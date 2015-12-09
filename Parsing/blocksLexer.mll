@@ -4,9 +4,11 @@ let space = [' ' '\t' '\n']
 rule nexttoken = parse
     space+ { nexttoken lexbuf }
   | eof { EOF }
-  | '+' { ADD }
-  | '-' { SUB }
-  | '/' { DIV }
-  | '*' { MUL }
-  | ['0'-'9']+ as i { INT (int_of_string i) }
-  | ['a'-'z' 'A'-'Z'] ['_' '0'-'9' 'a'-'z' 'A'-'Z']* as v { VAR v }
+  | '(' { OPEN_PARENTHESIS }
+  | ')' { CLOSE_PARENTHESIS }
+  | '{' { OPEN_BRACKET }
+  | '}' { CLOSE_BRACKET }
+  | "if" { IF }
+  | "else" { ELSE }
+  | "int" { INTEGER(3) }
+  | "true" { BOOLEAN(true) }
