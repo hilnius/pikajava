@@ -12,3 +12,7 @@ rule nexttoken = parse
   | "else" { ELSE }
   | "int" { INTEGER(3) }
   | "true" { BOOLEAN(true) }
+  | "for" { FOR }
+  | "while" { WHILE }
+  | ',' { COMMA }
+  | ';' { SEMICOLON }

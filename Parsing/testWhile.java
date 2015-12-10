@@ -1,4 +1,4 @@
-if ( true ) {
+while ( true ) {
   int
   int
   int
