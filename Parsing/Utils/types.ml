@@ -37,3 +37,5 @@ type classTreeMap = {vis:visibility; abs:abstraction; fin:finality; inh:parent; 
 
 type classTree = ClassTree of classTreeMap
 |Empty
+
+

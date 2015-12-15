@@ -1,6 +1,6 @@
 %{
 open Types
-
+open Location
 %}
 
 %token CLASS OPENING_BRACKET CLOSING_BRACKET EOF
@@ -18,6 +18,7 @@ open Types
 classDeclaration:
 | vis=visibility abs=abstraction fin=finality CLASS className=CLASS_NAME  inh=inherits impl=implements  OPENING_BRACKET
 	{ClassTree({vis=vis;abs=abs;fin=fin;inh=inh;impl=impl;className=Identifier className;con=None});}
+| error {print_string "Error : Invalid Class Declaration\n";print(symbol_loc $startpos $endpos);Empty}	
 visibility:
 |PUBLIC {Public}
 |PRIVATE {Private}

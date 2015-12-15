@@ -9,11 +9,14 @@ let printLexeme = function
     | CLASS  -> print_string "CLASS"
     | CLASS_NAME s -> print_string s
     | OPENING_BRACKET -> print_string "OPENING_BRACKET"
-		| CLOSING_BRACKET -> print_string "CLOSING_BRACKET"
+	| CLOSING_BRACKET -> print_string "CLOSING_BRACKET"
+	| EXTENDS -> print_string "EXTENDS" 
+	| IMPLEMENTS -> print_string "IMPLEMENTS"
+	| COMA -> print_string ";"
 
 }
 
-let className = ['A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']*
+let className = ['a'-'z' 'A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']*
 
 let space = [' ' '\t' '\n']
 

@@ -11,3 +11,10 @@ let execute lexbuf verbose =
     print_string "AST is printed";
     print_newline ();
   end *)
+  (*PrintTypes.printTree (ParseClass.classDeclaration LexClass.nextToken lexbuf)*)
+  
+  (*LexFile.examineAll lexbuf*)
+  
+ PrintFiles.printFileTree(ParseFile.fileDeclaration LexFile.nextToken lexbuf)
+  
+  (*LexClass.examineAll lexbuf*) 
