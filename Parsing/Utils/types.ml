@@ -1,34 +1,39 @@
-type visibility = 
-	| PUBLIC   
-  | PROTECTED
-  | PRIVATE 
-  | PACKAGE_PRIVATE
-  
-type abstraction = 
-	| ABSTRACT
-	| CONCRETE
+type visibility =
+	| Public
+  | Protected
+  | Private
+  | Private_Package
 
-type finality = 
-	| FINAL
-	| EXTENDABLE
+type abstraction =
+	| Abstract
+	| Concrete
 
-type identifier = IDENTIFIER of string
+type finality =
+	| Final
+	| Extendable
 
-type classListAttribute = 
-	| CLASS_ATTRIBUTE of classAttribute
-	| Empty							
+type parent = string option
+
+type identifier = Identifier of string
+
+type interfacesList = identifier list option
 
 (*TODO type classAttribute to be implemented*)
 type classAttribute = Empty
+type classListAttribute =
+	| ClassAttribute of classAttribute
+	| Empty
 
-type classListMethod = 
-	| CLASS_METHOD of classMethod
-	| Empty					
 
 (*TODO type classMethod to be implemented*)
 type classMethod = Empty
+type classListMethod =
+	| ClassMethod of classMethod
+	| Empty
 
-type content  = CONTENT of (classListAttribute * classListMethod )   
+type content  = (classListAttribute * classListMethod ) option
 
+type classTreeMap = {vis:visibility; abs:abstraction; fin:finality; inh:parent; impl:interfacesList; className:identifier; con:content}
 
-
+type classTree = ClassTree of classTreeMap
+|Empty

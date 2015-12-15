@@ -2,6 +2,7 @@
 let execute lexbuf verbose =
   print_string "Computing AST";
   print_newline ();
+  (* Compile for Robin
   let ast = (BlocksAST.formule BlocksLexer.nexttoken lexbuf) in
   begin
     print_string "Printing AST";
@@ -9,4 +10,4 @@ let execute lexbuf verbose =
     (* PrintAST.printAST(ast); *)
     print_string "AST is printed";
     print_newline ();
-  end
+  end *)

@@ -9,8 +9,8 @@ let printLexeme = function
     | CLASS  -> print_string "CLASS"
     | CLASS_NAME s -> print_string s
     | OPENING_BRACKET -> print_string "OPENING_BRACKET"
-		| CLOSING_BRACKET -> print_string "CLOSING_BRACKET" 		
-		
+		| CLOSING_BRACKET -> print_string "CLOSING_BRACKET"
+
 }
 
 let className = ['A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']*
@@ -24,9 +24,12 @@ rule nextToken = parse
   | "private" {PRIVATE}
   |	"abstract" {ABSTRACT}
   | "final" {FINAL}
+  | "extends" {EXTENDS}
+  | "implements" {IMPLEMENTS}
   | space+  { nextToken lexbuf }
+  | "," {COMA}
   | "class" {CLASS}
-  | className as className    { CLASS_NAME className }
+  | className as className { CLASS_NAME className }
   | '{' {OPENING_BRACKET}
   | '}' {CLOSING_BRACKET}
 
@@ -41,4 +44,4 @@ let rec examineAll lexbuf =
 		| _   -> examineAll lexbuf
     end;
     ();
-} 
+}
