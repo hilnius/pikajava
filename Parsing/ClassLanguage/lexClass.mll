@@ -24,12 +24,14 @@ rule nextToken = parse
   | "private" {PRIVATE}
   |	"abstract" {ABSTRACT}
   | "final" {FINAL}
+  | "extends" {EXTENDS}
+  | "implements" {IMPLEMENTS}
   | space+  { nextToken lexbuf }
+  | "," {COMA} 
   | "class" {CLASS}
-  | className as className    { CLASS_NAME className }
+  | className as className { CLASS_NAME className }
   | '{' {OPENING_BRACKET}
   | '}' {CLOSING_BRACKET}
-
 {
 let rec examineAll lexbuf =
     let res = nextToken lexbuf in
