@@ -1,30 +1,16 @@
 %{
-
-	type variableDeclaration = Integer of int
-	type expression = Bool of bool
-	type classDeclaration = Class
-
-	type block = Block of blockStatement list
-	and blockStatement =
-		  ClassDeclaration of classDeclaration
-		| LocalVariableDeclaration of variableDeclaration
-		| Statement of statement
-	and statement =
-		  IfStatement of (expression * block * block)
-		| ForStatement of (statement * expression * expression * block)
-		| WhileStatement of (expression * block)
-		| BlockStatement of block
-		| EmptyStatement
-
+	open Location
+	open Located
+	open BlocksTypes
 %}
 
-%token IF ELSE WHILE FOR OPEN_PARENTHESIS CLOSE_PARENTHESIS OPEN_BRACKET CLOSE_BRACKET COMMA SEMICOLON EOF
+%token IF ELSE WHILE FOR OPEN_PARENTHESIS CLOSE_PARENTHESIS OPEN_BRACKET CLOSE_BRACKET COMMA SEMICOLON EOF ANY
 
 %token <int> INTEGER
 %token <bool> BOOLEAN
 
 %start formule
-%type <block> formule
+%type <BlocksTypes.block> formule
 %%
 formule:
 | c=block EOF { c }
@@ -73,6 +59,7 @@ statement:
 | s=ifThenElseStatement { Statement(s) }
 | s=whileStatement { Statement(s) }
 | s=forStatement { Statement(s) }
+| error { print_string "Error: unable to parse statement \""; print_token (symbol_loc $startpos $endpos); print_string "\" at \n"; print (symbol_loc $startpos $endpos);  print_newline (); Statement(EmptyStatement)  }
 statementWithoutTrailingSubstatement:
 | b=block { Statement(BlockStatement(b)) }
 statementNoShortIf:

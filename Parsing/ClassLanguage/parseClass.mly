@@ -4,7 +4,7 @@ open Types
 %}
 
 %token CLASS OPENING_BRACKET CLOSING_BRACKET EOF
-%token PUBLIC PRIVATE PROTECTED 
+%token PUBLIC PRIVATE PROTECTED
 %token ABSTRACT CONCRETE
 %token FINAL EXTENDABLE
 %token<string> CLASS_NAME
@@ -25,6 +25,6 @@ abstraction:
 finality:
 |FINAL {FINAL}
 | {EXTENDABLE}
-%%	
+%%
 
 
