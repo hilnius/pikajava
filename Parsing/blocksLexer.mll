@@ -16,3 +16,7 @@ rule nexttoken = parse
   | "while" { WHILE }
   | ',' { COMMA }
   | ';' { SEMICOLON }
+
+{
+
+}

@@ -2,14 +2,19 @@
 
 	type variableDeclaration = Integer of int
 	type expression = Bool of bool
+	type classDeclaration = Class
 
-	type statement =
-			VariableDeclaration of variableDeclaration
-		| IfStatement of (expression * block * block)
-		| WhileStatement of (expression * block)
+	type block = Block of blockStatement list
+	and blockStatement =
+		  ClassDeclaration of classDeclaration
+		| LocalVariableDeclaration of variableDeclaration
+		| Statement of statement
+	and statement =
+		  IfStatement of (expression * block * block)
 		| ForStatement of (statement * expression * expression * block)
+		| WhileStatement of (expression * block)
 		| BlockStatement of block
-	and block = Block of (statement list)
+		| EmptyStatement
 
 %}
 
@@ -22,7 +27,7 @@
 %type <block> formule
 %%
 formule:
-| c=statement EOF { Block([c]) }
+| c=block EOF { c }
 (* if statements *)
 ifThenStatement:
 | IF OPEN_PARENTHESIS expr=expression CLOSE_PARENTHESIS s=statement { IfStatement(expr, Block([s]), Block([])) }
@@ -40,12 +45,12 @@ forStatement:
 | s=basicForStatement { s }
 (*| s=enhancedForStatement { s }*)
 basicForStatement:
-| FOR OPEN_PARENTHESIS fi=forInitOpt SEMICOLON expr=expressionOpt SEMICOLON update=forUpdateOpt CLOSE_PARENTHESIS s=statement { ForStatement(fi, expr, update, Block([s])) }
+| FOR OPEN_PARENTHESIS fi=forInit SEMICOLON expr=expression SEMICOLON update=expression CLOSE_PARENTHESIS s=statement { ForStatement(fi, expr, update, Block([s])) }
 forStatementNoShortIf:
 | FOR OPEN_PARENTHESIS fi=forInitOpt SEMICOLON expr=expressionOpt SEMICOLON update=forUpdateOpt CLOSE_PARENTHESIS s=statementNoShortIf { ForStatement(fi, expr, update, Block([s])) }
 forInitOpt:
 | f=forInit 		{ f }
-|           		{ VariableDeclaration(Integer(9)) }
+|           		{ EmptyStatement }
 expressionOpt:
 | f=expression 	{ f }
 |              	{ Bool(true) }
@@ -54,7 +59,7 @@ forUpdateOpt:
 |             	{ Bool(true) }
 forInit:
 | s=statementExpressionList { BlockStatement(Block(s)) }
-| s=localVariableDeclarationStatement { s } (* be careful, should be a localVariableDeclaration *)
+| s=localVariableDeclarationStatement { BlockStatement(Block([s])) } (* be careful, should be a localVariableDeclaration *)
 forUpdate:
 | s=statementExpressionList { Bool(true) }
 statementExpressionList:
@@ -64,18 +69,18 @@ statementExpressionList:
 statement:
 | s=statementWithoutTrailingSubstatement { s }
 | s=labeledStatement { s }
-| s=ifThenStatement { s }
-| s=ifThenElseStatement { s }
-| s=whileStatement { s }
-| s=forStatement { s }
+| s=ifThenStatement { Statement(s) }
+| s=ifThenElseStatement { Statement(s) }
+| s=whileStatement { Statement(s) }
+| s=forStatement { Statement(s) }
 statementWithoutTrailingSubstatement:
-| b=block { BlockStatement(b) }
+| b=block { Statement(BlockStatement(b)) }
 statementNoShortIf:
 | s=statementWithoutTrailingSubstatement { s }
 | s=labeledStatementNoShortIf { s }
-| s=ifThenElseStatementNoShortIf { s }
-| s=whileStatementNoShortIf { s }
-| s=forStatementNoShortIf { s }
+| s=ifThenElseStatementNoShortIf { Statement(s) }
+| s=whileStatementNoShortIf { Statement(s) }
+| s=forStatementNoShortIf { Statement(s) }
 block:
 | OPEN_BRACKET b=blockStatements CLOSE_BRACKET { Block(b) }
 blockStatements:
@@ -88,12 +93,12 @@ blockStatement:
 expression:
 | b=BOOLEAN { Bool(b) }
 localVariableDeclarationStatement:
-| i=INTEGER { VariableDeclaration(Integer(90)) }
+| i=INTEGER { LocalVariableDeclaration(Integer(90)) }
 (* empty parsers *)
 labeledStatement:
-| i=INTEGER { VariableDeclaration(Integer(91)) }
+| i=INTEGER { LocalVariableDeclaration(Integer(91)) }
 labeledStatementNoShortIf:
-| i=INTEGER { VariableDeclaration(Integer(92)) }
+| i=INTEGER { LocalVariableDeclaration(Integer(92)) }
 statementExpression:
-| i=INTEGER { VariableDeclaration(Integer(93)) }
+| i=INTEGER { LocalVariableDeclaration(Integer(93)) }
 %%

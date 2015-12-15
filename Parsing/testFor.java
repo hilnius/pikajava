@@ -1,3 +1,5 @@
-for ( int ; true ; int ) {
-  int
+{
+  for ( ; true ; true ) {
+    int
+  }
 }
