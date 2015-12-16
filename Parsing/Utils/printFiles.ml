@@ -7,8 +7,6 @@ let printStaticness staticness = match staticness with
 let printImport import = match import with 
 |Import(staticness,importName)->printStaticness staticness; print_string (" "^importName^"\n")
 
-  
-
 let rec printImports imports = match imports with
 |Some(a::t) -> print_string "Import : " ; printImport a; printImports (Some(t));
 |Some([]) -> print_string "End Imports\n"
@@ -21,3 +19,5 @@ let printPackage packageName = match packageName with
 let printFileTree tree = match tree with
 | FileTree({pack=pack; imports=imports;}, Empty) ->
 	printPackage pack; printImports imports;
+| FileTree({pack=pack; imports=imports;}, classTree) ->
+	printPackage pack; printImports imports; PrintTypes.printTree classTree;
