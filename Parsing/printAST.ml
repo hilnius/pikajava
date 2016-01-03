@@ -1,4 +1,6 @@
 
+open BlocksTypes
+
 let rec print_tabs tabs = match tabs with
   | 0 -> ()
   | i -> print_string "    "; print_tabs (i-1)

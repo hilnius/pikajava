@@ -2,6 +2,7 @@
   if ( true ) {
     int
     int
+    dsqdsq
     int
   }
   for (int; true ;true ) {
