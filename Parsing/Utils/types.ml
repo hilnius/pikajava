@@ -27,9 +27,15 @@ type objType =
 
 type parent = string option
 
+type child = string option
+
 type identifier = Identifier of string
 
 type interfacesList = identifier list option
+
+type parameter = {name:identifier; extends: parent}
+
+type parameterList = parameter list option
 
 (*TODO type classAttribute to be implemented*)
 type classAttribute = Empty
@@ -47,9 +53,9 @@ type classListMethod =
 
 type content  = (classListAttribute * classListMethod ) option
 
-type interfaceTreeMap = {objectType:objType;vis:visibility; inh:interfacesList; interfaceName:identifier; con:content}
+type interfaceTreeMap = {objectType:objType;vis:visibility; inh:interfacesList; interfaceName:identifier; parameters:parameterList; con:content}
 
-type classTreeMap = {objectType:objType;vis:visibility; abs:abstraction; fin:finality; inh:parent; impl:interfacesList; className:identifier; con:content}
+type classTreeMap = {objectType:objType;vis:visibility; abs:abstraction; fin:finality; parameters:parameterList; inh:parent; impl:interfacesList; className:identifier; con:content}
 
 type enumTreeMap = {objectType:objType;vis:visibility; inh:interfacesList; enumName:identifier; con:content}
 

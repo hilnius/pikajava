@@ -24,7 +24,7 @@ let printLexeme = function
 
 let identifierName = ['a'-'z' 'A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']*
 let space = [' ' '\t' '\n']
-let className = ['A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']*
+let className = ['A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']* 
 rule nextToken = parse
   | eof {EOF}
   | "package" {PACKAGE}
@@ -45,6 +45,8 @@ rule nextToken = parse
   | "class" {CLASS}
   | "interface" {INTERFACE}
   | "enum" {ENUM}
+  | "<" {OPENING_CHEVRON}
+  | ">" {CLOSING_CHEVRON}
   | identifierName as identifierName { IDENTIFIER identifierName }
   | '{' {OPENING_BRACKET}
   | '}' {CLOSING_BRACKET}
