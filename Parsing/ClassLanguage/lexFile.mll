@@ -43,6 +43,8 @@ rule nextToken = parse
   | "implements" {IMPLEMENTS}
   | "," {COMA}
   | "class" {CLASS}
+  | "interface" {INTERFACE}
+  | "enum" {ENUM}
   | identifierName as identifierName { IDENTIFIER identifierName }
   | '{' {OPENING_BRACKET}
   | '}' {CLOSING_BRACKET}

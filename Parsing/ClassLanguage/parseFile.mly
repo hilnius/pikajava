@@ -12,10 +12,10 @@ open Location
 
 (*TODO HANDLE SEVERAL CLASSES OR NONE*)
 fileDeclaration:
-| pack = package SEMICOLON imp = importsListDecl classDecl=classDeclaration {FileTree({pack=pack;imports=imp},classDecl)}
+| pack = package imp = importsListDecl classDecl=classDeclaration {FileTree({pack=pack;imports=imp},classDecl)}
 | error {print_string "Error : Invalid Package Declaration\n";print(symbol_loc $startpos $endpos);Empty}
 package:
-|PACKAGE pack = packageName {Some(pack)}
+|PACKAGE pack = packageName SEMICOLON {Some(pack)}
 | {None}
 packageName:
 |package = IDENTIFIER DOT childPackage = packageName {package^"."^childPackage}

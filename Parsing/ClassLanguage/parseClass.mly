@@ -4,11 +4,15 @@ open Location
 %}
 
 %start  classDeclaration
-%type <Types.classTree>  classDeclaration
+%type <Types.objectTree>  classDeclaration
 %%
 classDeclaration:
-| vis=visibility abs=abstraction fin=finality CLASS className=IDENTIFIER  inh=inherits impl=implements  OPENING_BRACKET
-	{ClassTree({vis=vis;abs=abs;fin=fin;inh=inh;impl=impl;className=Identifier className;con=None});}
+| vis=visibility abs=abstraction fin=finality CLASS className=IDENTIFIER inh=inherits impl=implements  OPENING_BRACKET
+	{ClassTree({objectType=Class;vis=vis;abs=abs;fin=fin;inh=inh;impl=impl;className=Identifier className;con=None});}
+| vis=visibility INTERFACE interfaceName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET
+	{InterfaceTree({objectType=Interface;vis=vis;inh=inh;interfaceName=Identifier interfaceName;con=None});}
+| vis=visibility ENUM enumName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET	
+	{EnumTree({objectType=Enum;vis=vis;inh=inh;enumName=Identifier enumName;con=None});}
 | error {print_string "Error : Invalid Class Declaration\n";print(symbol_loc $startpos $endpos);Empty}	
 %public visibility:
 |PUBLIC {Public}
@@ -24,6 +28,8 @@ finality:
 inherits:
 | EXTENDS parentName=IDENTIFIER {Some parentName}
 | {None}
+inheritsInterface:
+| EXTENDS completeInterf=interface {Some(completeInterf)}
 implements:
 | IMPLEMENTS completeInterf=interface {Some(completeInterf)}
 | {None}

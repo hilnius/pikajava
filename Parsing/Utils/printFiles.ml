@@ -19,5 +19,5 @@ let printPackage packageName = match packageName with
 let printFileTree tree = match tree with
 | FileTree({pack=pack; imports=imports;}, Empty) ->
 	printPackage pack; printImports imports;
-| FileTree({pack=pack; imports=imports;}, classTree) ->
-	printPackage pack; printImports imports; PrintTypes.printTree classTree;
+| FileTree({pack=pack; imports=imports;}, objectTree) ->
+	printPackage pack; printImports imports; PrintTypes.printTree objectTree;
