@@ -33,7 +33,9 @@ type identifier = Identifier of string
 
 type interfacesList = identifier list option
 
-type parameter = {name:identifier; extends: parent}
+
+
+type parameter = {name:identifier; extends:parameter option; super:parameter option}
 
 type parameterList = parameter list option
 

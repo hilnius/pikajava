@@ -8,9 +8,9 @@ open Location
 %%
 (*TODO GENERICS???? *)
 classDeclaration:
-| vis=visibility abs=abstraction fin=finality CLASS className=IDENTIFIER params=parameters inh=inherits impl=implements  OPENING_BRACKET
+| vis=visibility abs=abstraction fin=finality CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET
 	{ClassTree({objectType=Class;vis=vis;abs=abs;fin=fin;parameters=params;inh=inh;impl=impl;className=Identifier className;con=None});}
-| vis=visibility INTERFACE interfaceName=IDENTIFIER params=parameters inh=inheritsInterface OPENING_BRACKET
+| vis=visibility INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET
 	{InterfaceTree({objectType=Interface;vis=vis;inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=None});}
 | vis=visibility ENUM enumName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET	
 	{EnumTree({objectType=Enum;vis=vis;inh=inh;enumName=Identifier enumName;con=None});}
@@ -37,14 +37,4 @@ implements:
 interface:
 | className=IDENTIFIER COMA interf=interface {(Identifier className)::interf}
 | className=IDENTIFIER {[Identifier(className)]}
-
-parameters:
-| OPENING_CHEVRON paramList=parameterList CLOSING_CHEVRON {Some(paramList)}
-| {None}
-parameterList:
-| parameterName = IDENTIFIER COMA paramList = parameterList {({name= Identifier(parameterName);extends=None})::paramList}
-| parameterName = IDENTIFIER EXTENDS className = IDENTIFIER COMA paramList=parameterList { ({name= Identifier(parameterName); extends = Some(className)})::paramList}
-| parameterName = IDENTIFIER EXTENDS className = IDENTIFIER {[{name= Identifier(parameterName); extends = Some(className)}]}
-| parameterName= IDENTIFIER {[{name=Identifier parameterName;extends=None}]}
-
 %%

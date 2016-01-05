@@ -24,13 +24,16 @@ let printFinality fin = match fin with
 let printIdentifier iden = match iden with
 |Identifier(identName) -> print_string (identName^"\n")
 
+
 (*function to print the class parent name*)
 let printParent parent = match parent with
 |Some(parentName) -> print_string ("parentName:"^parentName^"\n")
 |None -> print_string ("parent: No parent\n")
 
-let printParameter param = match param with 
-{name=paramName;extends=parentName} -> printIdentifier paramName; printParent parentName
+let rec printParameter param = match param with 
+|{name=paramName;extends=Some(parentName);super=None} -> printIdentifier paramName; print_string "extends:";printParameter parentName;
+|{name=paramName;extends=None;super=Some(childName)} -> printIdentifier paramName; print_string "super:";printParameter childName;
+|{name=paramName;extends=None;super=None} -> printIdentifier paramName 
 
 (*function to print the parameters of the class or interface*)
 let rec printParameters params = match params with
@@ -49,5 +52,5 @@ let printTree tree = match tree with
 | InterfaceTree({objectType= obj;vis=vis;interfaceName=interfaceName;parameters=params;inh=parent;con=content}) ->
 	printObjectType obj; printVisibility vis; printIdentifier interfaceName; printParameters params; printInterfaces parent;
 | EnumTree	({objectType= obj;vis=vis;enumName=enumName;inh=parent;con=content}) ->
-	printObjectType obj; printVisibility vis; printIdentifier enumName; printInterfaces parent;
+	printObjectType obj; printVisibility vis; printIdentifier enumName; printInterfaces parent
 	

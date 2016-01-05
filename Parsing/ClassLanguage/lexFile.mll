@@ -40,6 +40,7 @@ rule nextToken = parse
   |	"abstract" {ABSTRACT}
   | "final" {FINAL}
   | "extends" {EXTENDS}
+  | "super" {SUPER}
   | "implements" {IMPLEMENTS}
   | "," {COMA}
   | "class" {CLASS}
@@ -47,6 +48,7 @@ rule nextToken = parse
   | "enum" {ENUM}
   | "<" {OPENING_CHEVRON}
   | ">" {CLOSING_CHEVRON}
+  | "?" {WILDCARD}
   | identifierName as identifierName { IDENTIFIER identifierName }
   | '{' {OPENING_BRACKET}
   | '}' {CLOSING_BRACKET}
