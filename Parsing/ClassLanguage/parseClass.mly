@@ -8,24 +8,37 @@ open Location
 %%
 (*TODO GENERICS???? *)
 classDeclaration:
-| vis=visibility abs=abstraction fin=finality CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET
-	{ClassTree({objectType=Class;vis=vis;abs=abs;fin=fin;parameters=params;inh=inh;impl=impl;className=Identifier className;con=None});}
-| vis=visibility INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET
-	{InterfaceTree({objectType=Interface;vis=vis;inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=None});}
-| vis=visibility ENUM enumName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET	
-	{EnumTree({objectType=Enum;vis=vis;inh=inh;enumName=Identifier enumName;con=None});}
-| error {print_string "Error : Invalid Class Declaration\n";print(symbol_loc $startpos $endpos);Empty}	
+| modifs=modifiers CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET con=methodsDeclarations 
+	CLOSING_BRACKET
+	{ClassTree({objectType=Class;modif=Some(modifs);parameters=params;inh=inh;impl=impl;className=Identifier className;con=con});}
+| modifs=modifiers INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET
+	{InterfaceTree({objectType=Interface;modif=Some(modifs);inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=None});}
+| modifs=modifiers ENUM enumName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET	
+	{EnumTree({objectType=Enum;modif=Some(modifs);inh=inh;enumName=Identifier enumName;con=None});}
+| error {print_string "Error : Invalid Class Declaration\n";print(symbol_loc $startpos $endpos);Empty}
+
+modifiers:
+| modif=modifierClass modifs=modifiers {(modif)::modifs}
+| modif=modifierClass {[modif]}
+
+modifierClass:
+| vis=visibility {Visibility vis}
+| abs=abstraction {Abstraction abs}
+| fin=finality {Finality fin}
+| sta=staticity {Staticity sta}
+| strict=strictfp {StrictFpity strict}	
 %public visibility:
 |PUBLIC {Public}
 |PRIVATE {Private}
 |PROTECTED {Protected}
-| {Private_Package}
-abstraction:
+%public abstraction:
 |ABSTRACT {Abstract}
-| {Concrete}
-finality:
+%public staticity:
+|STATIC {Static}
+%public finality:
 |FINAL {Final}
-| {Extendable}
+%public strictfp:
+| STRICTFP {StrictFp}
 inherits:
 | EXTENDS parentName=IDENTIFIER {Some parentName}
 | {None}
@@ -37,4 +50,11 @@ implements:
 interface:
 | className=IDENTIFIER COMA interf=interface {(Identifier className)::interf}
 | className=IDENTIFIER {[Identifier(className)]}
+
+methodsDeclarations:
+| methodsList=methodDeclarationsList {Some(methodsList)}
+| {None}
+methodDeclarationsList:
+| methDecl=methodDeclaration methDeclList=methodDeclarationsList  {(methDecl)::methDeclList}
+| methDecl=methodDeclaration {[methDecl]}
 %%

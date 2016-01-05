@@ -39,9 +39,13 @@ rule nextToken = parse
   | "private" {PRIVATE}
   |	"abstract" {ABSTRACT}
   | "final" {FINAL}
+  | "strictfp" {STRICTFP}
+  | "native" {NATIVE}
+  | "synchronized" {SYNCHRONIZED}    
   | "extends" {EXTENDS}
   | "super" {SUPER}
   | "implements" {IMPLEMENTS}
+  | "throws" {THROWS}  
   | "," {COMA}
   | "class" {CLASS}
   | "interface" {INTERFACE}
@@ -51,7 +55,9 @@ rule nextToken = parse
   | "?" {WILDCARD}
   | identifierName as identifierName { IDENTIFIER identifierName }
   | '{' {OPENING_BRACKET}
-  | '}' {CLOSING_BRACKET}
+  | '}' {CLOSING_BRACKET}  
+  | '(' {OPENING_PARENTHESIS}
+  | ')' {CLOSING_PARENTHESIS}
 {
 let rec examineAll lexbuf =
     let res = nextToken lexbuf in

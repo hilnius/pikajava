@@ -30,6 +30,36 @@ let printParent parent = match parent with
 |Some(parentName) -> print_string ("parentName:"^parentName^"\n")
 |None -> print_string ("parent: No parent\n")
 
+let rec printExceptions exceptions = match exceptions with 
+Some(a::t) -> print_string "exceptions : " ; printIdentifier a; printExceptions (Some(t));
+|Some([]) -> print_string "End exceptions\n"
+|None -> print_string("No exception\n")
+
+
+let printArgument argument = match argument with 
+| {argType=argType; argName=argName}->printIdentifier argType; printIdentifier argName
+
+let rec printArguments arguments = match arguments with
+Some(a::t) -> print_string "arguments : " ; printArgument a; printArguments (Some(t));
+|Some([]) -> print_string "End arguments\n"
+|None -> print_string("No argument\n")
+
+let printModifier modifier = match modifier with 
+|Visibility vis -> printVisibility vis 
+|Abstraction abs -> printAbstraction abs
+|Finality fin -> printFinality fin
+|Synchronization syn  -> print_string "Synchronized\n"
+|Nativity nat -> print_string "Native\n"
+|StrictFpity str -> print_string "StrictFp\n"
+|Staticity sta -> print_string "Static\n"
+
+let rec printModifiers modifiers = match modifiers with 
+Some(a::t) -> print_string "modifier : " ; printModifier a; printModifiers (Some(t));
+|Some([]) -> print_string "End modifiers\n"
+|None -> print_string("No modifier\n")
+
+
+
 let rec printParameter param = match param with 
 |{name=paramName;extends=Some(parentName);super=None} -> printIdentifier paramName; print_string "extends:";printParameter parentName;
 |{name=paramName;extends=None;super=Some(childName)} -> printIdentifier paramName; print_string "super:";printParameter childName;
@@ -46,11 +76,25 @@ let rec printInterfaces interfaces = match interfaces with
 |Some([]) -> print_string "End Interfaces\n"
 |None -> print_string("No interface\n")
 
+
+let printMethodTree tree = match tree with 
+| MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=content }) ->
+	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList
+| Empty -> print_string "Error in the method declaration"
+
+let rec printCon content = match content with 
+Some(a::t) -> print_string "method : " ; printMethodTree a; printCon (Some(t));
+|Some([]) -> print_string "End methods\n"
+|None -> print_string("No methods\n")
+
 let printTree tree = match tree with
-| ClassTree({objectType= obj;vis=vis; abs=abs; fin=fin; inh=parent; impl=interfaces; parameters=params; className=identifier; con=content}) ->
-	printObjectType obj; printVisibility vis; printAbstraction abs; printFinality fin;printParameters params; printParent parent; printInterfaces interfaces; printIdentifier identifier
-| InterfaceTree({objectType= obj;vis=vis;interfaceName=interfaceName;parameters=params;inh=parent;con=content}) ->
-	printObjectType obj; printVisibility vis; printIdentifier interfaceName; printParameters params; printInterfaces parent;
-| EnumTree	({objectType= obj;vis=vis;enumName=enumName;inh=parent;con=content}) ->
-	printObjectType obj; printVisibility vis; printIdentifier enumName; printInterfaces parent
+| ClassTree({objectType=obj;modif=modifiersObject; inh=parent; impl=interfaces; parameters=params; className=identifier; con=content}) ->
+	printObjectType obj; printModifiers modifiersObject; printParameters params; printParent parent; printInterfaces interfaces; printIdentifier identifier; printCon content
+| InterfaceTree({objectType= obj;modif=modifiersObject;interfaceName=interfaceName;parameters=params;inh=parent;con=content}) ->
+	printObjectType obj; printModifiers modifiersObject; printIdentifier interfaceName; printParameters params; printInterfaces parent;
+| EnumTree	({objectType=obj;modif=modifiersObject;enumName=enumName;inh=parent;con=content}) ->
+	printObjectType obj; printModifiers modifiersObject; printIdentifier enumName; printInterfaces parent
+
+
+
 	

@@ -1,1 +1,1 @@
-ParseClass ParseFile Tokens ParseParameters
+ParseClass ParseFile Tokens ParseParameters ParseMethod

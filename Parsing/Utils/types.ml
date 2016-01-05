@@ -20,6 +20,18 @@ type volatility =
 	| Volatile
 	| NonVolatile
 
+type synchronization = 
+	| Synchronized
+	| NonSynchronized
+
+type nativity = 
+	| Native
+	| NonNative
+	
+type strictfp=
+	| StrictFp
+	| NonStrictFp	
+	
 type objType = 
 	| Class
 	| Interface
@@ -33,11 +45,26 @@ type identifier = Identifier of string
 
 type interfacesList = identifier list option
 
-
-
 type parameter = {name:identifier; extends:parameter option; super:parameter option}
 
 type parameterList = parameter list option
+
+type modifier = 
+| Visibility of visibility
+| Finality of finality
+| Abstraction of abstraction
+| Staticity of staticity
+| StrictFpity of strictfp
+| Synchronization of synchronization
+| Nativity of nativity
+
+type modifiers = modifier list option
+
+type argument = {argType: identifier; argName: identifier}
+
+type arguments = argument list option
+
+type exceptionList = identifier list option
 
 (*TODO type classAttribute to be implemented*)
 type classAttribute = Empty
@@ -48,18 +75,22 @@ type classListAttribute =
 
 
 (*TODO type classMethod to be implemented*)
-type classMethod = Method of string
-type classListMethod =
-	| ClassMethod of classMethod
-	| Empty
 
-type content  = (classListAttribute * classListMethod ) option
+type content= string option
 
-type interfaceTreeMap = {objectType:objType;vis:visibility; inh:interfacesList; interfaceName:identifier; parameters:parameterList; con:content}
+type methodTreeMap = {parameters:parameterList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content }
 
-type classTreeMap = {objectType:objType;vis:visibility; abs:abstraction; fin:finality; parameters:parameterList; inh:parent; impl:interfacesList; className:identifier; con:content}
+type methodTree = 
+| MethodTree of methodTreeMap
+| Empty
 
-type enumTreeMap = {objectType:objType;vis:visibility; inh:interfacesList; enumName:identifier; con:content}
+type contentClass  = methodTree list option
+
+type interfaceTreeMap = {objectType:objType;modif:modifiers; inh:interfacesList; interfaceName:identifier; parameters:parameterList; con:contentClass}
+
+type classTreeMap = {objectType:objType;modif:modifiers; parameters:parameterList; inh:parent; impl:interfacesList; className:identifier; con:contentClass}
+
+type enumTreeMap = {objectType:objType;modif:modifiers; inh:interfacesList; enumName:identifier; con:contentClass}
 
 type objectTree =
 ClassTree of classTreeMap
@@ -68,6 +99,9 @@ ClassTree of classTreeMap
 | Empty
 
 
-type classContent = {methods:classListMethod; attributes:classListAttribute}
+
+
+
+type classContent = {methods:methodTree list option ; attributes:classListAttribute}
 
 
