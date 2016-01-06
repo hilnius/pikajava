@@ -78,15 +78,18 @@ type classListAttribute =
 
 (*TODO type classMethod to be implemented*)
 
-type content= block option
+type content= block
 
 type methodTreeMap = {parameters:parameterList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content }
 
-type methodTree = 
+type initializerTreeMap = {iniType:staticity;con:content}
+
+type classContentTree = 
 | MethodTree of methodTreeMap
+| Initializer of initializerTreeMap
 | Empty
 
-type contentClass  = methodTree list option
+type contentClass  = classContentTree list option
 
 type interfaceTreeMap = {objectType:objType;modif:modifiers; inh:interfacesList; interfaceName:identifier; parameters:parameterList; con:contentClass}
 
@@ -104,6 +107,6 @@ ClassTree of classTreeMap
 
 
 
-type classContent = {methods:methodTree list option ; attributes:classListAttribute}
+type classContent = {classContent:classContentTree list option ; attributes:classListAttribute}
 
 

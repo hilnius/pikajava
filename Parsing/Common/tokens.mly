@@ -15,7 +15,7 @@
 %token IF ELSE WHILE FOR
 %token <int> INTEGER
 %token <bool> BOOLEAN
-
+%token VOID
 
 %%
 
