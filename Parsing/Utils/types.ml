@@ -1,3 +1,5 @@
+open BlocksTypes
+
 type visibility =
 	| Public
   | Protected
@@ -76,7 +78,7 @@ type classListAttribute =
 
 (*TODO type classMethod to be implemented*)
 
-type content= string option
+type content= block option
 
 type methodTreeMap = {parameters:parameterList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content }
 

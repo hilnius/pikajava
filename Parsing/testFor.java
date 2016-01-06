@@ -1,5 +1,0 @@
-{
-  for ( ; true ; true ) {
-    int
-  }
-}

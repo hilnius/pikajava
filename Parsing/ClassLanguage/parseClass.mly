@@ -48,7 +48,7 @@ implements:
 | IMPLEMENTS completeInterf=interface {Some(completeInterf)}
 | {None}
 interface:
-| className=IDENTIFIER COMA interf=interface {(Identifier className)::interf}
+| className=IDENTIFIER COMMA interf=interface {(Identifier className)::interf}
 | className=IDENTIFIER {[Identifier(className)]}
 
 methodsDeclarations:

@@ -4,36 +4,31 @@
 	open BlocksTypes
 %}
 
-%token IF ELSE WHILE FOR OPEN_PARENTHESIS CLOSE_PARENTHESIS OPEN_BRACKET CLOSE_BRACKET COMMA SEMICOLON EOF ANY
-
-%token <int> INTEGER
-%token <bool> BOOLEAN
-
-%start formule
-%type <BlocksTypes.block> formule
+%start blockDeclaration
+%type <BlocksTypes.block> blockDeclaration
 %%
-formule:
-| c=block EOF { c }
+blockDeclaration:
+| c=block { c }
 (* if statements *)
 ifThenStatement:
-| IF OPEN_PARENTHESIS expr=expression CLOSE_PARENTHESIS s=statement { IfStatement(expr, Block([s]), Block([])) }
+| IF OPENING_PARENTHESIS expr=expression CLOSING_PARENTHESIS s=statement { IfStatement(expr, Block([s]), Block([])) }
 ifThenElseStatement:
-| IF OPEN_PARENTHESIS expr=expression CLOSE_PARENTHESIS s1=statementNoShortIf ELSE s2=statement { IfStatement(expr, Block([s1]), Block([s2])) }
+| IF OPENING_PARENTHESIS expr=expression CLOSING_PARENTHESIS s1=statementNoShortIf ELSE s2=statement { IfStatement(expr, Block([s1]), Block([s2])) }
 ifThenElseStatementNoShortIf:
-| IF OPEN_PARENTHESIS expr=expression CLOSE_PARENTHESIS s1=statementNoShortIf ELSE s2=statementNoShortIf { IfStatement(expr, Block([s1]), Block([s2])) }
+| IF OPENING_PARENTHESIS expr=expression CLOSING_PARENTHESIS s1=statementNoShortIf ELSE s2=statementNoShortIf { IfStatement(expr, Block([s1]), Block([s2])) }
 (* while statements *)
 whileStatement:
-| WHILE OPEN_PARENTHESIS expr=expression CLOSE_PARENTHESIS s=statement { WhileStatement(expr, Block([s])) }
+| WHILE OPENING_PARENTHESIS expr=expression CLOSING_PARENTHESIS s=statement { WhileStatement(expr, Block([s])) }
 whileStatementNoShortIf:
-| WHILE OPEN_PARENTHESIS expr=expression CLOSE_PARENTHESIS s=statementNoShortIf { WhileStatement(expr, Block([s])) }
+| WHILE OPENING_PARENTHESIS expr=expression CLOSING_PARENTHESIS s=statementNoShortIf { WhileStatement(expr, Block([s])) }
 (* for statements *)
 forStatement:
 | s=basicForStatement { s }
 (*| s=enhancedForStatement { s }*)
 basicForStatement:
-| FOR OPEN_PARENTHESIS fi=forInit SEMICOLON expr=expression SEMICOLON update=expression CLOSE_PARENTHESIS s=statement { ForStatement(fi, expr, update, Block([s])) }
+| FOR OPENING_PARENTHESIS fi=forInit SEMICOLON expr=expression SEMICOLON update=expression CLOSING_PARENTHESIS s=statement { ForStatement(fi, expr, update, Block([s])) }
 forStatementNoShortIf:
-| FOR OPEN_PARENTHESIS fi=forInitOpt SEMICOLON expr=expressionOpt SEMICOLON update=forUpdateOpt CLOSE_PARENTHESIS s=statementNoShortIf { ForStatement(fi, expr, update, Block([s])) }
+| FOR OPENING_PARENTHESIS fi=forInitOpt SEMICOLON expr=expressionOpt SEMICOLON update=forUpdateOpt CLOSING_PARENTHESIS s=statementNoShortIf { ForStatement(fi, expr, update, Block([s])) }
 forInitOpt:
 | f=forInit 		{ f }
 |           		{ EmptyStatement }
@@ -59,7 +54,7 @@ statement:
 | s=ifThenElseStatement { Statement(s) }
 | s=whileStatement { Statement(s) }
 | s=forStatement { Statement(s) }
-| error { print_string "Error: unable to parse statement \""; print_token (symbol_loc $startpos $endpos); print_string "\" at \n"; print (symbol_loc $startpos $endpos);  print_newline (); Statement(EmptyStatement)  }
+| error { print_string "Error: unable to parse statement \""; print_token (symbol_loc $startpos $endpos); print_string "\" at \n"; print (symbol_loc $startpos $endpos); print_newline (); Statement(EmptyStatement)  }
 statementWithoutTrailingSubstatement:
 | b=block { Statement(BlockStatement(b)) }
 statementNoShortIf:
@@ -69,10 +64,11 @@ statementNoShortIf:
 | s=whileStatementNoShortIf { Statement(s) }
 | s=forStatementNoShortIf { Statement(s) }
 block:
-| OPEN_BRACKET b=blockStatements CLOSE_BRACKET { Block(b) }
+| OPENING_BRACKET b=blockStatements CLOSING_BRACKET { Block(b) }
 blockStatements:
 | b=blockStatement { [b] }
 | b=blockStatement bs=blockStatements { b::bs }
+| 				{ [] }
 blockStatement:
 | lvds=localVariableDeclarationStatement { lvds }
 (* | cd=classDeclaration { cd } *)

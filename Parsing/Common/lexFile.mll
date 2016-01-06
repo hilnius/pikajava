@@ -19,7 +19,7 @@ let printLexeme = function
 	| CLOSING_BRACKET -> print_string "CLOSING_BRACKET"
 	| EXTENDS -> print_string "EXTENDS" 
 	| IMPLEMENTS -> print_string "IMPLEMENTS"
-	| COMA -> print_string ";"
+	| COMMA -> print_string ";"
 }
 
 let identifierName = ['a'-'z' 'A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']*
@@ -46,18 +46,25 @@ rule nextToken = parse
   | "super" {SUPER}
   | "implements" {IMPLEMENTS}
   | "throws" {THROWS}  
-  | "," {COMA}
+  | "," {COMMA}
   | "class" {CLASS}
   | "interface" {INTERFACE}
   | "enum" {ENUM}
   | "<" {OPENING_CHEVRON}
   | ">" {CLOSING_CHEVRON}
   | "?" {WILDCARD}
-  | identifierName as identifierName { IDENTIFIER identifierName }
   | '{' {OPENING_BRACKET}
   | '}' {CLOSING_BRACKET}  
   | '(' {OPENING_PARENTHESIS}
   | ')' {CLOSING_PARENTHESIS}
+  | "if" { IF }
+  | "else" { ELSE }
+  | "int" { INTEGER(3) }
+  | "true" { BOOLEAN(true) }
+  | "for" { FOR }
+  | "while" { WHILE }
+  | identifierName as identifierName { IDENTIFIER identifierName }
+  
 {
 let rec examineAll lexbuf =
     let res = nextToken lexbuf in

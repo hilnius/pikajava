@@ -1,4 +1,5 @@
 open Types
+open PrintBlock
 
 (*functions to print the different modifiers *)
 let printVisibility vis = match vis with
@@ -78,8 +79,9 @@ let rec printInterfaces interfaces = match interfaces with
 
 
 let printMethodTree tree = match tree with 
-| MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=content }) ->
-	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList
+| MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=Some(block) }) ->
+	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList;
+	printAST block
 | Empty -> print_string "Error in the method declaration"
 
 let rec printCon content = match content with 

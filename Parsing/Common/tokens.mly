@@ -11,8 +11,10 @@
 %token<string> IDENTIFIER
 %token EXTENDS IMPLEMENTS SUPER
 %token THROWS
-%token COMA
-
+%token COMMA
+%token IF ELSE WHILE FOR
+%token <int> INTEGER
+%token <bool> BOOLEAN
 
 
 %%
