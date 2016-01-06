@@ -16,8 +16,15 @@
     | PostfixLessLess
   and typed =
       NoneType
-    | TypeIdentifier of (identifier)
+    | TypeIdentifier of ((identifierArgs list) * int)
     | TypeBasic of (basicType)
+  and typeArgumentKind =
+      NoneTypeArgument
+    | TypeArgumentExtends
+    | TypeArgumentSuper
+  and typeArgument =
+      TypeArgumentType of (typed)
+    | TypeArgumentGeneric of (typed * typeArgumentKind)
   and basicType =
       Byte
     | Short
@@ -30,6 +37,8 @@
   and identifier =
       NoneIdentifier
     | Identifier of string
+  and identifierArgs =
+    | IdentifierArgs of (identifier * (typeArgument list))
   and variableDeclarators =
       VariableId of string
   and integerLiteral =
@@ -39,8 +48,13 @@
   and literal =
       IntegerLiteral of integerLiteral
     | FloatingPointLiteral of floatingPointLiteral
+  and primary =
+      PrimaryLiteral of literal
+  and expression3exty =
+      Expression3Type of typed
+    | Expression3Expr of expression
   and expression3 =
-      Expression3 of (literal * (prefixOp list) * (postfixOp list))
+      Expression3 of (primary * (expression3exty list) * (prefixOp list) * (postfixOp list))
   and expression2 =
       Expression2 of (expression3)
   and expression1 =
@@ -54,8 +68,12 @@
 %token EOF
 
 %token EQUAL EQUAL_MORE EQUAL_MINUS
-%token QUESTION_MARK TWO_DOTS
+%token QUESTION_MARK TWO_DOTS DOT COMMA GREATERTHAN LESSERTHAN
 %token MOREMORE LESSLESS MORE LESS
+
+%token EXTENDS SUPER
+
+%token INTEGER FLOAT DOUBLE
 
 %token <int> INTEGER_NUMERAL
 %token <float> FLOATING_POINT_NUMERAL
@@ -87,10 +105,14 @@ expression1:
 expression2:
 | p=expression3 { Expression2(p) }
 expression3:
-| f=prefixop p=expression3 { let Expression3(lit, l, post) = p in Expression3(lit, f::l, post) }
-| p=exprPrimary l=list(postfixop) { Expression3(p, [], l) }
+| f=prefixop p=expression3 { let Expression3(lit, e, l, post) = p in Expression3(lit, e, f::l, post) }
+| f=expression3exty p=expression3 { let Expression3(lit, e, l, post) = p in Expression3(lit, f::e, l, post) }
+| p=exprPrimary l=list(postfixop) { Expression3(p, [], [], l) }
+expression3exty:
+| p=typed { Expression3Type p }
+| p=expression { Expression3Expr p }
 exprPrimary:
-| p=literal { p }
+| p=literal { PrimaryLiteral p }
 literal:
 | p=integerLiteral { IntegerLiteral(p) }
 | p=floatingPointLiteral { FloatingPointLiteral(p) }
@@ -98,6 +120,21 @@ integerLiteral:
 | p=INTEGER_NUMERAL { DecimalNumeral(p) }
 floatingPointLiteral:
 | p=FLOATING_POINT_NUMERAL { DecimalFloatingPointNumeral(p) }
+typed:
+| p=separated_list(DOT, typedIdarg) { TypeIdentifier(p, 0) }
+| p=basicType { TypeBasic(p) }
+typedIdarg:
+| p=IDENTIFIER { IdentifierArgs(Identifier(p), []) }
+| p=IDENTIFIER LESSERTHAN a=typeArgument GREATERTHAN { IdentifierArgs(Identifier(p), [a]) }
+typeArgument:
+| p=typed { TypeArgumentType p }
+| QUESTION_MARK { TypeArgumentGeneric(NoneType, NoneTypeArgument) }
+| QUESTION_MARK EXTENDS p=typed { TypeArgumentGeneric(p, TypeArgumentExtends) }
+| QUESTION_MARK SUPER p=typed { TypeArgumentGeneric(p, TypeArgumentSuper) }
+basicType:
+| p=INTEGER { Integer }
+| p=FLOAT { Float }
+| p=DOUBLE { Double }
 %%
 (*%%
 formule:
