@@ -20,3 +20,5 @@ val symbol_loc : Lexing.position -> Lexing.position -> t
 
 (* Printing of a location *)
 val print : t -> unit
+
+val print_token : t -> unit

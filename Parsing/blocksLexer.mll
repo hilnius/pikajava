@@ -1,8 +1,10 @@
 {
+  open BlocksAST
 }
-let space = [' ' '\t' '\n']
+let space = [' ' '\t']
 rule nexttoken = parse
-    space+ { nexttoken lexbuf }
+  | '\n' { Lexing.new_line lexbuf; nexttoken lexbuf }
+  | space+ { nexttoken lexbuf }
   | eof { EOF }
   | '(' { OPEN_PARENTHESIS }
   | ')' { CLOSE_PARENTHESIS }
@@ -16,7 +18,8 @@ rule nexttoken = parse
   | "while" { WHILE }
   | ',' { COMMA }
   | ';' { SEMICOLON }
-
+  | (['a'-'z'])+ { ANY }
+  | _ { ANY }
 {
 
 }
