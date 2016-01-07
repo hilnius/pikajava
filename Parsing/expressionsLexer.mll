@@ -10,12 +10,32 @@ rule nexttoken = parse
   | "--" { LESSLESS }
   | '+' { MORE }
   | '-' { LESS }
+  | "||" { OR }
+  | "&&" { AND }
+  | '|' { BITOR }
+  | '^' { BITXOR }
+  | '&' { BITAND }
+  | "==" { EQUALEQUAL }
+  | "!=" { DIFFERENT }
+  | "<<" { SHIFTLEFT }
+  | ">>" { SHIFTRIGHT }
+  | ">>>" { GGG }
+  | '*' { MULTIPLY }
+  | '/' { DIVIDE }
+  | '%' { MODULO }
+  | '<' { LESSERTHAN }
+  | '>' { GREATERTHAN }
   | '.' { DOT }
   | ',' { COMMA }
   | '<' { LESSERTHAN }
-  | '>' { GREATERTHAN }
+  | '(' { PAROPEN }
+  | ')' { PARCLOSE }
+  | '=' { EQUAL }
+  | "+=" { MOREEQUAL }
+  | "-=" { LESSEQUAL }
   | "extends" { EXTENDS }
   | "super" { SUPER }
+  | "instanceof" { INSTANCEOF }
   | "int" { INTEGER }
   | "float" { FLOAT }
   | "double" { DOUBLE }
