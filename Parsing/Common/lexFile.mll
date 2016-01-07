@@ -24,7 +24,8 @@ let printLexeme = function
 
 let identifierName = ['a'-'z' 'A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']*
 let space = [' ' '\t' '\n']
-let className = ['A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']* 
+(* TODO COMMENTARIES*)
+let commentLine = ['/']{2}[^(['\n' '\r'])]
 rule nextToken = parse
   | eof {EOF}
   | "package" {PACKAGE}
@@ -47,8 +48,8 @@ rule nextToken = parse
   | "implements" {IMPLEMENTS}
   | "throws" {THROWS}  
   | "," {COMMA}
-  | "class" {CLASS}
   | "interface" {INTERFACE}
+  | "class" {CLASS}
   | "enum" {ENUM}
   | "<" {OPENING_CHEVRON}
   | ">" {CLOSING_CHEVRON}

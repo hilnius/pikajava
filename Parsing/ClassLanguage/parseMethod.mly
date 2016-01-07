@@ -10,17 +10,14 @@ open Location
 methodDeclaration :
 | modifs=modifiersMethod params=parametersDeclaration return=returnType methodName=IDENTIFIER OPENING_PARENTHESIS arguments = arguments CLOSING_PARENTHESIS exceptions=exceptionDecl block=blockDeclaration
 	{MethodTree({parameters=params; modif=Some(modifs); returnType= return; name= Identifier methodName; args=arguments; thr=exceptions; con=block});}
-| error {print_string "Error : Invalid Method Declaration\n";print(symbol_loc $startpos $endpos);Empty}	
+(*| error {print_string "Error : Invalid Method Declaration\n";print(symbol_loc $startpos $endpos);Empty}*)	
 modifiersMethod:
 | modif=modifierMethod modifs=modifiersMethod {(modif)::modifs}
 | modif=modifierMethod {[modif]}
+| modif=modifierClass modifs=modifiersMethod {(modif)::modifs}
+| modif=modifierClass {[modif]}
 modifierMethod:
-| vis=visibility {Visibility vis}
-| abs=abstraction {Abstraction abs}
-| fin=finality {Finality fin}
-| sta=staticity {Staticity sta}
 | syn=synchronization {Synchronization syn}
-| strict=strictfp {StrictFpity strict}
 | nat=nativity {Nativity nat}
 (*visibilit:
 |PUBLIC {Public}
