@@ -74,7 +74,7 @@ let read_token lnum posStart posEnd =
     done;
     let rightLine = input_line chan in
       close_in chan;
-      String.sub rightLine posStart (posEnd - posStart)
+      (*String.sub*) rightLine (* posStart (posEnd - posStart) *)
     end
   with End_of_file ->
     close_in chan;

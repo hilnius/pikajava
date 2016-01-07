@@ -1,4 +1,5 @@
 open Types
+open PrintBlock
 
 (*functions to print the different modifiers *)
 let printVisibility vis = match vis with
@@ -19,6 +20,10 @@ let printAbstraction abs= match abs with
 let printFinality fin = match fin with
 |Final -> print_string "finality:final\n"
 |Extendable -> print_string "finality:extendable\n"
+
+let printStaticity sta = match sta with 
+|Static -> print_string "staticity:static\n"
+|NonStatic -> print_string "staticity:Non static\n"
 
 (*function to print the class name *)
 let printIdentifier iden = match iden with
@@ -77,15 +82,17 @@ let rec printInterfaces interfaces = match interfaces with
 |None -> print_string("No interface\n")
 
 
-let printMethodTree tree = match tree with 
-| MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=content }) ->
-	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList
+let printClassContentTree tree = match tree with
+| Initializer ({iniType=iniType;con=block}) -> print_string "Initializer : "; printStaticity iniType; printAST block 
+| MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=block }) ->
+	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList;
+	printAST block
 | Empty -> print_string "Error in the method declaration"
 
 let rec printCon content = match content with 
-Some(a::t) -> print_string "method : " ; printMethodTree a; printCon (Some(t));
-|Some([]) -> print_string "End methods\n"
-|None -> print_string("No methods\n")
+Some(a::t) -> print_string "classContent : " ; printClassContentTree a; printCon (Some(t));
+|Some([]) -> print_string "End classContent\n"
+|None -> print_string("No classContent\n")
 
 let printTree tree = match tree with
 | ClassTree({objectType=obj;modif=modifiersObject; inh=parent; impl=interfaces; parameters=params; className=identifier; con=content}) ->

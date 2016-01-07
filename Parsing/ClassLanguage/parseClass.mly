@@ -8,7 +8,7 @@ open Location
 %%
 (*TODO GENERICS???? *)
 classDeclaration:
-| modifs=modifiers CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET con=methodsDeclarations 
+| modifs=modifiers CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET con=classContentDeclarations 
 	CLOSING_BRACKET
 	{ClassTree({objectType=Class;modif=Some(modifs);parameters=params;inh=inh;impl=impl;className=Identifier className;con=con});}
 | modifs=modifiers INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET
@@ -48,13 +48,17 @@ implements:
 | IMPLEMENTS completeInterf=interface {Some(completeInterf)}
 | {None}
 interface:
-| className=IDENTIFIER COMA interf=interface {(Identifier className)::interf}
+| className=IDENTIFIER COMMA interf=interface {(Identifier className)::interf}
 | className=IDENTIFIER {[Identifier(className)]}
 
-methodsDeclarations:
-| methodsList=methodDeclarationsList {Some(methodsList)}
+classContentDeclarations:
+| classContentList=classContentList {Some(classContentList)}
 | {None}
-methodDeclarationsList:
-| methDecl=methodDeclaration methDeclList=methodDeclarationsList  {(methDecl)::methDeclList}
-| methDecl=methodDeclaration {[methDecl]}
+classContentList:
+| classContentDecl=classContentDeclaration classContentList=classContentList  {(classContentDecl)::classContentList}
+| classContentDecl=classContentDeclaration {[classContentDecl]}
+classContentDeclaration:
+| STATIC block=blockDeclaration {Initializer({iniType=Static;con=block})}
+| block=blockDeclaration {Initializer({iniType=NonStatic;con=block})}
+| methodDecl=methodDeclaration {methodDecl} 
 %%

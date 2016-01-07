@@ -4,12 +4,12 @@ open Location
 %}
 
 %start  methodDeclaration
-%type <Types.methodTree>  methodDeclaration
+%type <Types.classContentTree>  methodDeclaration
 %%
 
 methodDeclaration :
-| modifs=modifiersMethod params=parametersDeclaration return=IDENTIFIER methodName=IDENTIFIER OPENING_PARENTHESIS arguments = arguments CLOSING_PARENTHESIS exceptions=exceptionDecl OPENING_BRACKET CLOSING_BRACKET
-	{MethodTree({parameters=params; modif=Some(modifs); returnType= Identifier return; name= Identifier methodName; args=arguments; thr=exceptions; con=None});}
+| modifs=modifiersMethod params=parametersDeclaration return=returnType methodName=IDENTIFIER OPENING_PARENTHESIS arguments = arguments CLOSING_PARENTHESIS exceptions=exceptionDecl block=blockDeclaration
+	{MethodTree({parameters=params; modif=Some(modifs); returnType= return; name= Identifier methodName; args=arguments; thr=exceptions; con=block});}
 | error {print_string "Error : Invalid Method Declaration\n";print(symbol_loc $startpos $endpos);Empty}	
 modifiersMethod:
 | modif=modifierMethod modifs=modifiersMethod {(modif)::modifs}
@@ -39,11 +39,14 @@ nativity:
 synchronization:
 | SYNCHRONIZED {Synchronized}
 
+returnType:
+| VOID {Identifier "void"}
+| ret=IDENTIFIER {Identifier ret} 
 arguments:
 | argList = argumentsList {Some(argList)}
 | {None}
 argumentsList:
-| arg=argument COMA argList=argumentsList {arg::argList}
+| arg=argument COMMA argList=argumentsList {arg::argList}
 | arg=argument {[arg]}
 argument:
 | argType=IDENTIFIER argName=IDENTIFIER {{argType=Identifier argType; argName=Identifier argName}}
@@ -52,7 +55,7 @@ exceptionDecl:
 | THROWS exceptions=exceptionsList {Some(exceptions)}
 | {None}
 exceptionsList:
-| exc=except COMA excList=exceptionsList {(exc)::excList}
+| exc=except COMMA excList=exceptionsList {(exc)::excList}
 | exc=except {[exc]}
 except:
 | exceptType=IDENTIFIER {Identifier exceptType}
