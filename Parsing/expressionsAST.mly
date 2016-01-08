@@ -72,6 +72,9 @@
   and primary =
       PrimaryLiteral of literal
     | PrimaryIdentifier of (identifier list)
+    | PrimaryIdentifierSuffix of ((identifier list) * identifierSuffix)
+    | PrimaryThis of arguments
+    | PrimarySuper of superSuffix
     | PrimaryExpression of expression
   and expression3exty =
       Expression3Type of typed
@@ -79,7 +82,7 @@
   and expression3infix =
       Expression3Infix of (infixOp * expression3)
   and expression3 =
-      Expression3 of (primary * (expression3exty list) * (prefixOp list) * (postfixOp list))
+      Expression3 of (primary * (expression3exty list) * (prefixOp list) * (postfixOp list) * (selector list))
   and expression2 =
       Expression2 of (expression3)
     | Expression2Infix of (expression3 * (expression3infix list))
@@ -90,6 +93,41 @@
   and expression = 
       NoneExpression
     | Expression of (expression1 * assignmentOperator * expression1)
+  and selector =
+      NoneSelector
+    | SelectorIdentifier of (identifier * arguments)
+    | SelectorInvocation of explicitGenericInvocation
+    | SelectorThis
+    | SelectorSuper of superSuffix
+    | SelectorNew of (innerCreator * (typed list) * expression)
+  and arguments =
+      NoneArguments
+    | Arguments of (expression list)
+  and superSuffix =
+      NoneSuperSuffix
+    | SuperSuffixArguments of arguments
+    | SuperSuffixIdentifier of (identifier * arguments)
+  and identifierSuffix =
+      NoneIdentifierSuffix
+    | IdentifierSuffixClass
+    | IdentifierSuffixArguments of arguments
+    | IdentifierSuffixDotClass
+    | IdentifierSuffixDotInvocation of explicitGenericInvocation
+    | IdentifierSuffixDotThis
+    | IdentifierSuffixDotSuperArguments of arguments
+    | IdentifierSuffixDotNew of (innerCreator * (typed list))
+  and explicitGenericInvocation =
+      ExplicitGenericInvocation of ((typed list) * explicitGenericInvocationSuffix)
+  and explicitGenericInvocationSuffix =
+      ExplicitGenericInvocationSuffixSuper of superSuffix
+    | ExplicitGenericInvocationSuffixIdentifier of (identifier * arguments)
+  and innerCreator =
+      InnerCreator of (identifier * classCreatorRest)
+  and classCreatorRest =
+      ClassCreatorRest of (arguments * classBody)
+  and classBody =
+      NoneClassBody
+    | ClassBody
 %}
 
 %token EOF
@@ -101,7 +139,7 @@
 
 %token PAROPEN PARCLOSE
 
-%token EXTENDS SUPER INSTANCEOF
+%token CLASS NEW EXTENDS THIS SUPER INSTANCEOF
 
 %token INTEGER FLOAT DOUBLE
 
@@ -160,21 +198,25 @@ expression2:
 | p=expression3 i=expression2infix { Expression2Infix(p, i) }
 expression2infix:
 | i=infixop p=expression3 { [Expression3Infix(i, p)] }
-| i=infixop p=expression3 e=expression2infix { Expression3Infix(i, p)::e }
+| e=expression2infix i=infixop p=expression3 { Expression3Infix(i, p)::e }
 expression3:
-| f=prefixop p=expression3 { let Expression3(lit, e, l, post) = p in Expression3(lit, e, f::l, post) }
-| f=expression3exty p=expression3 { let Expression3(lit, e, l, post) = p in Expression3(lit, f::e, l, post) }
-| p=exprPrimary l=list(postfixop) { Expression3(p, [], [], l) }
+| f=prefixop p=expression3 { let Expression3(lit, e, l, post, sel) = p in Expression3(lit, e, f::l, post, sel) }
+| f=expression3exty p=expression3 { let Expression3(lit, e, l, post, sel) = p in Expression3(lit, f::e, l, post, sel) }
+| p=exprPrimary s=list(selector) l=list(postfixop) { Expression3(p, [], [], l, s) }
 expression3exty:
 | p=typed { Expression3Type p }
 | p=expression { Expression3Expr p }
 exprPrimary:
 | p=parExpression { PrimaryExpression p }
+| THIS { PrimaryThis NoneArguments }
+| THIS p=arguments { PrimaryThis p }
+| SUPER p=superSuffix { PrimarySuper p }
 | p=literal { PrimaryLiteral p }
-| p=exprPrimaryIdentifiers { PrimaryIdentifier(p) }
-exprPrimaryIdentifiers:
+| p=identifierList { PrimaryIdentifier(p) }
+| p=identifierList s=identifierSuffix { PrimaryIdentifierSuffix(p, s) }
+identifierList:
 | p=identifier { [p] }
-| p=identifier DOT e=exprPrimaryIdentifiers { p::e }
+| e=identifierList DOT p=identifier { p::e }
 literal:
 | p=integerLiteral { IntegerLiteral(p) }
 | p=floatingPointLiteral { FloatingPointLiteral(p) }
@@ -183,8 +225,11 @@ integerLiteral:
 floatingPointLiteral:
 | p=FLOATING_POINT_NUMERAL { DecimalFloatingPointNumeral(p) }
 typed:
-| p=separated_list(DOT, typedIdarg) { TypeIdentifier(p, 0) }
+| p=typedList { TypeIdentifier(p, 0) }
 | p=basicType { TypeBasic(p) }
+typedList:
+| p=typedIdarg { [p] }
+| e=typedList DOT p=typedIdarg { p::e }
 typedIdarg:
 | p=identifier { IdentifierArgs(p, []) }
 | p=identifier LESSERTHAN a=separated_nonempty_list(COMMA, typeArgument) GREATERTHAN { IdentifierArgs(p, a) }
@@ -197,8 +242,48 @@ basicType:
 | INTEGER { Integer }
 | FLOAT { Float }
 | DOUBLE { Double }
+typeList:
+| p=typed { [p] }
+| e=typeList p=typed { p::e }
 identifier:
 | p=IDENTIFIER { Identifier(p) }
+identifierSuffix:
+| p=arguments { IdentifierSuffixArguments p }
+// TC class exp
+| DOT CLASS { IdentifierSuffixDotClass }
+| DOT p=explicitGenericInvocation { IdentifierSuffixDotInvocation p }
+| DOT THIS { IdentifierSuffixDotThis }
+| DOT SUPER p=arguments { IdentifierSuffixDotSuperArguments p }
+| DOT NEW e=optNonWildcardTypeArguments p=innerCreator { IdentifierSuffixDotNew(p, e) }
+explicitGenericInvocation:
+| p=nonWildcardTypeArguments e=explicitGenericInvocationSuffix { ExplicitGenericInvocation(p, e) }
+explicitGenericInvocationSuffix:
+| SUPER p=superSuffix { ExplicitGenericInvocationSuffixSuper p }
+| p=identifier a=arguments { ExplicitGenericInvocationSuffixIdentifier(p, a) }
+superSuffix:
+| a=arguments { SuperSuffixArguments a }
+| DOT p=identifier a=arguments { SuperSuffixIdentifier(p, a) }
+selector:
+| DOT p=identifier { SelectorIdentifier(p, NoneArguments) }
+| DOT p=identifier a=arguments { SelectorIdentifier(p, a) }
+| DOT p=explicitGenericInvocation { SelectorInvocation p }
+| DOT THIS { SelectorThis }
+| DOT SUPER p=superSuffix { SelectorSuper p }
+| DOT NEW a=optNonWildcardTypeArguments p=innerCreator { SelectorNew(p, a, NoneExpression) }
+| DOT NEW a=optNonWildcardTypeArguments p=innerCreator e=expression { SelectorNew(p, a, e) }
+arguments:
+| PAROPEN p=separated_list(COMMA, expression) PARCLOSE { Arguments(p) }
+optNonWildcardTypeArguments:
+| { [] }
+| p=nonWildcardTypeArguments { p }
+nonWildcardTypeArguments:
+| LESSERTHAN GREATERTHAN { [] }
+| LESSERTHAN p=typeList GREATERTHAN { p }
+innerCreator:
+| p=identifier r=classCreatorRest { InnerCreator(p, r) }
+classCreatorRest:
+| a=arguments { ClassCreatorRest(a, NoneClassBody) }
+// TC classBody
 %%
 (*%%
 formule:
