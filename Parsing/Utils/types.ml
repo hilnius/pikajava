@@ -43,7 +43,7 @@ type child = string option
 
 type identifier = Identifier of string
 
-type parameter = {name:identifier; extends:parameter option; super:parameter option}
+type parameter = {name:identifier; param: parameter option ;extends:parameter option; super:parameter option}
 
 type parameterList = parameter list option
 

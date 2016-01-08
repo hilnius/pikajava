@@ -65,9 +65,16 @@ Some(a::t) -> print_string "modifier : " ; printModifier a; printModifiers (Some
 
 
 let rec printParameter param = match param with 
-|{name=paramName;extends=Some(parentName);super=None} -> printIdentifier paramName; print_string "extends:";printParameter parentName;
-|{name=paramName;extends=None;super=Some(childName)} -> printIdentifier paramName; print_string "super:";printParameter childName;
-|{name=paramName;extends=None;super=None} -> printIdentifier paramName 
+|{name=paramName;param=Some(parentParameter);extends=Some(parentName);super=None} -> printIdentifier paramName; print_string "parentParameter:";
+printParameter parentParameter;print_string "extends:";printParameter parentName;
+|{name=paramName;param=Some(parentParameter);extends=None;super=Some(childName)} -> printIdentifier paramName;print_string "parentParameter:";printParameter parentParameter; print_string "super:";printParameter childName;
+|{name=paramName;param=Some(parentParameter);extends=None;super=None} -> printIdentifier paramName ;print_string "parentParameter:";printParameter parentParameter;
+
+|{name=paramName;param=None;extends=Some(parentName);super=None} -> printIdentifier paramName; print_string "parentParameter:none\n";print_string "extends:";printParameter parentName;
+|{name=paramName;param=None;extends=None;super=Some(childName)} -> printIdentifier paramName;print_string "parentParameter: none\n";print_string "super:";printParameter childName;
+|{name=paramName;param=None;extends=None;super=None} -> printIdentifier paramName ;print_string "parentParameter: none\n"
+
+
 
 (*function to print the parameters of the class or interface*)
 let rec printParameters params = match params with
@@ -77,7 +84,7 @@ Some(a::t) -> print_string "params : " ; printParameter a; printParameters (Some
 
 let printExtendsParent parent = match parent with
 |Some(Parent({name=parentName;parameters=parameters})) -> print_string ("class parent:"^parentName^"\n"); printParameters parameters
-
+|None -> print_string("No parents\n")
 let printImplementsParent parent= match parent with
 |Parent({name=parentName;parameters=parameters}) -> print_string ("interface parent:"^parentName^"\n"); printParameters parameters
 
