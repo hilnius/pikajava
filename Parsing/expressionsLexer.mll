@@ -33,9 +33,12 @@ rule nexttoken = parse
   | '=' { EQUAL }
   | "+=" { MOREEQUAL }
   | "-=" { LESSEQUAL }
+  | "new" { NEW }
   | "extends" { EXTENDS }
   | "super" { SUPER }
+  | "this" { THIS }
   | "instanceof" { INSTANCEOF }
+  | "class" { CLASS }
   | "int" { INTEGER }
   | "float" { FLOAT }
   | "double" { DOUBLE }
