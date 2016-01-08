@@ -41,7 +41,7 @@ finality:
 strictfp:
 | STRICTFP {StrictFp}
 inherits:
-| EXTENDS parentName=IDENTIFIER {Some parentName}
+| EXTENDS parentName=IDENTIFIER parameters=parametersDeclaration {Some(Parent({name=parentName;parameters=parameters}))}
 | {None}
 inheritsInterface:
 | EXTENDS completeInterf=interface {Some(completeInterf)}
@@ -50,8 +50,8 @@ implements:
 | IMPLEMENTS completeInterf=interface {Some(completeInterf)}
 | {None}
 interface:
-| className=IDENTIFIER COMMA interf=interface {(Identifier className)::interf}
-| className=IDENTIFIER {[Identifier(className)]}
+| className=IDENTIFIER parameters=parametersDeclaration COMMA interf=interface {(Parent({name=className; parameters=parameters}))::interf}
+| className=IDENTIFIER parameters=parametersDeclaration {[Parent({name=className; parameters=parameters})]}
 
 classContentDeclarations:
 | classContentList=classContentList {Some(classContentList)}

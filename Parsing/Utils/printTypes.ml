@@ -32,9 +32,7 @@ let printIdentifier iden = match iden with
 
 
 (*function to print the class parent name*)
-let printParent parent = match parent with
-|Some(parentName) -> print_string ("parentName:"^parentName^"\n")
-|None -> print_string ("parent: No parent\n")
+
 
 let rec printExceptions exceptions = match exceptions with 
 Some(a::t) -> print_string "exceptions : " ; printIdentifier a; printExceptions (Some(t));
@@ -77,6 +75,17 @@ Some(a::t) -> print_string "params : " ; printParameter a; printParameters (Some
 |Some([]) -> print_string "End params\n"
 |None -> print_string("No params\n")
 
+let printExtendsParent parent = match parent with
+|Some(Parent({name=parentName;parameters=parameters})) -> print_string ("class parent:"^parentName^"\n"); printParameters parameters
+
+let printImplementsParent parent= match parent with
+|Parent({name=parentName;parameters=parameters}) -> print_string ("interface parent:"^parentName^"\n"); printParameters parameters
+
+let rec printParents parents = match parents with 
+Some(a::t) -> print_string "parent : " ; printImplementsParent a; printParents (Some(t));
+|Some([]) -> print_string "End parents\n"
+|None -> print_string("No parents\n")
+
 let rec printInterfaces interfaces = match interfaces with
 |Some(a::t) -> print_string "Interface : " ; printIdentifier a; printInterfaces (Some(t));
 |Some([]) -> print_string "End Interfaces\n"
@@ -93,11 +102,11 @@ Some(a::t) -> print_string "classContent : " ; printClassContentTree a; printCon
 |None -> print_string("No classContent\n")
 and printTree tree = match tree with
 | ClassTree({objectType=obj;modif=modifiersObject; inh=parent; impl=interfaces; parameters=params; className=identifier; con=content}) ->
-	printObjectType obj; printModifiers modifiersObject; printParameters params; printParent parent; printInterfaces interfaces; printIdentifier identifier; printCon content
+	printObjectType obj; printModifiers modifiersObject; printParameters params; printExtendsParent parent; printParents interfaces; printIdentifier identifier; printCon content
 | InterfaceTree({objectType= obj;modif=modifiersObject;interfaceName=interfaceName;parameters=params;inh=parent;con=content}) ->
-	printObjectType obj; printModifiers modifiersObject; printIdentifier interfaceName; printParameters params; printInterfaces parent; printCon content
+	printObjectType obj; printModifiers modifiersObject; printIdentifier interfaceName; printParameters params; printParents parent; printCon content
 | EnumTree	({objectType=obj;modif=modifiersObject;enumName=enumName;inh=parent;con=content}) ->
-	printObjectType obj; printModifiers modifiersObject; printIdentifier enumName; printInterfaces parent; printCon content
+	printObjectType obj; printModifiers modifiersObject; printIdentifier enumName; printParents parent; printCon content
 and printClassContentTree tree = match tree with
 | Initializer ({iniType=iniType;con=block}) -> print_string "Initializer : "; printStaticity iniType; printAST block 
 | MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=block }) ->

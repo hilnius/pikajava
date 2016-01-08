@@ -39,17 +39,17 @@ type objType =
 	| Interface
 	| Enum
 
-type parent = string option
-
 type child = string option
 
 type identifier = Identifier of string
 
-type interfacesList = identifier list option
-
 type parameter = {name:identifier; extends:parameter option; super:parameter option}
 
 type parameterList = parameter list option
+
+type parentMap = {name:string;parameters:parameterList}
+
+type parent=Parent of parentMap
 
 type modifier = 
 | Visibility of visibility
@@ -95,9 +95,9 @@ ClassTree of classTreeMap
 | InterfaceTree of interfaceTreeMap
 | EnumTree of enumTreeMap
 | Empty
-and interfaceTreeMap = {objectType:objType;modif:modifiers; inh:interfacesList; interfaceName:identifier; parameters:parameterList; con:contentClass} 
-and classTreeMap = {objectType:objType;modif:modifiers; parameters:parameterList; inh:parent; impl:interfacesList; className:identifier; con:contentClass}
-and enumTreeMap = {objectType:objType;modif:modifiers; inh:interfacesList; enumName:identifier; con:contentClass}
+and interfaceTreeMap = {objectType:objType;modif:modifiers; inh:parent list option; interfaceName:identifier; parameters:parameterList; con:contentClass} 
+and classTreeMap = {objectType:objType;modif:modifiers; parameters:parameterList; inh:parent option; impl:parent list option; className:identifier; con:contentClass}
+and enumTreeMap = {objectType:objType;modif:modifiers; inh:parent list option; enumName:identifier; con:contentClass}
 and contentClass  = classContentTree list option
 
 
