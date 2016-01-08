@@ -80,28 +80,33 @@ type classListAttribute =
 
 type content= block
 
-type methodTreeMap = {parameters:parameterList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content }
+type methodTreeMap = {parameters:parameterList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content } 
+
 
 type initializerTreeMap = {iniType:staticity;con:content}
 
 type classContentTree = 
 | MethodTree of methodTreeMap
 | Initializer of initializerTreeMap
+| ObjectTree of objectTree
 | Empty
-
-type contentClass  = classContentTree list option
-
-type interfaceTreeMap = {objectType:objType;modif:modifiers; inh:interfacesList; interfaceName:identifier; parameters:parameterList; con:contentClass}
-
-type classTreeMap = {objectType:objType;modif:modifiers; parameters:parameterList; inh:parent; impl:interfacesList; className:identifier; con:contentClass}
-
-type enumTreeMap = {objectType:objType;modif:modifiers; inh:interfacesList; enumName:identifier; con:contentClass}
-
-type objectTree =
+and objectTree =
 ClassTree of classTreeMap
 | InterfaceTree of interfaceTreeMap
 | EnumTree of enumTreeMap
 | Empty
+and interfaceTreeMap = {objectType:objType;modif:modifiers; inh:interfacesList; interfaceName:identifier; parameters:parameterList; con:contentClass} 
+and classTreeMap = {objectType:objType;modif:modifiers; parameters:parameterList; inh:parent; impl:interfacesList; className:identifier; con:contentClass}
+and enumTreeMap = {objectType:objType;modif:modifiers; inh:interfacesList; enumName:identifier; con:contentClass}
+and contentClass  = classContentTree list option
+
+
+
+
+
+
+
+
 
 
 

@@ -82,25 +82,25 @@ let rec printInterfaces interfaces = match interfaces with
 |None -> print_string("No interface\n")
 
 
-let printClassContentTree tree = match tree with
-| Initializer ({iniType=iniType;con=block}) -> print_string "Initializer : "; printStaticity iniType; printAST block 
-| MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=block }) ->
-	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList;
-	printAST block
-| Empty -> print_string "Error in the method declaration"
-
 let rec printCon content = match content with 
 Some(a::t) -> print_string "classContent : " ; printClassContentTree a; printCon (Some(t));
 |Some([]) -> print_string "End classContent\n"
 |None -> print_string("No classContent\n")
-
-let printTree tree = match tree with
+and printTree tree = match tree with
 | ClassTree({objectType=obj;modif=modifiersObject; inh=parent; impl=interfaces; parameters=params; className=identifier; con=content}) ->
 	printObjectType obj; printModifiers modifiersObject; printParameters params; printParent parent; printInterfaces interfaces; printIdentifier identifier; printCon content
 | InterfaceTree({objectType= obj;modif=modifiersObject;interfaceName=interfaceName;parameters=params;inh=parent;con=content}) ->
-	printObjectType obj; printModifiers modifiersObject; printIdentifier interfaceName; printParameters params; printInterfaces parent;
+	printObjectType obj; printModifiers modifiersObject; printIdentifier interfaceName; printParameters params; printInterfaces parent; printCon content
 | EnumTree	({objectType=obj;modif=modifiersObject;enumName=enumName;inh=parent;con=content}) ->
-	printObjectType obj; printModifiers modifiersObject; printIdentifier enumName; printInterfaces parent
+	printObjectType obj; printModifiers modifiersObject; printIdentifier enumName; printInterfaces parent; printCon content
+and printClassContentTree tree = match tree with
+| Initializer ({iniType=iniType;con=block}) -> print_string "Initializer : "; printStaticity iniType; printAST block 
+| MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=block }) ->
+	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList;
+	printAST block
+| ObjectTree objectTree -> printTree objectTree 
+| Empty -> print_string "Error in the method declaration"
+
 
 
 
