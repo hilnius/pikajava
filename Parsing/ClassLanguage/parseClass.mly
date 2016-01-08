@@ -7,19 +7,21 @@ open Location
 %type <Types.objectTree>  classDeclaration
 %%
 classDeclaration:
-| modifs=modifiers CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET con=classContentDeclarations 
+| modifs=modifiersList CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET con=classContentDeclarations 
 	CLOSING_BRACKET
-	{ClassTree(print_string "CLASS MATCHED";{objectType=Class;modif=Some(modifs);parameters=params;inh=inh;impl=impl;className=Identifier className;con=con});}
-| modifs=modifiers INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
-	{InterfaceTree({objectType=Interface;modif=Some(modifs);inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=con});}
-| modifs=modifiers ENUM enumName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
-	{EnumTree({objectType=Enum;modif=Some(modifs);inh=inh;enumName=Identifier enumName;con=con});}
+	{ClassTree(print_string "CLASS MATCHED";{objectType=Class;modif=modifs;parameters=params;inh=inh;impl=impl;className=Identifier className;con=con});}
+| modifs=modifiersList INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
+	{InterfaceTree({objectType=Interface;modif=modifs;inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=con});}
+| modifs=modifiersList ENUM enumName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
+	{EnumTree({objectType=Enum;modif=modifs;inh=inh;enumName=Identifier enumName;con=con});}
 | error {print_string "Error : Invalid Declaration\n";print(symbol_loc $startpos $endpos);Empty}
 
+modifiersList:
+| modifsList=modifiers {Some(modifsList)}
+| {None}
 modifiers:
 | modif=modifierClass modifs=modifiers {(modif)::modifs}
 | modif=modifierClass {[modif]}
-
 %public modifierClass:
 | vis=visibility {Visibility vis}
 | abs=abstraction {Abstraction abs}

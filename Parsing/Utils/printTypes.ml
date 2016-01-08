@@ -1,5 +1,6 @@
 open Types
 open PrintBlock
+open BlocksTypes
 
 (*functions to print the different modifiers *)
 let printVisibility vis = match vis with
@@ -81,6 +82,10 @@ let rec printInterfaces interfaces = match interfaces with
 |Some([]) -> print_string "End Interfaces\n"
 |None -> print_string("No interface\n")
 
+let printMethodContent aMethod = match aMethod with 
+| Some(b) -> printAST b
+| None -> print_string ("Abstract Method\n")
+
 
 let rec printCon content = match content with 
 Some(a::t) -> print_string "classContent : " ; printClassContentTree a; printCon (Some(t));
@@ -97,7 +102,7 @@ and printClassContentTree tree = match tree with
 | Initializer ({iniType=iniType;con=block}) -> print_string "Initializer : "; printStaticity iniType; printAST block 
 | MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=block }) ->
 	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList;
-	printAST block
+	printMethodContent block
 | ObjectTree objectTree -> printTree objectTree 
 | Empty -> print_string "Error in the method declaration"
 

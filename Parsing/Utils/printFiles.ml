@@ -16,8 +16,11 @@ let printPackage packageName = match packageName with
 |Some (name) -> print_string ("package : "^name^"\n");
 |None ->  print_string "no package\n"
 
+let rec printTrees trees = match trees with
+|Some(a::t) -> print_string "Object Declcaration : "; PrintTypes.printTree a; printTrees (Some(t));
+|Some([]) -> print_string "End Object Declaration\n"
+|None -> print_string("No Object Declaration\n")
+
 let printFileTree tree = match tree with
-| FileTree({pack=pack; imports=imports;}, Empty) ->
-	printPackage pack; printImports imports;
-| FileTree({pack=pack; imports=imports;}, objectTree) ->
-	printPackage pack; printImports imports; PrintTypes.printTree objectTree;
+| FileTree({pack=pack; imports=imports;}, objectTrees) ->
+	printPackage pack; printImports imports; printTrees objectTrees;

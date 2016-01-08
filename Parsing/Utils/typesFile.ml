@@ -12,9 +12,7 @@ type importsList = import list option
 
 type fileTreeMap = {pack:package; imports : importsList;} 
 
-type classTreeList = objectTree list option 
-
 type fileTree = 
-|FileTree of (fileTreeMap * objectTree)
+|FileTree of (fileTreeMap * (objectTree list option))
 |Empty
 
