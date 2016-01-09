@@ -18,7 +18,6 @@ parameter:
 | paramName = IDENTIFIER {{name=Identifier paramName;param=None;extends=None;super=None}} 
 | paramName = IDENTIFIER EXTENDS firstParent=parentParameter {{name= Identifier paramName; param=None;extends=Some(firstParent);super=None}}
 
-(*TODO Correct the parameter AST List Does not extends something but HAS a parameter*)
 parentParameter:
 | parentName=IDENTIFIER {{name= Identifier parentName;param=None; extends=None; super=None}}
 | parentName=IDENTIFIER OPENING_CHEVRON parentParam=parentParameter CLOSING_CHEVRON {{name= Identifier parentName; param=Some(parentParam); extends=None; super=None}}

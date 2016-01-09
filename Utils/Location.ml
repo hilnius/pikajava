@@ -68,7 +68,6 @@ let print loc =
 
 let read_token filename lnum posStart posEnd =
   let chan = open_in filename in
-  let myStr = (Bytes.create 100) in
   try
     begin
     for i = 2 to lnum do

@@ -93,12 +93,14 @@ type classContentTree =
 | MethodTree of methodTreeMap
 | Initializer of initializerTreeMap
 | ObjectTree of objectTree
-| Empty
+| ErrorDecl of string
+
 and objectTree =
 ClassTree of classTreeMap
 | InterfaceTree of interfaceTreeMap
 | EnumTree of enumTreeMap
-| Empty
+| ErrorDecl of string
+
 and interfaceTreeMap = {objectType:objType; annots:annotationsList; modif:modifiers; inh:parent list option; interfaceName:identifier; parameters:parameterList; con:contentClass} 
 and classTreeMap = {objectType:objType; annots:annotationsList; modif:modifiers; parameters:parameterList; inh:parent option; impl:parent list option; className:identifier; con:contentClass}
 and enumTreeMap = {objectType:objType; annots:annotationsList; modif:modifiers; inh:parent list option; enumName:identifier; con:contentClass}

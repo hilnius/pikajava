@@ -16,6 +16,8 @@
 %token <int> INTEGER
 %token <bool> BOOLEAN
 %token VOID
+%token INISTATIC (* Used for Static initializer because bug if Static token is used*)
+
 
 %%
 

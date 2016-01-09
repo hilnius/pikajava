@@ -17,7 +17,7 @@ let printPackage packageName = match packageName with
 |None ->  print_string "no package\n"
 
 let rec printTrees trees = match trees with
-|Some(a::t) -> print_string "Object Declcaration : "; PrintTypes.printTree a; printTrees (Some(t));
+|Some(a::t) -> print_string "Object Declaration : "; PrintTypes.printTree a; printTrees (Some(t));
 |Some([]) -> print_string "End Object Declaration\n"
 |None -> print_string("No Object Declaration\n")
 

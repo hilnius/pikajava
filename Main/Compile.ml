@@ -14,8 +14,7 @@ let execute lexbuf verbose =
   end *)
   (*PrintTypes.printTree (ParseClass.classDeclaration LexClass.nextToken lexbuf)*)
   
-  (*LexFile.examineAll lexbuf*)
+ (*LexFile.examineAll lexbuf;*)
   
  PrintFiles.printFileTree(Parsers.fileDeclaration LexFile.nextToken lexbuf)
   
-  (*LexClass.examineAll lexbuf*) 

@@ -3,6 +3,8 @@ open Types
 open Location
 %}
 
+
+
 %start  classDeclaration
 %type <Types.objectTree>  classDeclaration
 %%
@@ -14,7 +16,8 @@ classDeclaration:
 	{InterfaceTree({objectType=Interface;annots=annot;modif=modifs;inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=con});}
 | annot=annotationsList modifs=modifiersList ENUM enumName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
 	{EnumTree({objectType=Enum;annots=annot;modif=modifs;inh=inh;enumName=Identifier enumName;con=con});}
-| error {print_string "Error : Invalid Declaration\n";print(symbol_loc $startpos $endpos);Empty}
+| error {print_string "Error: unable to parse  "; print_token_full (symbol_loc $startpos $endpos);ErrorDecl ("Error : Invalid Declaration\n")}	
+
 modifiersList:
 | modifsList=modifiers {Some(modifsList)}
 | {None}
@@ -59,8 +62,8 @@ classContentList:
 | classContentDecl=classContentDeclaration classContentList=classContentList  {(classContentDecl)::classContentList}
 | classContentDecl=classContentDeclaration {[classContentDecl]}
 classContentDeclaration:
-| STATIC block=blockDeclaration {Initializer({iniType=Static;con=block})}
-| block=blockDeclaration {Initializer({iniType=NonStatic;con=block})}
+| INISTATIC block=blockStatements CLOSING_BRACKET {Initializer({iniType=Static;con=Block(block)})}
 | methodDecl=methodDeclaration {methodDecl} 
 | objectDecl=classDeclaration {ObjectTree(objectDecl)}
+| block=blockDeclaration {Initializer({iniType=NonStatic;con=block})}
 %%

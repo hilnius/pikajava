@@ -13,18 +13,42 @@ let printLexeme = function
 	| PUBLIC  -> print_string "PUBLIC"
     | PRIVATE  -> print_string "PRIVATE"
     | PROTECTED  -> print_string "PROTECTED"
+    | ABSTRACT -> print_string "ABSTRACT"
+    | FINAL -> print_string "FINAL"
+    | STRICTFP -> print_string "STRICTFP"
+    | NATIVE -> print_string "SYNCHRONIZED"
+	| EXTENDS -> print_string "EXTENDS"
+    | SUPER -> print_string "SUPER"
+	| IMPLEMENTS -> print_string "IMPLEMENTS"
+	| THROWS -> print_string "THROWS"
+	| COMMA -> print_string ";"
+	| INTERFACE -> print_string "INTERFACE"
     | CLASS  -> print_string "CLASS"
-    | IDENTIFIER s -> print_string s
+    | ENUM -> print_string "ENUM"
+    | AT -> print_string "AT"
     | OPENING_BRACKET -> print_string "OPENING_BRACKET"
 	| CLOSING_BRACKET -> print_string "CLOSING_BRACKET"
-	| EXTENDS -> print_string "EXTENDS"
-	| IMPLEMENTS -> print_string "IMPLEMENTS"
-	| COMMA -> print_string ";"
+	| OPENING_CHEVRON -> print_string "OPENING_CHEVRON"
+  	| CLOSING_CHEVRON -> print_string "CLOSING_CHEVRON"
+  	| WILDCARD -> print_string "WILDCARD"
+  	| OPENING_BRACKET -> print_string "OPENING_BRACKET"
+  	| CLOSING_BRACKET -> print_string "CLOSING_BRACKET"
+  	| OPENING_PARENTHESIS -> print_string "OPENING_PARENTHESIS"
+  	| CLOSING_PARENTHESIS -> print_string "CLOSING_PARENTHESIS"
+  	| IF -> print_string "IF" 
+  	| ELSE -> print_string "ELSE" 
+  	| INTEGER(3) -> print_string "INTEGER(3)" 
+  	| BOOLEAN(true) -> print_string "BOOLEAN(true)" 
+  	| FOR -> print_string "FOR"
+  	| WHILE -> print_string "WHILE"
+  	| VOID -> print_string "VOID"
+  	| IDENTIFIER s -> print_string s
 }
 
 let identifierName = ['a'-'z' 'A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']*
 let space = [' ' '\t']
 let newLine = ['\n']
+let iniStatic = "static"[' ' '\t' '\n']*"{"
 (* TODO COMMENTARIES*)
 (*let commentLine = ['/']{2}[^(['\n' '\r'])]*)
 
@@ -32,6 +56,7 @@ rule nextToken = parse
   | eof {EOF}
   | "package" {PACKAGE}
   | "import" {IMPORT}
+  | iniStatic {INISTATIC}
   | "static" {STATIC}
   | ";" {SEMICOLON}
   | "." {DOT}
@@ -68,6 +93,7 @@ rule nextToken = parse
   | "true" { BOOLEAN(true) }
   | "for" { FOR }
   | "while" { WHILE }
+  | "void" {VOID}
   | identifierName as identifierName { IDENTIFIER identifierName }
 
 {

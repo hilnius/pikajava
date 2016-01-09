@@ -65,7 +65,7 @@ statementNoShortIf:
 | s=forStatementNoShortIf { Statement(s) }
 block:
 | OPENING_BRACKET b=blockStatements CLOSING_BRACKET { Block(b) }
-blockStatements:
+%public blockStatements:
 | b=blockStatement { [b] }
 | b=blockStatement bs=blockStatements { b::bs }
 | 				{ [] }

@@ -122,13 +122,15 @@ and printTree tree = match tree with
 	printObjectType obj; printAnnotations annotations; printModifiers modifiersObject; printIdentifier interfaceName; printParameters params; printParents parent; printCon content
 | EnumTree	({objectType=obj; annots=annotations; modif=modifiersObject;enumName=enumName;inh=parent;con=content}) ->
 	printObjectType obj; printAnnotations annotations; printModifiers modifiersObject; printIdentifier enumName; printParents parent; printCon content
+| ErrorDecl error -> print_string error
+	
 and printClassContentTree tree = match tree with
 | Initializer ({iniType=iniType;con=block}) -> print_string "Initializer : "; printStaticity iniType; printAST block 
 | MethodTree ({parameters=parameterList;  annots=annotations; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=block }) ->
 	printParameters parameterList; printAnnotations annotations; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList;
 	printMethodContent block
-| ObjectTree objectTree -> printTree objectTree 
-| Empty -> print_string "Error in the method declaration"
+| ObjectTree objectTree -> printTree objectTree; 
+| ErrorDecl error -> print_string error
 
 
 

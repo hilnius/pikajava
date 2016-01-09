@@ -17,6 +17,6 @@ annotations:
 annotation:
 |markAnnotation=markerAnnotation {markAnnotation}
 markerAnnotation:
-| AT annotName=IDENTIFIER {annotName}
+|AT annotName=IDENTIFIER {annotName}
 
 %%
