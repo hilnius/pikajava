@@ -35,7 +35,7 @@ let printIdentifier iden = match iden with
 
 
 let rec printExceptions exceptions = match exceptions with 
-Some(a::t) -> print_string "exceptions : " ; printIdentifier a; printExceptions (Some(t));
+Some(a::t) -> print_string "exception : " ; printIdentifier a; printExceptions (Some(t));
 |Some([]) -> print_string "End exceptions\n"
 |None -> print_string("No exception\n")
 
@@ -44,9 +44,17 @@ let printArgument argument = match argument with
 | {argType=argType; argName=argName}->printIdentifier argType; printIdentifier argName
 
 let rec printArguments arguments = match arguments with
-Some(a::t) -> print_string "arguments : " ; printArgument a; printArguments (Some(t));
+Some(a::t) -> print_string "argument : " ; printArgument a; printArguments (Some(t));
 |Some([]) -> print_string "End arguments\n"
 |None -> print_string("No argument\n")
+
+let printAnnotation annotation =  match annotation with 
+| annotName -> print_string (annotName^"\n")
+
+let rec printAnnotations annotations = match annotations with 
+Some(a::t) -> print_string "annotation : " ; printAnnotation a; printAnnotations (Some(t));
+|Some([]) -> print_string "End annotations\n"
+|None -> print_string("No annotation\n")
 
 let printModifier modifier = match modifier with 
 |Visibility vis -> printVisibility vis 
@@ -78,7 +86,7 @@ printParameter parentParameter;print_string "extends:";printParameter parentName
 
 (*function to print the parameters of the class or interface*)
 let rec printParameters params = match params with
-Some(a::t) -> print_string "params : " ; printParameter a; printParameters (Some(t));
+Some(a::t) -> print_string "param : " ; printParameter a; printParameters (Some(t));
 |Some([]) -> print_string "End params\n"
 |None -> print_string("No params\n")
 
@@ -108,16 +116,16 @@ Some(a::t) -> print_string "classContent : " ; printClassContentTree a; printCon
 |Some([]) -> print_string "End classContent\n"
 |None -> print_string("No classContent\n")
 and printTree tree = match tree with
-| ClassTree({objectType=obj;modif=modifiersObject; inh=parent; impl=interfaces; parameters=params; className=identifier; con=content}) ->
-	printObjectType obj; printModifiers modifiersObject; printParameters params; printExtendsParent parent; printParents interfaces; printIdentifier identifier; printCon content
-| InterfaceTree({objectType= obj;modif=modifiersObject;interfaceName=interfaceName;parameters=params;inh=parent;con=content}) ->
-	printObjectType obj; printModifiers modifiersObject; printIdentifier interfaceName; printParameters params; printParents parent; printCon content
-| EnumTree	({objectType=obj;modif=modifiersObject;enumName=enumName;inh=parent;con=content}) ->
-	printObjectType obj; printModifiers modifiersObject; printIdentifier enumName; printParents parent; printCon content
+| ClassTree({objectType=obj; annots=annotations; modif=modifiersObject; inh=parent; impl=interfaces; parameters=params; className=identifier; con=content}) ->
+	printObjectType obj; printAnnotations annotations; printModifiers modifiersObject; printParameters params; printExtendsParent parent; printParents interfaces; printIdentifier identifier; printCon content
+| InterfaceTree({objectType= obj; annots=annotations; modif=modifiersObject;interfaceName=interfaceName;parameters=params;inh=parent;con=content}) ->
+	printObjectType obj; printAnnotations annotations; printModifiers modifiersObject; printIdentifier interfaceName; printParameters params; printParents parent; printCon content
+| EnumTree	({objectType=obj; annots=annotations; modif=modifiersObject;enumName=enumName;inh=parent;con=content}) ->
+	printObjectType obj; printAnnotations annotations; printModifiers modifiersObject; printIdentifier enumName; printParents parent; printCon content
 and printClassContentTree tree = match tree with
 | Initializer ({iniType=iniType;con=block}) -> print_string "Initializer : "; printStaticity iniType; printAST block 
-| MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=block }) ->
-	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList;
+| MethodTree ({parameters=parameterList;  annots=annotations; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=block }) ->
+	printParameters parameterList; printAnnotations annotations; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList;
 	printMethodContent block
 | ObjectTree objectTree -> printTree objectTree 
 | Empty -> print_string "Error in the method declaration"

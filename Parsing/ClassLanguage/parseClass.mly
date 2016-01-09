@@ -7,15 +7,14 @@ open Location
 %type <Types.objectTree>  classDeclaration
 %%
 classDeclaration:
-| modifs=modifiersList CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET con=classContentDeclarations 
+| annot=annotationsList modifs=modifiersList CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET con=classContentDeclarations 
 	CLOSING_BRACKET
-	{ClassTree({objectType=Class;modif=modifs;parameters=params;inh=inh;impl=impl;className=Identifier className;con=con});}
-| modifs=modifiersList INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
-	{InterfaceTree({objectType=Interface;modif=modifs;inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=con});}
-| modifs=modifiersList ENUM enumName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
-	{EnumTree({objectType=Enum;modif=modifs;inh=inh;enumName=Identifier enumName;con=con});}
+	{ClassTree({objectType=Class;annots=annot;modif=modifs;parameters=params;inh=inh;impl=impl;className=Identifier className;con=con});}
+| annot=annotationsList modifs=modifiersList INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
+	{InterfaceTree({objectType=Interface;annots=annot;modif=modifs;inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=con});}
+| annot=annotationsList modifs=modifiersList ENUM enumName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
+	{EnumTree({objectType=Enum;annots=annot;modif=modifs;inh=inh;enumName=Identifier enumName;con=con});}
 | error {print_string "Error : Invalid Declaration\n";print(symbol_loc $startpos $endpos);Empty}
-
 modifiersList:
 | modifsList=modifiers {Some(modifsList)}
 | {None}

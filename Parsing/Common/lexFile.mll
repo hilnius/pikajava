@@ -52,6 +52,7 @@ rule nextToken = parse
   | "interface" {INTERFACE}
   | "class" {CLASS}
   | "enum" {ENUM}
+  | "@" {AT}
   | "<" {OPENING_CHEVRON}
   | ">" {CLOSING_CHEVRON}
   | "?" {WILDCARD}
