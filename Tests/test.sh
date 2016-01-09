@@ -13,6 +13,8 @@ expectedResult=""
 
 syntaxChecker=0
 lineNumber=1
+totalTestNumber=0
+totalFailNumber=0
 
 #Checking arguments
 if [ "$#" -ne 2 ]; then
@@ -49,10 +51,14 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 				printf "SUCCESS!\n"
 			else
 				printf "FAIL!\n"
+				#Increments the number of fails.
+    			((totalFailNumber=totalFailNumber+1))
 			fi
 		else
 			if [ "$parsingResult" -eq "0" ]; then
 				printf "FAIL!\n"
+				#Increments the number of fails.
+    			((totalFailNumber=totalFailNumber+1))
 			else
 				printf "SUCCESS!\n"
 			fi
@@ -69,6 +75,9 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 			printf "ERROR unexpected new test line $lineNumber \n"
 			exit 1
 		fi
+
+		#Increments the number of tests.
+    	((totalTestNumber=totalTestNumber+1))
 
 		#Gets the description of the test.
 		description=${BASH_REMATCH[1]}
@@ -110,3 +119,4 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 done < "$1"
 #Clears temp file.
 rm -f $file
+printf "$totalTestNumber tests : $totalFailNumber failures. Have a good day Sir!\n"
