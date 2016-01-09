@@ -1,6 +1,7 @@
 %{
 open Types
 open Location
+open ExitManagement
 %}
 
 %start  annotationsList

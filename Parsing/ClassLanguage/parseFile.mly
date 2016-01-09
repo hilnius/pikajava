@@ -2,6 +2,7 @@
 open TypesFile
 open Types
 open Location
+open ExitManagement
 %}
 
 %start fileDeclaration
@@ -13,7 +14,7 @@ open Location
 (*TODO HANDLE SEVERAL CLASSES OR NONE*)
 fileDeclaration:
 | pack = package imp = importsListDecl classDecls=classDeclarations EOF {FileTree({pack=pack;imports=imp},classDecls)}
-| error {print_string "Error : Invalid Package Declaration\n";print(symbol_loc $startpos $endpos);Empty}
+| error {print_string "Error : Invalid Package Declaration\n"; print(symbol_loc $startpos $endpos); setExitCodeValue 1; Empty}
 package:
 |PACKAGE pack = packageName SEMICOLON {Some(pack)}
 | {None}

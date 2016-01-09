@@ -1,6 +1,7 @@
 %{
 open Types
 open Location
+open ExitManagement
 %}
 
 
@@ -16,7 +17,7 @@ classDeclaration:
 	{InterfaceTree({objectType=Interface;annots=annot;modif=modifs;inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=con});}
 | annot=annotationsList modifs=modifiersList ENUM enumName=IDENTIFIER  inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
 	{EnumTree({objectType=Enum;annots=annot;modif=modifs;inh=inh;enumName=Identifier enumName;con=con});}
-| error {print_string "Error: unable to parse  "; print_token_full (symbol_loc $startpos $endpos);ErrorDecl ("Error : Invalid Declaration\n")}	
+| error {print_string "Error: unable to parse  "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; ErrorDecl ("Error : Invalid Declaration\n")}	
 
 modifiersList:
 | modifsList=modifiers {Some(modifsList)}

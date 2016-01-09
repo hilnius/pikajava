@@ -1,4 +1,4 @@
-
+open ExitManagement
 (* verbose is a boolean that you can use to switch to a verbose output (for example, to dump all the ast) *)
 let execute lexbuf verbose =
   print_string "Computing AST";
@@ -16,5 +16,6 @@ let execute lexbuf verbose =
   
  (*LexFile.examineAll lexbuf;*)
   
- PrintFiles.printFileTree(Parsers.fileDeclaration LexFile.nextToken lexbuf)
+ PrintFiles.printFileTree(Parsers.fileDeclaration LexFile.nextToken lexbuf);
+ exit !exitCodeValue
   

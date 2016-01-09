@@ -2,6 +2,7 @@
 	open Location
 	open Located
 	open BlocksTypes
+	open ExitManagement
 %}
 
 %start blockDeclaration
@@ -54,7 +55,7 @@ statement:
 | s=ifThenElseStatement { Statement(s) }
 | s=whileStatement { Statement(s) }
 | s=forStatement { Statement(s) }
-| error { print_string "Error: unable to parse statement "; print_token_full (symbol_loc $startpos $endpos); Statement(EmptyStatement)  }
+| error { print_string "Error: unable to parse statement "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue(4); Statement(EmptyStatement)  }
 statementWithoutTrailingSubstatement:
 | b=block { Statement(BlockStatement(b)) }
 statementNoShortIf:
