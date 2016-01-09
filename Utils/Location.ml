@@ -1,4 +1,5 @@
 open Lexing
+open String
 
 type t =
     {
@@ -65,8 +66,9 @@ let print loc =
       print_int (fin.pos_cnum - fin.pos_bol)
     end
 
-let read_token lnum posStart posEnd =
-  let chan = open_in "Parsing/testIf.java" in
+let read_token filename lnum posStart posEnd =
+  let chan = open_in filename in
+  let myStr = (Bytes.create 100) in
   try
     begin
     for i = 2 to lnum do
@@ -74,7 +76,7 @@ let read_token lnum posStart posEnd =
     done;
     let rightLine = input_line chan in
       close_in chan;
-      (*String.sub*) rightLine (* posStart (posEnd - posStart) *)
+      String.sub  rightLine posStart (posEnd - posStart)
     end
   with End_of_file ->
     close_in chan;
@@ -84,5 +86,13 @@ let print_token loc =
   let debut = loc.loc_start
   and fin = loc.loc_end in
   if (debut.pos_lnum = fin.pos_lnum) then
-      print_string (read_token debut.pos_lnum (debut.pos_cnum - debut.pos_bol) (fin.pos_cnum - fin.pos_bol)  );
+      print_string (read_token debut.pos_fname debut.pos_lnum (debut.pos_cnum - debut.pos_bol) (fin.pos_cnum - fin.pos_bol)  );;
 
+let print_token_full loc =
+  begin
+    print_string "\"";
+    print_token loc;
+    print_string "\" in ";
+    print loc;
+    print_newline ();
+  end;;

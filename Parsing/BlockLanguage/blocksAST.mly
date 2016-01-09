@@ -54,7 +54,7 @@ statement:
 | s=ifThenElseStatement { Statement(s) }
 | s=whileStatement { Statement(s) }
 | s=forStatement { Statement(s) }
-| error { print_string "Error: unable to parse statement \""; print_token (symbol_loc $startpos $endpos); print_string "\" at \n"; print (symbol_loc $startpos $endpos); print_newline (); Statement(EmptyStatement)  }
+| error { print_string "Error: unable to parse statement "; print_token_full (symbol_loc $startpos $endpos); Statement(EmptyStatement)  }
 statementWithoutTrailingSubstatement:
 | b=block { Statement(BlockStatement(b)) }
 statementNoShortIf:
