@@ -46,9 +46,9 @@ let end_it qsd =
     print_string (!currentDescribe);
     print_string " ";
     print_string (!currentIt);
-    print_string " - ";
+    print_string " - \027[33m";
     print_int (!assertionsPassed);
-    print_string " passed, ";
+    print_string " passed\027[31m, ";
     print_int (!assertionsFailed);
     print_string " failed";
     print_string "\027[0m\n";
@@ -70,7 +70,7 @@ let expect value comparatorName result =
     | _ -> toBe
   in
   if comparator value result then
-    assertionsPassed := (!assertionsFailed + 1)
+    assertionsPassed := (!assertionsPassed + 1)
   else begin
     assertionsFailed := (!assertionsFailed + 1);
     failures := ((value, result)::(!failures));
