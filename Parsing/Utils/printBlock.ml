@@ -16,10 +16,13 @@ and print_block tabs b =
 
 and print_local_variable_declaration tabs v = match v with
   | Integer(i) -> begin print_tabs tabs; print_int i; print_newline (); end
-    | _ -> print_string "error"
+  | _ -> print_string "error"
 
 and print_expression expression =
-  print_string "expression"
+  match expression with
+  | Bool(true) -> print_string "true"
+  | Bool(false) -> print_string "false"
+  | _ -> print_string "something"
 
 and print_if tabs expression blockIf blockElse =
   begin

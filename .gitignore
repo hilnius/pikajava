@@ -2,4 +2,5 @@
 *~
 _build
 Main.byte
+*.byte
 
