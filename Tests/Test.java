@@ -1,19 +1,29 @@
-package Tests;
 
 // class Yolo is a swaggy class !
-class Yolo implements Interface {
-  public static void main() {
+@override
+class Yolo {
+  @override
+  static void main() {
+    int
+  }
+
+  static {
+    int
+  }
+
+  public static <T, L extends Yolo<? super T>> void main() {
     class SubClass {
-      /* This is
+       /*This is
           a long
           and multiline
           comment
       */
-      public void getInstance(/* yolo */) {
+      public void getInstance() {
         if(true) {
           int
         }
-        assert true;
+        assert true ;
+        assert true : true;
         switch (true) {
           case true:
             return true;

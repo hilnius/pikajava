@@ -62,6 +62,7 @@ type modifier =
 | StrictFpity of strictfp
 | Synchronization of synchronization
 | Nativity of nativity
+| Annotation of annotation
 
 type modifiers = modifier list option
 
@@ -82,7 +83,7 @@ type classListAttribute =
 
 type content= block option
 
-and methodTreeMap = {parameters:parameterList; annots:annotationsList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content }
+and methodTreeMap = {parameters:parameterList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content }
 
 
 and initializerTreeMap = {iniType:staticity;con:block}
@@ -107,9 +108,9 @@ and objectTree =
 | EnumTree of enumTreeMap
 | ErrorDecl of string
 
-and interfaceTreeMap = {objectType:objType; annots:annotationsList; modif:modifiers; inh:parent list option; interfaceName:identifier; parameters:parameterList; con:contentClass}
-and classTreeMap = {objectType:objType; annots:annotationsList; modif:modifiers; parameters:parameterList; inh:parent option; impl:parent list option; className:identifier; con:contentClass}
-and enumTreeMap = {objectType:objType; annots:annotationsList; modif:modifiers; inh:parent list option; enumName:identifier; con:contentClass}
+and interfaceTreeMap = {objectType:objType; modif:modifiers; inh:parent list option; interfaceName:identifier; parameters:parameterList; con:contentClass}
+and classTreeMap = {objectType:objType; modif:modifiers; parameters:parameterList; inh:parent option; impl:parent list option; className:identifier; con:contentClass}
+and enumTreeMap = {objectType:objType; modif:modifiers; inh:parent list option; enumName:identifier; con:contentClass}
 and contentClass  = classContentTree list option
 
 

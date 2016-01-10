@@ -158,7 +158,7 @@ statementNoShortIf:
 block:
 | OPENING_BRACKET b=blockStatements CLOSING_BRACKET { Block(b) }
 %public blockStatements:
-| b=blockStatement { [b] }
+| b=blockStatement                        { [b] }
 | bs=blockStatements b=blockStatement     { bs @ [b] }
 blockStatement:
 | lvds=localVariableDeclarationStatement  { lvds }

@@ -48,7 +48,6 @@ let printLexeme = function
 let identifierName = ['a'-'z' 'A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']*
 let space = [' ' '\t']
 let newLine = ['\n']
-let iniStatic = "static"[' ' '\t' '\n']*"{"
 (* TODO COMMENTARIES*)
 (*let commentLine = ['/']{2}[^(['\n' '\r'])]*)
 
@@ -58,7 +57,6 @@ rule nextToken = parse
   | "/*"          { longComment lexbuf }
   | "package"     { PACKAGE }
   | "import"      { IMPORT }
-  | iniStatic     { INISTATIC }
   | "static"      { STATIC }
   | ";"           { SEMICOLON }
   | ":"           { COLON }
