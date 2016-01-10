@@ -16,5 +16,6 @@
 %token <int> INTEGER
 %token <bool> BOOLEAN
 %token VOID
+%token<string> STRING
 
 %%

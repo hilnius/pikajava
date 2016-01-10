@@ -4,14 +4,20 @@ open Location
 open ExitManagement
 %}
 
-%start  methodDeclaration
-%type <Types.classContentTree>  methodDeclaration
+%start  someMethodDeclaration
+%type <Types.classContentTree>  someMethodDeclaration
 %%
 
-methodDeclaration :
+
+someMethodDeclaration:
+|abstractMethodDecl=abstractMethodDeclaration {abstractMethodDecl}
+|methodDecl=methodDeclaration {methodDecl}
+%public methodDeclaration :
 | modifs=modifiersMethodList params=parametersDeclaration return=returnType methodName=IDENTIFIER OPENING_PARENTHESIS arguments = arguments CLOSING_PARENTHESIS exceptions=exceptionDecl block=blockOrAbstract
 	{MethodTree({parameters=params; modif=modifs; returnType= return; name= Identifier methodName; args=arguments; thr=exceptions; con=block});}
-
+%public abstractMethodDeclaration:
+| modifs=modifiersMethodList params=parametersDeclaration return=returnType methodName=IDENTIFIER OPENING_PARENTHESIS arguments = arguments CLOSING_PARENTHESIS exceptions=exceptionDecl SEMICOLON
+	{MethodTree({parameters=params; modif=modifs; returnType= return; name= Identifier methodName; args=arguments; thr=exceptions; con=None});}
 modifiersMethodList:
 | modifsMethod = modifiersMethod {Some(modifsMethod)}
 | {None}
@@ -51,6 +57,5 @@ except:
 | exceptType=IDENTIFIER {Identifier exceptType}
 blockOrAbstract:
 |blockDecl = blockDeclaration {Some(blockDecl)}
-|SEMICOLON {None}
 
 %%

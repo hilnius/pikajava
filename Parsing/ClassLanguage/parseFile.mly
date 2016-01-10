@@ -13,7 +13,7 @@ open ExitManagement
 
 (*TODO HANDLE SEVERAL CLASSES OR NONE*)
 fileDeclaration:
-| pack = package imp = importsListDecl classDecls=classDeclarations EOF {FileTree({pack=pack;imports=imp},classDecls)}
+| pack = package imp = importsListDecl classDecls=classDeclarationList? EOF {FileTree({pack=pack;imports=imp},classDecls)}
 | error {print_string "Error : Invalid Package Declaration\n"; print(symbol_loc $startpos $endpos); setExitCodeValue 1; Empty}
 package:
 |PACKAGE pack = packageName SEMICOLON {Some(pack)}
@@ -36,12 +36,9 @@ importNext:
 |DOT importName = IDENTIFIER childName=importNext {"."^importName^childName}
 |DOT STAR {".*"}
 | {""}
-classDeclarations:
-|classDecls=classDeclarationList {Some classDecls} 
-| {None}
 classDeclarationList:
-|classDecl=classDeclaration classDecls=classDeclarationList {classDecl::classDecls}
-|classDecl=classDeclaration {[classDecl]} 
+|classDecl=objectDeclaration classDecls=classDeclarationList {classDecl::classDecls}
+|classDecl=objectDeclaration {[classDecl]} 
 %%	
 
 

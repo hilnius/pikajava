@@ -21,6 +21,7 @@ class Yolo {
 
   static {
     int
+    "hello"
   }
 
   public @override static <T, L extends Yolo<? super T>> void main() {
