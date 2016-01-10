@@ -2,6 +2,18 @@
 // class Yolo is a swaggy class !
 @override
 class Yolo {
+
+  enum Coucou {
+    LUNDI , Mardi;
+    public void dsqqsd () {
+    }
+  }
+
+}
+
+// class Yolo is a swaggy class !
+@override
+class Yolo {
   @override
   static void main() {
     int
@@ -11,13 +23,8 @@ class Yolo {
     int
   }
 
-  public static <T, L extends Yolo<? super T>> void main() {
+  public @override static <T, L extends Yolo<? super T>> void main() {
     class SubClass {
-       /*This is
-          a long
-          and multiline
-          comment
-      */
       public void getInstance() {
         if(true) {
           int
@@ -69,3 +76,4 @@ class Yolo {
     }
   }
 }
+

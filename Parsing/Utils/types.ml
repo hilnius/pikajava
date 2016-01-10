@@ -108,11 +108,12 @@ and objectTree =
 | EnumTree of enumTreeMap
 | ErrorDecl of string
 
-and interfaceTreeMap = {objectType:objType; modif:modifiers; inh:parent list option; interfaceName:identifier; parameters:parameterList; con:contentClass}
-and classTreeMap = {objectType:objType; modif:modifiers; parameters:parameterList; inh:parent option; impl:parent list option; className:identifier; con:contentClass}
-and enumTreeMap = {objectType:objType; modif:modifiers; inh:parent list option; enumName:identifier; con:contentClass}
+and interfaceTreeMap = {objectType: objType; modif: modifiers; inh:parent list option; interfaceName: identifier; parameters: parameterList; con: contentClass}
+and classTreeMap = {objectType: objType; modif: modifiers; parameters: parameterList; inh:parent option; impl: parent list option; className: identifier; con: contentClass}
+and enumTreeMap = {objectType: objType; modif: modifiers; inh:parent list option; enumName: identifier; con: enumContent}
 and contentClass  = classContentTree list option
-
+and enumContent = { enumConstants: enumConstant list option; con: contentClass }
+and enumConstant = { annotations : annotation list option; identifier: identifier; arguments: arguments; classBody: contentClass }
 
 and block = Block of blockStatement list
 and blockStatement =

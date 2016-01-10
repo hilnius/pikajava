@@ -106,15 +106,29 @@ and printCon content = match content with
 Some(a::t) -> print_string "classContent : " ; printClassContentTree a; printCon (Some(t));
 |Some([]) -> print_string "End classContent\n"
 |None -> print_string("No classContent\n")
+and printEnum enum = match enum with
+| { enumConstants=a; con=b } -> printEnumConstants a; printCon b;
+and printEnumConstants constants = match constants with
+| None -> ()
+| Some([]) -> ()
+| Some({ annotations=an; identifier=id; arguments=ar; classBody=cb }::q) -> printEnumConstant an id ar cb; printEnumConstants (Some(q));
+and printEnumConstant an id ar cb =
+  printAnnotations an;
+  printIdentifier id;
+  printArguments ar;
+  printCon cb;
+and printAnnotations ans = match ans with
+| None -> ()
+| Some([]) -> ()
+| Some(t::q) -> print_string ("@" ^ t ^ "\n"); printAnnotations (Some(q));
 and printTree tree = match tree with
 | ClassTree({objectType=obj; modif=modifiersObject; inh=parent; impl=interfaces; parameters=params; className=identifier; con=content}) ->
 	printObjectType obj; printModifiers modifiersObject; printParameters params; printExtendsParent parent; printParents interfaces; printIdentifier identifier; printCon content
 | InterfaceTree({objectType= obj; modif=modifiersObject;interfaceName=interfaceName;parameters=params;inh=parent;con=content}) ->
 	printObjectType obj; printModifiers modifiersObject; printIdentifier interfaceName; printParameters params; printParents parent; printCon content
 | EnumTree	({objectType=obj; modif=modifiersObject;enumName=enumName;inh=parent;con=content}) ->
-	printObjectType obj; printModifiers modifiersObject; printIdentifier enumName; printParents parent; printCon content
+	printObjectType obj; printModifiers modifiersObject; printIdentifier enumName; printParents parent; printEnum content
 | ErrorDecl error -> print_string error
-
 and printClassContentTree tree = match tree with
 | Initializer ({iniType=iniType;con=block}) -> print_string "Initializer : "; printStaticity iniType; printAST block
 | MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=block }) ->
