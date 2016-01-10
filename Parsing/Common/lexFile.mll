@@ -35,10 +35,10 @@ let printLexeme = function
   	| CLOSING_BRACKET -> print_string "CLOSING_BRACKET"
   	| OPENING_PARENTHESIS -> print_string "OPENING_PARENTHESIS"
   	| CLOSING_PARENTHESIS -> print_string "CLOSING_PARENTHESIS"
-  	| IF -> print_string "IF" 
-  	| ELSE -> print_string "ELSE" 
-  	| INTEGER(3) -> print_string "INTEGER(3)" 
-  	| BOOLEAN(true) -> print_string "BOOLEAN(true)" 
+  	| IF -> print_string "IF"
+  	| ELSE -> print_string "ELSE"
+  	| INTEGER(3) -> print_string "INTEGER(3)"
+  	| BOOLEAN(true) -> print_string "BOOLEAN(true)"
   	| FOR -> print_string "FOR"
   	| WHILE -> print_string "WHILE"
   	| VOID -> print_string "VOID"
@@ -54,6 +54,8 @@ let iniStatic = "static"[' ' '\t' '\n']*"{"
 
 rule nextToken = parse
   | eof {EOF}
+  | "//" { commentLine lexbuf }
+  | "/*" { longComment lexbuf }
   | "package" {PACKAGE}
   | "import" {IMPORT}
   | iniStatic {INISTATIC}
@@ -95,7 +97,12 @@ rule nextToken = parse
   | "while" { WHILE }
   | "void" {VOID}
   | identifierName as identifierName { IDENTIFIER identifierName }
-
+and commentLine = parse
+  | newLine   { nextToken lexbuf }
+  | _         { commentLine lexbuf }
+and longComment = parse
+  | "*/"      { nextToken lexbuf }
+  | _         { longComment lexbuf }
 {
 let rec examineAll lexbuf =
     let res = nextToken lexbuf in
