@@ -1,10 +1,10 @@
-open TypesFile
+open Types
 
 let printStaticness staticness = match staticness with
 |Static -> print_string "static"
-|NonStatic -> print_string "NonStatic" 
+|NonStatic -> print_string "NonStatic"
 
-let printImport import = match import with 
+let printImport import = match import with
 |Import(staticness,importName)->printStaticness staticness; print_string (" "^importName^"\n")
 
 let rec printImports imports = match imports with
@@ -24,3 +24,4 @@ let rec printTrees trees = match trees with
 let printFileTree tree = match tree with
 | FileTree({pack=pack; imports=imports;}, objectTrees) ->
 	printPackage pack; printImports imports; printTrees objectTrees;
+

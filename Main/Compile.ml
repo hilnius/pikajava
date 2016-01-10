@@ -13,9 +13,10 @@ let execute lexbuf verbose =
     print_newline ();
   end *)
   (*PrintTypes.printTree (ParseClass.classDeclaration LexClass.nextToken lexbuf)*)
-  
+
  (*LexFile.examineAll lexbuf;*)
-  
+
+ (* Parsers.fileDeclaration LexFile.nextToken lexbuf; *)
  PrintFiles.printFileTree(Parsers.fileDeclaration LexFile.nextToken lexbuf);
  exit !exitCodeValue
-  
+

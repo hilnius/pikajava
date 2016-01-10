@@ -13,11 +13,11 @@ someMethodDeclaration:
 |abstractMethodDecl=abstractMethodDeclaration {abstractMethodDecl}
 |methodDecl=methodDeclaration {methodDecl}
 %public methodDeclaration :
-| modifs=modifiersMethodList params=parametersDeclaration return=returnType methodName=IDENTIFIER OPENING_PARENTHESIS arguments = arguments CLOSING_PARENTHESIS exceptions=exceptionDecl block=blockOrAbstract
-	{MethodTree({parameters=params; modif=modifs; returnType= return; name= Identifier methodName; args=arguments; thr=exceptions; con=block});}
+| modifs=modifiersMethodList params=parametersDeclaration return=returnType methodName=identifier arguments=arguments exceptions=exceptionDecl block=blockOrAbstract
+	{MethodTree({parameters=params; modif=modifs; returnType= return; name= methodName; args=arguments; thr=exceptions; con=block});}
 %public abstractMethodDeclaration:
-| modifs=modifiersMethodList params=parametersDeclaration return=returnType methodName=IDENTIFIER OPENING_PARENTHESIS arguments = arguments CLOSING_PARENTHESIS exceptions=exceptionDecl SEMICOLON
-	{MethodTree({parameters=params; modif=modifs; returnType= return; name= Identifier methodName; args=arguments; thr=exceptions; con=None});}
+| modifs=modifiersMethodList params=parametersDeclaration return=returnType methodName=identifier arguments=arguments exceptions=exceptionDecl SEMICOLON
+	{MethodTree({parameters=params; modif=modifs; returnType= return; name= methodName; args=arguments; thr=exceptions; con=None});}
 modifiersMethodList:
 | modifsMethod = modifiersMethod {Some(modifsMethod)}
 | {None}
@@ -37,15 +37,7 @@ synchronization:
 
 returnType:
 | VOID {Identifier "void"}
-| ret=IDENTIFIER {Identifier ret}
-arguments:
-| argList = argumentsList {Some(argList)}
-| {None}
-argumentsList:
-| arg=argument COMMA argList=argumentsList {arg::argList}
-| arg=argument {[arg]}
-argument:
-| argType=IDENTIFIER argName=IDENTIFIER {{argType=Identifier argType; argName=Identifier argName}}
+| ret=identifier { ret}
 
 exceptionDecl:
 | THROWS exceptions=exceptionsList {Some(exceptions)}
@@ -54,7 +46,7 @@ exceptionsList:
 | exc=except COMMA excList=exceptionsList {(exc)::excList}
 | exc=except {[exc]}
 except:
-| exceptType=IDENTIFIER {Identifier exceptType}
+| exceptType=identifier { exceptType}
 blockOrAbstract:
 |blockDecl = blockDeclaration {Some(blockDecl)}
 

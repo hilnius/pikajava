@@ -25,10 +25,9 @@ whileStatementNoShortIf:
 | WHILE OPENING_PARENTHESIS expr=expression CLOSING_PARENTHESIS s=statementNoShortIf { WhileStatement(expr, Block([Statement(s)])) }
 
 (* for statements *)
-forStatement:
+(*forStatement:
 | s=basicForStatement                     { s }
-
-(*| s=enhancedForStatement { s }*)
+| s=enhancedForStatement                  { s }
 basicForStatement:
 | FOR OPENING_PARENTHESIS fi=forInit SEMICOLON expr=expression SEMICOLON update=expression CLOSING_PARENTHESIS s=statement { ForStatement(fi, expr, update, Block([Statement(s)])) }
 forStatementNoShortIf:
@@ -38,15 +37,15 @@ forInitOpt:
 |           		                          { EmptyStatement }
 expressionOpt:
 | f=expression 	                          { f }
-|              	                          { Bool(true) }
+|              	                          { BooleanLiteral(true) }
 forUpdateOpt:
 | f=forUpdate 	                          { f }
-|             	                          { Bool(true) }
+|             	                          { BooleanLiteral(true) }
 forInit:
 | s=statementExpressionList               { BlockStatement(Block(s)) }
 | s=localVariableDeclarationStatement     { BlockStatement(Block([s])) } (* be careful, should be a localVariableDeclaration *)
 forUpdate:
-| s=statementExpressionList               { Bool(true) }
+| s=statementExpressionList               { BooleanLiteral(true) }*)
 statementExpressionList:
 | s=statementExpression                   { [s] }
 | s=statementExpression COMMA sel=statementExpressionList { s::sel }
@@ -55,7 +54,7 @@ statementExpressionList:
 switchStatement:
 | SWITCH OPENING_PARENTHESIS e=expression CLOSING_PARENTHESIS bl=switchBlock { SwitchStatement(e, bl) }
 switchBlock:
-| OPENING_BRACKET gr=switchBlockStatementGroups? labels=switchLabels? CLOSING_BRACKET {
+| OPENING_BRACE gr=switchBlockStatementGroups? labels=switchLabels? CLOSING_BRACE {
     match gr,labels with
     | Some(l1), Some(l2) -> l1 @ l2
     | Some(l1), None -> l1
@@ -83,7 +82,7 @@ switchLabel:
 | CASE e=enumConstantName COLON           { Case(e, []) }
 | DEFAULT COLON                           { Default([]) }
 enumConstantName:
-| i=identifier                            { i }
+| i=expression                            { i }
 
 (* try statement *)
 tryStatement:
@@ -106,7 +105,7 @@ formalParameter:
 | vdi=variableDeclaratorId                { vdi }
 (* real here : | variableModifiers type variableDeclaratorId *)
 variableDeclaratorId:
-| i=identifier                            { i }
+| i=expression                            { i }
 (*| variableDeclaratorId [ ] *)
 
 (* small statements *)
@@ -135,7 +134,7 @@ statement:
 | s=ifThenStatement                       { s }
 | s=ifThenElseStatement                   { s }
 | s=whileStatement                        { s }
-| s=forStatement                          { s }
+(*| s=forStatement                          { s }*)
 statementWithoutTrailingSubstatement:
 | b=block                                 { BlockStatement(b) }
 | s=emptyStatement                        { s }
@@ -154,10 +153,10 @@ statementNoShortIf:
 | s=labeledStatementNoShortIf             { s }
 | s=ifThenElseStatementNoShortIf          { s }
 | s=whileStatementNoShortIf               { s }
-| s=forStatementNoShortIf                 { s }
+(*| s=forStatementNoShortIf                 { s }*)
 block:
-| OPENING_BRACKET b=blockStatements CLOSING_BRACKET { Block(b) }
-| OPENING_BRACKET CLOSING_BRACKET { Block([]) }
+| OPENING_BRACE b=blockStatements CLOSING_BRACE { Block(b) }
+| OPENING_BRACE CLOSING_BRACE { Block([]) }
 %public blockStatements:
 | b=blockStatement                        { [b] }
 | bs=blockStatements b=blockStatement     { bs @ [b] }
@@ -167,19 +166,15 @@ blockStatement:
 | s=statement                             { Statement(s) }
 
 (* expressions *)
-expression:
-| b=BOOLEAN                               { Bool(b) }
 localVariableDeclarationStatement:
-| i=INTEGER                               { LocalVariableDeclaration(Integer(90)) }
+| i=INTEGER                               { LocalVariableDeclaration(IntegerLiteral(90)) }
 (* empty parsers *)
 labeledStatement:
-| i=INTEGER                               { BlockStatement(Block([LocalVariableDeclaration(Integer(91))])) }
+| i=INTEGER                               { BlockStatement(Block([LocalVariableDeclaration(IntegerLiteral(91))])) }
 labeledStatementNoShortIf:
-| i=INTEGER                               { BlockStatement(Block([LocalVariableDeclaration(Integer(92))])) }
+| i=INTEGER                               { BlockStatement(Block([LocalVariableDeclaration(IntegerLiteral(92))])) }
 statementExpression:
-| i=INTEGER                               { LocalVariableDeclaration(Integer(93)) }
-identifier:
-| b=BOOLEAN                               { Bool(b) }
+| i=INTEGER                               { LocalVariableDeclaration(IntegerLiteral(93)) }
 constantExpression:
-| b=BOOLEAN                               { Bool(b) }
+| b=expression                            { b }
 %%

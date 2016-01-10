@@ -31,7 +31,6 @@ let printIdentifier iden = match iden with
 
 (*function to print the class parent name*)
 
-
 let rec printExceptions exceptions = match exceptions with
 Some(a::t) -> print_string "exception : " ; printIdentifier a; printExceptions (Some(t));
 |Some([]) -> print_string "End exceptions\n"
@@ -39,12 +38,13 @@ Some(a::t) -> print_string "exception : " ; printIdentifier a; printExceptions (
 
 
 let printArgument argument = match argument with
-| {argType=argType; argName=argName}->printIdentifier argType; printIdentifier argName
+| _ -> () (* todo *)
 
 let rec printArguments arguments = match arguments with
-Some(a::t) -> print_string "argument : " ; printArgument a; printArguments (Some(t));
-|Some([]) -> print_string "End arguments\n"
-|None -> print_string("No argument\n")
+  Some(Arguments(a::t)) -> print_string "argument : " ; printArgument a; printArguments (Some(Arguments(t)));
+| Some(Arguments([])) -> print_string "End arguments\n"
+| Some(NoneArguments) -> print_string "No arguments\n"
+| None -> print_string "No arguments\n"
 
 let printModifier modifier = match modifier with
 |Visibility vis -> printVisibility vis
@@ -82,10 +82,10 @@ Some(a::t) -> print_string "param : " ; printParameter a; printParameters (Some(
 |None -> print_string("No params\n")
 
 let printExtendsParent parent = match parent with
-|Some(Parent({name=parentName;parameters=parameters})) -> print_string ("class parent:"^parentName^"\n"); printParameters parameters
+|Some(Parent({name=Identifier(parentName);parameters=parameters})) -> print_string ("class parent:"^parentName^"\n"); printParameters parameters
 |None -> print_string("No parents\n")
 let printImplementsParent parent= match parent with
-|Parent({name=parentName;parameters=parameters}) -> print_string ("interface parent:"^parentName^"\n"); printParameters parameters
+|Parent({name=Identifier(parentName);parameters=parameters}) -> print_string ("interface parent:"^parentName^"\n"); printParameters parameters
 
 let rec printParents parents = match parents with
 Some(a::t) -> print_string "parent : " ; printImplementsParent a; printParents (Some(t));
@@ -121,6 +121,7 @@ and printAnnotations ans = match ans with
 | None -> ()
 | Some([]) -> ()
 | Some(t::q) -> print_string ("@" ^ t ^ "\n"); printAnnotations (Some(q));
+
 and printTree tree = match tree with
 | ClassTree({objectType=obj; modif=modifiersObject; inh=parent; impl=interfaces; parameters=params; className=identifier; con=content}) ->
 	printObjectType obj; printModifiers modifiersObject; printParameters params; printExtendsParent parent; printParents interfaces; printIdentifier identifier; printCon content
@@ -132,7 +133,7 @@ and printTree tree = match tree with
 and printClassContentTree tree = match tree with
 | Initializer ({iniType=iniType;con=block}) -> print_string "Initializer : "; printStaticity iniType; printAST block
 | MethodTree ({parameters=parameterList; modif=modifiersMethod; returnType=returnType; name=methodName; args=arguments; thr=exceptionList; con=block }) ->
-	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments arguments; printExceptions exceptionList;
+	printParameters parameterList; printModifiers modifiersMethod; printIdentifier returnType; printIdentifier methodName; printArguments (Some arguments); printExceptions exceptionList;
 	printMethodContent block
 | ObjectTree objectTree -> printTree objectTree;
 | ErrorDecl error -> print_string error
@@ -152,13 +153,11 @@ and print_block tabs b =
     | _ -> print_string "error"
 
 and print_local_variable_declaration tabs v = match v with
-  | Integer(i) -> begin print_tabs tabs; print_int i; print_newline (); end
+  | IntegerLiteral(i) -> begin print_tabs tabs; print_int i; print_newline (); end
   | _ -> print_string "error"
 
 and print_expression expression =
-  match expression with
-  | Bool(true) -> print_string "true"
-  | Bool(false) -> print_string "false"
+  match expression with (* todo *)
   | _ -> print_string "something"
 
 and print_optional_expression prefix e =
@@ -167,6 +166,14 @@ and print_optional_expression prefix e =
   | Some(v2) -> begin
       print_string prefix;
       print_expression v2;
+    end
+
+and print_optional_identifier prefix i =
+  match i with
+  | None -> ()
+  | Some(v2) -> begin
+      print_string prefix;
+      print_string "YOLO IDENTIFIER";
     end
 
 and print_if tabs expression blockIf blockElse =
@@ -328,7 +335,7 @@ and print_break tabs expression =
   begin
   print_tabs tabs;
   print_string "break";
-  print_optional_expression " " expression;
+  print_optional_identifier " " expression;
   print_string ";\n";
   end
 
@@ -336,7 +343,7 @@ and print_continue tabs expression =
   begin
   print_tabs tabs;
   print_string "continue";
-  print_optional_expression " " expression;
+  print_optional_identifier " " expression;
   print_string ";\n";
   end
 
@@ -373,14 +380,14 @@ and print_statement tabs statement = match statement with
   | EmptyStatement -> ()
 
 and print_block_statement tabs st = match st with
-  | LocalVariableDeclaration(lvd) -> print_local_variable_declaration tabs lvd
+  (*| LocalVariableDeclaration(lvd) -> print_local_variable_declaration tabs lvd*)
   | ClassDeclarationStatement(cl) -> printTree cl
   | Statement(st) -> print_statement tabs st
   | _ -> ()
 
 and printAST t =
-  print_block 0 t
+  ()
+  (* print_block 0 t *)
 ;;
-
 
 

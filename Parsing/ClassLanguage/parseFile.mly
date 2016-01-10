@@ -1,12 +1,11 @@
 %{
-open TypesFile
 open Types
 open Location
 open ExitManagement
 %}
 
 %start fileDeclaration
-%type <TypesFile.fileTree> fileDeclaration
+%type <Types.fileTree> fileDeclaration
 %%
 
 (*TODO EOF?????*)
@@ -34,11 +33,11 @@ import:
 |importName = IDENTIFIER childName=importNext SEMICOLON {importName^childName}
 importNext:
 |DOT importName = IDENTIFIER childName=importNext {"."^importName^childName}
-|DOT STAR {".*"}
+|DOT ASTERISK {".*"}
 | {""}
 classDeclarationList:
 |classDecl=objectDeclaration classDecls=classDeclarationList {classDecl::classDecls}
-|classDecl=objectDeclaration {[classDecl]} 
-%%	
+|classDecl=objectDeclaration {[classDecl]}
+%%
 
 

@@ -1,18 +1,17 @@
 
 // class Yolo is a swaggy class !
-@override
 class Yolo {
 
-  enum Coucou {
-    LUNDI , Mardi;
-    public void dsqqsd () {
+  public void dsqqsd() {
+    if (1 == 2) {
+      return 12 + 1931 >> 3;
     }
   }
 
 }
 
 // class Yolo is a swaggy class !
-@override
+/*@override
 class Yolo {
   @override
   static void main() {
@@ -78,3 +77,4 @@ class Yolo {
   }
 }
 
+*/

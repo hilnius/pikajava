@@ -1,60 +1,72 @@
-type visibility =
-	| Public
+
+type package = string option
+
+and import = Import of (staticity * string)
+and importsList = import list option
+
+
+and fileTreeMap = { pack: package; imports : importsList }
+
+and fileTree =
+  | FileTree of (fileTreeMap * (objectTree list option))
+  | Empty
+
+and visibility =
+  | Public
   | Protected
   | Private
   | Private_Package
 
-type abstraction =
-	| Abstract
-	| Concrete
 
-type finality =
-	| Final
-	| Extendable
+and abstraction =
+  | Abstract
+  | Concrete
 
-type staticity =
-	| Static
-	| NonStatic
+and finality =
+  | Final
+  | Extendable
 
-type volatility =
-	| Volatile
-	| NonVolatile
+and staticity =
+  | Static
+  | NonStatic
 
-type synchronization =
-	| Synchronized
-	| NonSynchronized
+and volatility =
+  | Volatile
+  | NonVolatile
 
-type nativity =
-	| Native
-	| NonNative
+and synchronization =
+  | Synchronized
+  | NonSynchronized
 
-type strictfp=
-	| StrictFp
-	| NonStrictFp
+and nativity =
+  | Native
+  | NonNative
 
-type objType =
-	| Class
-	| Interface
-	| Enum
+and strictfp=
+  | StrictFp
+  | NonStrictFp
 
-type child = string option
+and objType =
+  | Class
+  | Interface
+  | Enum
 
-type identifier = Identifier of string
+and child = string option
 
-type annotation = string
+and annotation = string
 
-type annotationsList = annotation list option
+and annotationsList = annotation list option
 
 
-type parameter = {name:identifier; param: parameter option ;extends:parameter option; super:parameter option}
+and parameter = {name:identifier; param: parameter option ;extends:parameter option; super:parameter option}
 
-type parameterList = parameter list option
+and parameterList = parameter list option
 
-type parentMap = {name:string;parameters:parameterList}
+and parentMap = {name:identifier;parameters:parameterList}
 
-type parent=Parent of parentMap
+and parent=Parent of parentMap
 
-type modifier =
+and modifier =
 | Visibility of visibility
 | Finality of finality
 | Abstraction of abstraction
@@ -64,24 +76,20 @@ type modifier =
 | Nativity of nativity
 | Annotation of annotation
 
-type modifiers = modifier list option
+and modifiers = modifier list option
 
-type argument = {argType: identifier; argName: identifier}
+and exceptionList = identifier list option
 
-type arguments = argument list option
+(*TODO and classAttribute to be implemented*)
+and classAttribute = Empty
 
-type exceptionList = identifier list option
+and classListAttribute =
+  | ClassAttribute of classAttribute
+  | Empty
 
-(*TODO type classAttribute to be implemented*)
-type classAttribute = Empty
+(*TODO types classMethod to be implemented*)
 
-type classListAttribute =
-	| ClassAttribute of classAttribute
-	| Empty
-
-(*TODO type classMethod to be implemented*)
-
-type content= block option
+and content= block option
 
 and methodTreeMap = {parameters:parameterList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content }
 
@@ -90,8 +98,7 @@ and initializerTreeMap = {iniType:staticity;con:block}
 
 (* types for blocks *)
 
-and variableDeclaration = Integer of int
-and expression = Bool of bool
+and variableDeclaration = IntegerLiteral of int
 and classDeclaration = Class
 
 (* end of blocks types *)
@@ -113,7 +120,7 @@ and classTreeMap = {objectType: objType; modif: modifiers; parameters: parameter
 and enumTreeMap = {objectType: objType; modif: modifiers; inh:parent list option; enumName: identifier; con: enumContent}
 and contentClass  = classContentTree list option
 and enumContent = { enumConstants: enumConstant list option; con: contentClass }
-and enumConstant = { annotations : annotation list option; identifier: identifier; arguments: arguments; classBody: contentClass }
+and enumConstant = { annotations : annotation list option; identifier: identifier; arguments: arguments option; classBody: contentClass }
 
 
 and block = Block of blockStatement list
@@ -130,8 +137,8 @@ and statement =
   | AssertStatement of (expression * expression option)
   | SwitchStatement of (expression * switchCase list)
   | DoWhileStatement of (expression * statement)
-  | BreakStatement of expression option
-  | ContinueStatement of expression option
+  | BreakStatement of identifier option
+  | ContinueStatement of identifier option
   | ReturnStatement of expression option
   | ThrowStatement of expression
   | SynchronizedStatement of (expression * block)
@@ -141,15 +148,376 @@ and switchCase =
   | Case of (expression * blockStatement list)
   | Default of (blockStatement list)
 and catch =
-	| CatchClause of (expression * block)
+  | CatchClause of (expression * block)
 
 
+and assignmentOperator =
+    NoneAssignmentOperator
+  | Equal
+  | EqualMore
+  | EqualMinus
+  | EqualMultiply
+  | EqualDivide
+  | EqualAnd
+  | EqualOr
+  | EqualXor
+  | EqualModulo
+  | EqualLeft
+  | EqualRight
+  | EqualShiftRightUnsigned
 
+and prefixOp =
+    NonePrefix
+  | PrefixMoreMore
+  | PrefixLessLess
+  | PrefixMore
+  | PrefixLess
+  | PrefixNot
+  | PrefixTild
 
+and postfixOp =
+    NonePostfix
+  | PostfixMoreMore
+  | PostfixLessLess
 
+and infixOp =
+    NoneInfix
+  | InfixOr
+  | InfixAnd
+  | InfixBitOr
+  | InfixBitXor
+  | InfixBitAnd
+  | InfixEqual
+  | InfixDifferent
+  | InfixLessThan
+  | InfixGreaterThan
+  | InfixLessEqual
+  | InfixGreaterEqual
+  | InfixShiftLeft
+  | InfixShiftRight
+  | InfixShiftRightUnsigned
+  | InfixMore
+  | InfixLess
+  | InfixASTERISK
+  | InfixDivide
+  | InfixModulo
 
+and typed =
+    NoneType
+  | TypeReference of referenceType
+  | TypePrimitive of primitiveType
 
+and referenceType =
+    ReferenceTypeClassOrInterface of classOrInterfaceType
+  | ReferenceTypeVariable of typeVariable
+  | ReferenceTypeArray of arrayType
 
+and classOrInterfaceType =
+    ClassType of (typeDeclSpecifier * typeArguments)
+  | InterfaceType of (typeDeclSpecifier * typeArguments)
+
+and typeDeclSpecifier =
+    TypeDeclSpecifierName of typeName
+  | TypeDeclSpecifierIdentifier of (classOrInterfaceType * identifier)
+
+and typeVariable =
+    TypeVariable of identifier
+
+and arrayType =
+    ArrayType of typed
+
+and typeArguments =
+    NoneTypeArguments
+  | TypeArguments of (actualTypeArgument list)
+
+and actualTypeArgument =
+    ActualTypeArgumentReferenceType of referenceType
+  | ActualTypeArgumentWildcard of wildcard
+
+and wildcard =
+    Wildcard
+  | WildcardExtends of referenceType
+  | WildcardSuper of referenceType
+
+and typeArgumentKind =
+    NoneTypeArgument
+  | TypeArgumentExtends
+  | TypeArgumentSuper
+
+and typeArgument =
+    TypeArgumentType of (typed)
+  | TypeArgumentGeneric of (typed * typeArgumentKind)
+
+and primitiveType =
+    Byte
+  | Short
+  | Char
+  | Integer
+  | Long
+  | Float
+  | Double
+  | Boolean
+
+and identifierArgs =
+    IdentifierArgs of (identifier * (typeArgument list))
+
+and identifierTypeArgs =
+    IdentifierTypeArgs of (identifier * (typed list))
+
+and variableDeclarators =
+    VariableId of string
+
+and literal =
+    IntegerLiteral of int
+  | FloatingPointLiteral of float
+  | BooleanLiteral of bool
+
+and primary =
+    PrimaryNoNewArray of primaryNoNewArray
+  | PrimaryArrayCreation of arrayCreationExpression
+
+and primaryNoNewArray =
+    PrimaryLiteral of literal
+  | PrimaryType of typed
+  | PrimaryVoidClass
+  | PrimaryThis
+  | PrimaryClassThis of className
+  | PrimaryExpression of expression
+  | PrimaryClassInstanceCreation of classInstanceCreationExpression
+  | PrimaryFieldAccess of fieldAccess
+  | PrimaryMethodInvocation of methodInvocation
+  | PrimaryArrayAccess of arrayAccess
+
+and arrayCreationExpression =
+    ArrayCreationExpression
+
+and classInstanceCreationExpression =
+    ClassInstanceCreationExpression
+
+and methodInvocation =
+    MethodInvocation
+
+and expression3Cast =
+    Expression3CastType of typed
+  | Expression3CastExpr of expression
+
+and expression3infix =
+    Expression3Infix of (infixOp * expression3)
+
+and expression3 =
+    Expression3 of (primary * (expression3Cast list) * (prefixOp list) * (postfixOp list) * (selector list))
+
+and expression2 =
+    Expression2 of (expression3)
+  | Expression2Infix of (expression3 * (expression3infix list))
+  | Expression2InstanceOf of (expression3 * typed)
+
+and expression1 =
+    NoneExpression1
+  | Expression1 of (expression2 * expression * expression1)
+
+and identifier =
+    NoneIdentifier
+  | Identifier of string
+
+and packageName =
+    PackageName of (identifier list)
+
+and packageOrTypeName =
+    PackageOrTypeName of (identifier list)
+
+and typeName =
+    TypeName of identifier
+  | TypeNamePackage of (identifier * packageOrTypeName)
+
+and expressionName =
+    ExpressionName of identifier
+  | ExpressionNameAmbiguous of (identifier * ambiguousName)
+
+and methodName =
+    MethodName of identifier
+  | MethodNameAmbiguous of (identifier * ambiguousName)
+
+and className =
+    ClassName of identifier
+  | ClassNameAmbiguous of (identifier * ambiguousName)
+
+and ambiguousName =
+    AmbiguousName of (identifier list)
+
+and expression =
+    NoneExpression
+  | ExpressionAssignment of assignmentExpression
+
+and assignmentExpression =
+    AssignmentExpressionAssignment of assignment
+  | AssignmentExpressionConditional of conditionalExpression
+
+and conditionalExpression =
+    ConditionalExpression of conditionalOrExpression
+  | ConditionalExpressionTernary of (conditionalOrExpression * expression * conditionalExpression)
+
+and conditionalOrExpression =
+    ConditionalOrExpression of (conditionalAndExpression list)
+
+and conditionalAndExpression =
+    ConditionalAndExpression of (inclusiveOrExpression list)
+
+and inclusiveOrExpression =
+    InclusiveOrExpression of (exclusiveOrExpression list)
+
+and exclusiveOrExpression =
+    ExclusiveOrExpression of (andExpression list)
+
+and andExpression =
+    AndExpression of (equalityExpression list)
+
+and equalityExpression =
+    EqualityExpression of relationalExpression
+  | EqualityExpressionEqual of (equalityExpression * relationalExpression)
+  | EqualityExpressionDifferent of (equalityExpression * relationalExpression)
+
+and relationalExpression =
+    RelationalExpression of shiftExpression
+  | RelationalExpressionLess of (relationalExpression * shiftExpression)
+  | RelationalExpressionGreater of (relationalExpression * shiftExpression)
+  | RelationalExpressionLessEqualThan of (relationalExpression * shiftExpression)
+  | RelationalExpressionGreaterEqualThan of (relationalExpression * shiftExpression)
+  | RelationalExpressionInstanceOf of (relationalExpression * referenceType)
+
+and shiftExpression =
+    ShiftExpression of additiveExpression
+  | ShiftExpressionLeft of (shiftExpression * additiveExpression)
+  | ShiftExpressionRight of (shiftExpression * additiveExpression)
+  | ShiftExpressionUnsignedRight of (shiftExpression * additiveExpression)
+
+and additiveExpression =
+    AdditiveExpression of multiplicativeExpression
+  | AdditiveExpressionAdd of (additiveExpression * multiplicativeExpression)
+  | AdditiveExpressionSubstract of (additiveExpression * multiplicativeExpression)
+
+and multiplicativeExpression =
+    MultiplicativeExpression of unaryExpression
+  | MultiplicativeExpressionMultiply of (multiplicativeExpression * unaryExpression)
+  | MultiplicativeExpressionDivide of (multiplicativeExpression * unaryExpression)
+  | MultiplicativeExpressionModulo of (multiplicativeExpression * unaryExpression)
+
+and unaryExpression =
+    UnaryExpressionPreInc of preIncrementExpression
+  | UnaryExpressionPreDec of preDecrementExpression
+  | UnaryExpressionPlus of unaryExpression
+  | UnaryExpressionMinus of unaryExpression
+  | UnaryExpressionNotPlusMinus of unaryExpressionNotPlusMinus
+
+and preIncrementExpression =
+    PreIncrementExpression of unaryExpression
+
+and preDecrementExpression =
+    PreDecrementExpression of unaryExpression
+
+and unaryExpressionNotPlusMinus =
+    UnaryExpressionNotPlusMinusPostfix of postfixExpression
+  | UnaryExpressionNotPlusMinusBitnot of unaryExpression
+  | UnaryExpressionNotPlusMinusNot of unaryExpression
+  | UnaryExpressionNotPlusMinusCast of castExpression
+
+and castExpression =
+    CastExpressionPrimitive of (primitiveType * int * unaryExpression)
+  | CastExpressionReference of (referenceType * unaryExpressionNotPlusMinus)
+
+and postfixExpression =
+    PostfixExpressionPrimary of primary
+  | PostfixExpressionName of expressionName
+  | PostfixExpressionPostInc of postIncrementExpression
+  | PostfixExpressionPostDec of postDecrementExpression
+
+and postIncrementExpression =
+    PostIncrementExpression of postfixExpression
+
+and postDecrementExpression =
+    PostDecrementExpression of postfixExpression
+
+and assignment =
+  | Assignment of (leftHandSide * assignmentOperator * assignmentExpression)
+
+and leftHandSide =
+    LeftHandSideExpressionName of expressionName
+  | LeftHandSideFieldAccess of fieldAccess
+  | LeftHandSideArrayAccess
+
+and fieldAccess =
+    FieldAccessPrimary of (primary * identifier)
+  | FieldAccessSuper of (identifier)
+  | FieldAccessClass of (className * identifier)
+
+and arrayAccess =
+    ArrayAccessExpression of (expressionName * expression)
+  | ArrayAccessPrimary of (primaryNoNewArray * expression)
+
+and selector =
+    NoneSelector
+  | SelectorIdentifier of (identifier * arguments)
+  | SelectorInvocation of explicitGenericInvocation
+  | SelectorThis
+  | SelectorSuper of superSuffix
+  | SelectorNew of (innerCreator * (typed list) * expression)
+
+and arguments =
+    NoneArguments
+  | Arguments of (expression list)
+
+and superSuffix =
+    NoneSuperSuffix
+  | SuperSuffixArguments of arguments
+  | SuperSuffixIdentifier of (identifier * arguments)
+
+and identifierSuffix =
+    NoneIdentifierSuffix
+  | IdentifierSuffixArrayClass of int
+  | IdentifierSuffixArrayExpression of expression
+  | IdentifierSuffixArguments of arguments
+  | IdentifierSuffixDotClass
+  | IdentifierSuffixDotInvocation of explicitGenericInvocation
+  | IdentifierSuffixDotThis
+  | IdentifierSuffixDotSuperArguments of arguments
+  | IdentifierSuffixDotNew of (innerCreator * (typed list))
+
+and explicitGenericInvocation =
+    ExplicitGenericInvocation of ((typed list) * explicitGenericInvocationSuffix)
+
+and explicitGenericInvocationSuffix =
+    ExplicitGenericInvocationSuffixSuper of superSuffix
+  | ExplicitGenericInvocationSuffixIdentifier of (identifier * arguments)
+
+and creator =
+    NoneCreator
+  | CreatorArray of (createdName * (typed list) * arrayCreatorRest)
+  | CreatorClass of (createdName * (typed list) * classCreatorRest)
+
+and createdName =
+    CreatedName of (identifier * (typed list) * (identifierTypeArgs list))
+
+and innerCreator =
+    InnerCreator of (identifier * classCreatorRest)
+
+and arrayCreatorRest =
+    ArrayCreatorRestInit of (arrayInitializer * int)
+  | ArrayCreatorRestExpression of ((expression list) * int)
+
+and classCreatorRest =
+    ClassCreatorRest of (arguments * classBody)
+
+and arrayInitializer =
+    ArrayInitializer of (variableInitializer list)
+  | ArrayInitializerTrailing of (variableInitializer list)
+
+and variableInitializer =
+    VariableInitializerArray of arrayInitializer
+  | VariableInitializerExpression of expression
+
+and classBody =
+    NoneClassBody
+  | ClassBody
 
 
 

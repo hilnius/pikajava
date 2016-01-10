@@ -11,17 +11,17 @@ open ExitManagement
 %%
 objectDeclaration:
 | interfaceDecl=interfaceDeclaration { interfaceDecl}
-| classDecl=classDeclaration { classDecl}	
+| classDecl=classDeclaration { classDecl}
 | enum=enumDeclaration { enum }
 | error {print_string "\027[31mError: unable to parse "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; ErrorDecl ("Error : Invalid Declaration\n")}
 
 classDeclaration:
-| modifs=modifiersList CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET con=classContentDeclarations
-	CLOSING_BRACKET
-	{ClassTree({objectType=Class;modif=modifs;parameters=params;inh=inh;impl=impl;className=Identifier className;con=con});}
+| modifs=modifiersList CLASS className=identifier params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACE con=classContentDeclarations
+	CLOSING_BRACE
+	{ClassTree({objectType=Class;modif=modifs;parameters=params;inh=inh;impl=impl;className=className;con=con});}
 interfaceDeclaration:
-| modifs=modifiersList INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET con=interfaceMemberDeclarations? CLOSING_BRACKET
-	{InterfaceTree({objectType=Interface;modif=modifs;inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=con});}	
+| modifs=modifiersList INTERFACE interfaceName=identifier params=parametersDeclaration inh=inheritsInterface OPENING_BRACE con=interfaceMemberDeclarations? CLOSING_BRACE
+	{InterfaceTree({objectType=Interface;modif=modifs;inh=inh;parameters=params;interfaceName=interfaceName;con=con});}
 interfaceMemberDeclarations:
 | interf=interfaceMemberDeclaration {[interf]}
 | interfs=interfaceMemberDeclarations interf=interfaceMemberDeclaration {interfs @ [interf]}
@@ -33,16 +33,16 @@ interfaceMemberDeclaration:
 |interfDecl=interfaceDeclaration {ObjectTree interfDecl}
 
 enumDeclaration:
-| cm=modifiers? ENUM id=IDENTIFIER ifs=implements eb=enumBody { EnumTree({ objectType=Enum; modif=cm; inh=ifs; enumName=Identifier id; con=eb }); }
+| cm=modifiers? ENUM id=identifier ifs=implements eb=enumBody { EnumTree({ objectType=Enum; modif=cm; inh=ifs; enumName=id; con=eb }); }
 enumBody:
-| OPENING_BRACKET ec=enumConstants? COMMA? ebd=enumBodyDeclarations CLOSING_BRACKET { { enumConstants=ec; con=ebd } }
+| OPENING_BRACE ec=enumConstants? COMMA? ebd=enumBodyDeclarations CLOSING_BRACE { { enumConstants=ec; con=ebd } }
 enumConstants:
 | e=enumConstant { [e] }
 | es=enumConstants COMMA e=enumConstant { es @ [e] }
 enumConstant:
-| an=annotations? id=IDENTIFIER ar=enumConstantsArguments? cb=classContentDeclarations { { annotations=an; identifier=(Identifier id); arguments=ar; classBody=cb } }
+| an=annotations? id=identifier ar=enumConstantsArguments? cb=classContentDeclarations { { annotations=an; identifier=id; arguments=ar; classBody=cb } }
 enumConstantsArguments:
-| OPENING_PARENTHESIS  CLOSING_PARENTHESIS { [] } (* FIXME *)
+| OPENING_PARENTHESIS ar=arguments CLOSING_PARENTHESIS { ar }
 enumBodyDeclarations:
 | SEMICOLON cb=classContentDeclarations { cb }
 |  { None }
@@ -76,7 +76,7 @@ finality:
 strictfp:
 | STRICTFP {StrictFp}
 inherits:
-| EXTENDS parentName=IDENTIFIER parameters=parametersDeclaration {Some(Parent({name=parentName;parameters=parameters}))}
+| EXTENDS parentName=identifier parameters=parametersDeclaration {Some(Parent({name=parentName;parameters=parameters}))}
 | {None}
 inheritsInterface:
 | EXTENDS completeInterf=interface {Some(completeInterf)}
@@ -85,8 +85,8 @@ implements:
 | IMPLEMENTS completeInterf=interface {Some(completeInterf)}
 | {None}
 interface:
-| className=IDENTIFIER parameters=parametersDeclaration COMMA interf=interface {(Parent({name=className; parameters=parameters}))::interf}
-| className=IDENTIFIER parameters=parametersDeclaration {[Parent({name=className; parameters=parameters})]}
+| className=identifier parameters=parametersDeclaration COMMA interf=interface {(Parent({name=className; parameters=parameters}))::interf}
+| className=identifier parameters=parametersDeclaration {[Parent({name=className; parameters=parameters})]}
 
 classContentDeclarations:
 | classContentList=classContentList {Some(classContentList)}

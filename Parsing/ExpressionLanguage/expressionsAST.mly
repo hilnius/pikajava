@@ -1,397 +1,12 @@
 %{
-  type assignmentOperator =
-      NoneAssignmentOperator
-    | Equal
-    | EqualMore
-    | EqualMinus
-    | EqualMultiply
-    | EqualDivide
-    | EqualAnd
-    | EqualOr
-    | EqualXor
-    | EqualModulo
-    | EqualLeft
-    | EqualRight
-    | EqualGGG
-
-  and prefixOp =
-      NonePrefix
-    | PrefixMoreMore
-    | PrefixLessLess
-    | PrefixMore
-    | PrefixLess
-    | PrefixNot
-    | PrefixTild
-
-  and postfixOp =
-      NonePostfix
-    | PostfixMoreMore
-    | PostfixLessLess
-
-  and infixOp =
-      NoneInfix
-    | InfixOr
-    | InfixAnd
-    | InfixBitOr
-    | InfixBitXor
-    | InfixBitAnd
-    | InfixEqual
-    | InfixDifferent
-    | InfixLessThan
-    | InfixGreaterThan
-    | InfixLessEqual
-    | InfixGreaterEqual
-    | InfixShiftLeft
-    | InfixShiftRight
-    | InfixGGG
-    | InfixMore
-    | InfixLess
-    | InfixMultiply
-    | InfixDivide
-    | InfixModulo
-
-  and typed =
-      NoneType
-    | TypeReference of referenceType
-    | TypePrimitive of primitiveType
-
-  and referenceType =
-      ReferenceTypeClassOrInterface of classOrInterfaceType
-    | ReferenceTypeVariable of typeVariable
-    | ReferenceTypeArray of arrayType
-
-  and classOrInterfaceType =
-      ClassType of (typeDeclSpecifier * typeArguments)
-    | InterfaceType of (typeDeclSpecifier * typeArguments)
-
-  and typeDeclSpecifier =
-      TypeDeclSpecifierName of typeName
-    | TypeDeclSpecifierIdentifier of (classOrInterfaceType * identifier)
-
-  and typeVariable =
-      TypeVariable of identifier
-
-  and arrayType =
-      ArrayType of typed
-
-  and typeArguments =
-      NoneTypeArguments
-    | TypeArguments of (actualTypeArgument list)
-
-  and actualTypeArgument =
-      ActualTypeArgumentReferenceType of referenceType
-    | ActualTypeArgumentWildcard of wildcard
-
-  and wildcard =
-      Wildcard
-    | WildcardExtends of referenceType
-    | WildcardSuper of referenceType
-
-  and typeArgumentKind =
-      NoneTypeArgument
-    | TypeArgumentExtends
-    | TypeArgumentSuper
-
-  and typeArgument =
-      TypeArgumentType of (typed)
-    | TypeArgumentGeneric of (typed * typeArgumentKind)
-
-  and primitiveType =
-      Byte
-    | Short
-    | Char
-    | Integer
-    | Long
-    | Float
-    | Double
-    | Boolean
-
-  and identifierArgs =
-      IdentifierArgs of (identifier * (typeArgument list))
-
-  and identifierTypeArgs =
-      IdentifierTypeArgs of (identifier * (typed list))
-
-  and variableDeclarators =
-      VariableId of string
-
-  and literal =
-      IntegerLiteral of int
-    | FloatingPointLiteral of float
-
-  and primary =
-      PrimaryNoNewArray of primaryNoNewArray
-    | PrimaryArrayCreation of arrayCreationExpression
-
-  and primaryNoNewArray =
-      PrimaryLiteral of literal
-    | PrimaryType of typed
-    | PrimaryVoidClass
-    | PrimaryThis
-    | PrimaryClassThis of className
-    | PrimaryExpression of expression
-    | PrimaryClassInstanceCreation of classInstanceCreationExpression
-    | PrimaryFieldAccess of fieldAccess
-    | PrimaryMethodInvocation of methodInvocation
-    | PrimaryArrayAccess of arrayAccess
-
-  and arrayCreationExpression =
-      ArrayCreationExpression
-
-  and classInstanceCreationExpression =
-      ClassInstanceCreationExpression
-
-  and methodInvocation =
-      MethodInvocation
-
-  and expression3Cast =
-      Expression3CastType of typed
-    | Expression3CastExpr of expression
-
-  and expression3infix =
-      Expression3Infix of (infixOp * expression3)
-
-  and expression3 =
-      Expression3 of (primary * (expression3Cast list) * (prefixOp list) * (postfixOp list) * (selector list))
-
-  and expression2 =
-      Expression2 of (expression3)
-    | Expression2Infix of (expression3 * (expression3infix list))
-    | Expression2InstanceOf of (expression3 * typed)
-
-  and expression1 =
-      NoneExpression1
-    | Expression1 of (expression2 * expression * expression1)
-
-  and identifier =
-      NoneIdentifier
-    | Identifier of string
-
-  and packageName =
-      PackageName of (identifier list)
-
-  and packageOrTypeName =
-      PackageOrTypeName of (identifier list)
-
-  and typeName =
-      TypeName of identifier
-    | TypeNamePackage of (identifier * packageOrTypeName)
-
-  and expressionName =
-      ExpressionName of identifier
-    | ExpressionNameAmbiguous of (identifier * ambiguousName)
-
-  and methodName =
-      MethodName of identifier
-    | MethodNameAmbiguous of (identifier * ambiguousName)
-
-  and className =
-      ClassName of identifier
-    | ClassNameAmbiguous of (identifier * ambiguousName)
-
-  and ambiguousName =
-      AmbiguousName of (identifier list)
-
-  and expression = 
-      NoneExpression
-    | ExpressionAssignment of assignmentExpression
-
-  and assignmentExpression =
-      AssignmentExpressionAssignment of assignment
-    | AssignmentExpressionConditional of conditionalExpression
-
-  and conditionalExpression =
-      ConditionalExpression of conditionalOrExpression
-    | ConditionalExpressionTernary of (conditionalOrExpression * expression * conditionalExpression)
-
-  and conditionalOrExpression =
-      ConditionalOrExpression of (conditionalAndExpression list)
-
-  and conditionalAndExpression =
-      ConditionalAndExpression of (inclusiveOrExpression list)
-
-  and inclusiveOrExpression =
-      InclusiveOrExpression of (exclusiveOrExpression list)
-
-  and exclusiveOrExpression =
-      ExclusiveOrExpression of (andExpression list)
-
-  and andExpression =
-      AndExpression of (equalityExpression list)
-
-  and equalityExpression =
-      EqualityExpression of relationalExpression
-    | EqualityExpressionEqual of (equalityExpression * relationalExpression)
-    | EqualityExpressionDifferent of (equalityExpression * relationalExpression)
-
-  and relationalExpression =
-      RelationalExpression of shiftExpression
-    | RelationalExpressionLessThan of (relationalExpression * shiftExpression)
-    | RelationalExpressionGreaterThan of (relationalExpression * shiftExpression)
-    | RelationalExpressionLessEqualThan of (relationalExpression * shiftExpression)
-    | RelationalExpressionGreaterEqualThan of (relationalExpression * shiftExpression)
-    | RelationalExpressionInstanceOf of (relationalExpression * referenceType)
-
-  and shiftExpression =
-      ShiftExpression of additiveExpression
-    | ShiftExpressionLeft of (shiftExpression * additiveExpression)
-    | ShiftExpressionRight of (shiftExpression * additiveExpression)
-    | ShiftExpressionUnsignedRight of (shiftExpression * additiveExpression)
-
-  and additiveExpression =
-      AdditiveExpression of multiplicativeExpression
-    | AdditiveExpressionAdd of (additiveExpression * multiplicativeExpression)
-    | AdditiveExpressionSubstract of (additiveExpression * multiplicativeExpression)
-
-  and multiplicativeExpression =
-      MultiplicativeExpression of unaryExpression
-    | MultiplicativeExpressionMultiply of (multiplicativeExpression * unaryExpression)
-    | MultiplicativeExpressionDivide of (multiplicativeExpression * unaryExpression)
-    | MultiplicativeExpressionModulo of (multiplicativeExpression * unaryExpression)
-
-  and unaryExpression =
-      UnaryExpressionPreInc of preIncrementExpression
-    | UnaryExpressionPreDec of preDecrementExpression
-    | UnaryExpressionPlus of unaryExpression
-    | UnaryExpressionMinus of unaryExpression
-    | UnaryExpressionNotPlusMinus of unaryExpressionNotPlusMinus
-
-  and preIncrementExpression =
-      PreIncrementExpression of unaryExpression
-
-  and preDecrementExpression =
-      PreDecrementExpression of unaryExpression
-
-  and unaryExpressionNotPlusMinus =
-      UnaryExpressionNotPlusMinusPostfix of postfixExpression
-    | UnaryExpressionNotPlusMinusBitnot of unaryExpression
-    | UnaryExpressionNotPlusMinusNot of unaryExpression
-    | UnaryExpressionNotPlusMinusCast of castExpression
-
-  and castExpression =
-      CastExpressionPrimitive of (primitiveType * int * unaryExpression)
-    | CastExpressionReference of (referenceType * unaryExpressionNotPlusMinus)
-
-  and postfixExpression =
-      PostfixExpressionPrimary of primary
-    | PostfixExpressionName of expressionName
-    | PostfixExpressionPostInc of postIncrementExpression
-    | PostfixExpressionPostDec of postDecrementExpression
-
-  and postIncrementExpression =
-      PostIncrementExpression of postfixExpression
-
-  and postDecrementExpression =
-      PostDecrementExpression of postfixExpression
-
-  and assignment =
-    | Assignment of (leftHandSide * assignmentOperator * assignmentExpression)
-
-  and leftHandSide =
-      LeftHandSideExpressionName of expressionName
-    | LeftHandSideFieldAccess of fieldAccess
-    | LeftHandSideArrayAccess
-
-  and fieldAccess =
-      FieldAccessPrimary of (primary * identifier)
-    | FieldAccessSuper of (identifier)
-    | FieldAccessClass of (className * identifier)
-
-  and arrayAccess =
-      ArrayAccessExpression of (expressionName * expression)
-    | ArrayAccessPrimary of (primaryNoNewArray * expression)
-
-  and selector =
-      NoneSelector
-    | SelectorIdentifier of (identifier * arguments)
-    | SelectorInvocation of explicitGenericInvocation
-    | SelectorThis
-    | SelectorSuper of superSuffix
-    | SelectorNew of (innerCreator * (typed list) * expression)
-
-  and arguments =
-      NoneArguments
-    | Arguments of (expression list)
-
-  and superSuffix =
-      NoneSuperSuffix
-    | SuperSuffixArguments of arguments
-    | SuperSuffixIdentifier of (identifier * arguments)
-
-  and identifierSuffix =
-      NoneIdentifierSuffix
-    | IdentifierSuffixArrayClass of int
-    | IdentifierSuffixArrayExpression of expression
-    | IdentifierSuffixArguments of arguments
-    | IdentifierSuffixDotClass
-    | IdentifierSuffixDotInvocation of explicitGenericInvocation
-    | IdentifierSuffixDotThis
-    | IdentifierSuffixDotSuperArguments of arguments
-    | IdentifierSuffixDotNew of (innerCreator * (typed list))
-
-  and explicitGenericInvocation =
-      ExplicitGenericInvocation of ((typed list) * explicitGenericInvocationSuffix)
-
-  and explicitGenericInvocationSuffix =
-      ExplicitGenericInvocationSuffixSuper of superSuffix
-    | ExplicitGenericInvocationSuffixIdentifier of (identifier * arguments)
-
-  and creator =
-      NoneCreator
-    | CreatorArray of (createdName * (typed list) * arrayCreatorRest)
-    | CreatorClass of (createdName * (typed list) * classCreatorRest)
-
-  and createdName =
-      CreatedName of (identifier * (typed list) * (identifierTypeArgs list))
-
-  and innerCreator =
-      InnerCreator of (identifier * classCreatorRest)
-
-  and arrayCreatorRest =
-      ArrayCreatorRestInit of (arrayInitializer * int)
-    | ArrayCreatorRestExpression of ((expression list) * int)
-
-  and classCreatorRest =
-      ClassCreatorRest of (arguments * classBody)
-
-  and arrayInitializer =
-      ArrayInitializer of (variableInitializer list)
-    | ArrayInitializerTrailing of (variableInitializer list)
-
-  and variableInitializer =
-      VariableInitializerArray of arrayInitializer
-    | VariableInitializerExpression of expression
-
-  and classBody =
-      NoneClassBody
-    | ClassBody
+  open Location
+  open Located
+  open ExitManagement
 %}
 
-%token EOF
-
-%token EQUAL MORE_EQUAL LESS_EQUAL MULTIPLY_EQUAL DIVIDE_EQUAL AND_EQUAL OR_EQUAL XOR_EQUAL MODULO_EQUAL LEFT_EQUAL RIGHT_EQUAL GGG_EQUAL
-%token OR AND BITOR BITXOR BITAND EQUALEQUAL DIFFERENT LESSEQUALTHAN GREATEREQUALTHAN SHIFTLEFT SHIFTRIGHT GGG MULTIPLY DIVIDE MODULO
-%token EXCLAMATION_MARK QUESTION_MARK TWO_DOTS DOT COMMA GREATERTHAN LESSTHAN
-%token MOREMORE LESSLESS MORE LESS TILD
-
-
-%token PAROPEN PARCLOSE BRACKETOPEN BRACKETCLOSE BRACEOPEN BRACECLOSE
-
-%token VOID CLASS NEW EXTENDS THIS SUPER INSTANCEOF NULL
-
-%token BYTE SHORTINT INTEGER LONGINT CHAR STRING FLOAT DOUBLE BOOLEAN
-
-%token <int> INTEGER_NUMERAL
-%token <float> FLOATING_POINT_NUMERAL
-%token <bool> BOOLEAN_LITERAL
-%token <string> IDENTIFIER
-
-%start perform
-%type <expression> perform
+%start expression
+%type <Types.expression> expression
 %%
-perform:
-| p=expression EOF { p }
-
 expression:
 | p=assignmentExpression
 	{ ExpressionAssignment p }
@@ -405,7 +20,7 @@ assignmentExpression:
 conditionalExpression:
 | p=conditionalOrExpression
 	{ ConditionalExpression p }
-| p=conditionalOrExpression QUESTION_MARK e=expression TWO_DOTS c=conditionalExpression
+| p=conditionalOrExpression QUESTION_MARK e=expression COLON c=conditionalExpression
 	{ ConditionalExpressionTernary(p, e, c) }
 
 conditionalOrExpression:
@@ -449,10 +64,10 @@ equalityExpression:
 relationalExpression:
 | p=shiftExpression
 	{ RelationalExpression p }
-| p=relationalExpression LESSTHAN s=shiftExpression
-	{ RelationalExpressionLessThan(p, s) }
-| p=relationalExpression GREATERTHAN s=shiftExpression
-	{ RelationalExpressionGreaterThan(p, s) }
+| p=relationalExpression OPENING_CHEVRON s=shiftExpression
+	{ RelationalExpressionLess(p, s) }
+| p=relationalExpression CLOSING_CHEVRON s=shiftExpression
+	{ RelationalExpressionGreater(p, s) }
 | p=relationalExpression LESSEQUALTHAN s=shiftExpression
 	{ RelationalExpressionLessEqualThan(p, s) }
 | p=relationalExpression GREATEREQUALTHAN s=shiftExpression
@@ -467,7 +82,7 @@ shiftExpression:
 	{ ShiftExpressionLeft(p, a) }
 | p=shiftExpression SHIFTRIGHT a=additiveExpression
 	{ ShiftExpressionRight(p, a) }
-| p=shiftExpression GGG a=additiveExpression
+| p=shiftExpression SHIFT_RIGHT_UNSIGNED a=additiveExpression
 	{ ShiftExpressionUnsignedRight(p, a) }
 
 additiveExpression:
@@ -481,7 +96,7 @@ additiveExpression:
 multiplicativeExpression:
 | p=unaryExpression
 	{ MultiplicativeExpression p }
-| p=multiplicativeExpression MULTIPLY u=unaryExpression
+| p=multiplicativeExpression ASTERISK u=unaryExpression
 	{ MultiplicativeExpressionMultiply(p, u) }
 | p=multiplicativeExpression DIVIDE u=unaryExpression
 	{ MultiplicativeExpressionDivide(p, u) }
@@ -519,9 +134,9 @@ unaryExpressionNotPlusMinus:
 	{ UnaryExpressionNotPlusMinusCast p }
 
 castExpression:
-| PAROPEN t=primitiveType c=dimsopt PARCLOSE p=unaryExpression
+| OPENING_PARENTHESIS t=primitiveType c=dimsopt CLOSING_PARENTHESIS p=unaryExpression
 	{ CastExpressionPrimitive(t, c, p) }
-| PAROPEN t=referenceType PARCLOSE p=unaryExpressionNotPlusMinus
+| OPENING_PARENTHESIS t=referenceType CLOSING_PARENTHESIS p=unaryExpressionNotPlusMinus
 	{ CastExpressionReference(t, p) }
 
 postfixExpression:
@@ -595,7 +210,7 @@ primaryNoNewArray:
 	{ PrimaryThis }
 | p=className DOT THIS
 	{ PrimaryClassThis p }
-| PAROPEN p=expression PARCLOSE
+| OPENING_PARENTHESIS p=expression CLOSING_PARENTHESIS
 	{ PrimaryExpression p }
 //| p=classInstanceCreationExpression
 //	{ PrimaryClassInstanceCreation p }
@@ -609,49 +224,49 @@ primaryNoNewArray:
 dims:
 | BRACKETOPEN BRACKETCLOSE
 	{ 1 }
-| p=dims BRACKETOPEN BRACKETCLOSE 
+| p=dims BRACKETOPEN BRACKETCLOSE
 	{ p + 1 }
 
 dimsopt:
-| 
+|
 	{ 0 }
 | p=dims
 	{ p }
 
 assignmentOperator:
-| EQUAL 
+| EQUAL
 	{ Equal }
-| MORE_EQUAL 
+| MORE_EQUAL
 	{ EqualMore }
-| LESS_EQUAL 
+| LESS_EQUAL
 	{ EqualMinus }
-| MULTIPLY_EQUAL 
+| ASTERISK_EQUAL
 	{ EqualMultiply }
-| DIVIDE_EQUAL 
+| DIVIDE_EQUAL
 	{ EqualDivide }
-| AND_EQUAL 
+| AND_EQUAL
 	{ EqualAnd }
-| OR_EQUAL 
+| OR_EQUAL
 	{ EqualOr }
-| XOR_EQUAL 
+| XOR_EQUAL
 	{ EqualXor }
-| MODULO_EQUAL 
+| MODULO_EQUAL
 	{ EqualModulo }
-| LEFT_EQUAL 
+| LEFT_EQUAL
 	{ EqualLeft }
-| RIGHT_EQUAL 
+| RIGHT_EQUAL
 	{ EqualRight }
-| GGG_EQUAL 
-	{ EqualGGG }
+| SHIFT_RIGHT_UNSIGNED_EQUAL
+	{ EqualShiftRightUnsigned }
 
 /*prefixop:
-| MOREMORE 
+| MOREMORE
 	{ PrefixMoreMore }
-| LESSLESS 
+| LESSLESS
 	{ PrefixLessLess }
-| MORE 
+| MORE
 	{ PrefixMore }
-| LESS 
+| LESS
 	{ PrefixLess }
 | EXCLAMATION_MARK
 	{ PrefixNot }
@@ -659,61 +274,61 @@ assignmentOperator:
 	{ PrefixTild }
 
 postfixop:
-| MOREMORE 
+| MOREMORE
 	{ PostfixMoreMore }
-| LESSLESS 
+| LESSLESS
 	{ PostfixLessLess }
 
 infixop:
-| OR 
+| OR
 	{ InfixOr }
-| AND 
+| AND
 	{ InfixAnd }
-| BITOR 
+| BITOR
 	{ InfixBitOr }
-| BITXOR 
+| BITXOR
 	{ InfixBitXor }
-| BITAND 
+| BITAND
 	{ InfixBitAnd }
-| EQUALEQUAL 
+| EQUALEQUAL
 	{ InfixEqual }
-| DIFFERENT 
+| DIFFERENT
 	{ InfixDifferent }
-| LESSTHAN 
+| OPENING_CHEVRON
 	{ InfixLessThan }
-| GREATERTHAN 
+| CLOSING_CHEVRON
 	{ InfixGreaterThan }
 | LESSEQUALTHAN
 	{ InfixLessEqual }
 | GREATEREQUALTHAN
 	{ InfixGreaterEqual }
-| SHIFTLEFT 
+| SHIFTLEFT
 	{ InfixShiftLeft }
-| SHIFTRIGHT 
+| SHIFTRIGHT
 	{ InfixShiftRight }
-| GGG 
-	{ InfixGGG }
-| MORE 
+| SHIFT_RIGHT_UNSIGNED
+	{ InfixShiftRightUnsigned }
+| MORE
 	{ InfixMore }
-| LESS 
+| LESS
 	{ InfixLess }
-| MULTIPLY 
-	{ InfixMultiply }
-| DIVIDE 
+| ASTERISK
+	{ InfixASTERISK }
+| DIVIDE
 	{ InfixDivide }
-| MODULO 
+| MODULO
 	{ InfixModulo }*/
 
 /*identifierList:
-| p=identifier 
+| p=identifier
 	{ [p] }
-| e=identifierList DOT p=identifier 
+| e=identifierList DOT p=identifier
 	{ p::e }*/
 
 literal:
-| p=INTEGER_NUMERAL 
+| p=INTEGER_NUMERAL
 	{ IntegerLiteral(p) }
-| p=FLOATING_POINT_NUMERAL 
+| p=FLOATING_POINT_NUMERAL
 	{ FloatingPointLiteral(p) }
 
 typed:
@@ -739,7 +354,7 @@ integralType:
 	{ Byte }
 | SHORTINT
 	{ Short }
-| INTEGER 
+| INTEGER
 	{ Integer }
 | LONGINT
 	{ Long }
@@ -747,9 +362,9 @@ integralType:
 	{ Char }
 
 floatingPointType:
-| FLOAT 
+| FLOAT
 	{ Float }
-| DOUBLE 
+| DOUBLE
 	{ Double }
 
 referenceType:
@@ -795,7 +410,7 @@ typeArgumentsOpt:
 	{ p }
 
 typeArguments:
-| LESSTHAN p=actualTypeArgumentList GREATERTHAN
+| OPENING_CHEVRON p=actualTypeArgumentList CLOSING_CHEVRON
 	{ TypeArguments p }
 
 actualTypeArgumentList:
@@ -819,35 +434,35 @@ wildcard:
 	{ WildcardSuper p }
 
 /*typedList:
-| p=typedIdarg 
+| p=typedIdarg
 	{ [p] }
-| e=typedList DOT p=typedIdarg 
+| e=typedList DOT p=typedIdarg
 	{ p::e }
 
 typedIdarg:
-| p=identifier 
+| p=identifier
 	{ IdentifierArgs(p, []) }
-| p=identifier LESSTHAN a=separated_nonempty_list(COMMA, typeArgument) GREATERTHAN 
+| p=identifier OPENING_CHEVRON a=separated_nonempty_list(COMMA, typeArgument) CLOSING_CHEVRON
 	{ IdentifierArgs(p, a) }
 
 typeArgument:
-| p=typed 
+| p=typed
 	{ TypeArgumentType p }
-| QUESTION_MARK 
+| QUESTION_MARK
 	{ TypeArgumentGeneric(NoneType, NoneTypeArgument) }
-| QUESTION_MARK EXTENDS p=typed 
+| QUESTION_MARK EXTENDS p=typed
 	{ TypeArgumentGeneric(p, TypeArgumentExtends) }
-| QUESTION_MARK SUPER p=typed 
+| QUESTION_MARK SUPER p=typed
 	{ TypeArgumentGeneric(p, TypeArgumentSuper) }
 
 typeList:
-| p=typed 
+| p=typed
 	{ [p] }
-| e=typeList p=typed 
+| e=typeList p=typed
 	{ p::e }*/
 
-identifier:
-| p=IDENTIFIER 
+%public identifier:
+| p=IDENTIFIER
 	{ Identifier(p) }
 
 /*packageName:
@@ -893,130 +508,130 @@ typeName:
 //	{ ClassNameAmbiguous(p, a) }
 
 /*identifierSuffix:
-| BRACKETOPEN BRACKETCLOSE c=arrayCounter DOT CLASS 
+| BRACKETOPEN BRACKETCLOSE c=arrayCounter DOT CLASS
 	{ IdentifierSuffixArrayClass(c + 1) }
-| BRACKETOPEN e=expression BRACKETCLOSE 
+| BRACKETOPEN e=expression BRACKETCLOSE
 	{ IdentifierSuffixArrayExpression e }
-| p=arguments 
+| p=arguments
 	{ IdentifierSuffixArguments p }
-| DOT CLASS 
+| DOT CLASS
 	{ IdentifierSuffixDotClass }
-| DOT p=explicitGenericInvocation 
+| DOT p=explicitGenericInvocation
 	{ IdentifierSuffixDotInvocation p }
-| DOT THIS 
+| DOT THIS
 	{ IdentifierSuffixDotThis }
-| DOT SUPER p=arguments 
+| DOT SUPER p=arguments
 	{ IdentifierSuffixDotSuperArguments p }
-| DOT NEW e=optNonWildcardTypeArguments p=innerCreator 
+| DOT NEW e=optNonQUESTION_MARKTypeArguments p=innerCreator
 	{ IdentifierSuffixDotNew(p, e) }
 
 explicitGenericInvocation:
-| p=nonWildcardTypeArguments e=explicitGenericInvocationSuffix 
+| p=nonQUESTION_MARKTypeArguments e=explicitGenericInvocationSuffix
 	{ ExplicitGenericInvocation(p, e) }
 
 explicitGenericInvocationSuffix:
-| SUPER p=superSuffix 
+| SUPER p=superSuffix
 	{ ExplicitGenericInvocationSuffixSuper p }
-| p=identifier a=arguments 
+| p=identifier a=arguments
 	{ ExplicitGenericInvocationSuffixIdentifier(p, a) }
 
 superSuffix:
-| a=arguments 
+| a=arguments
 	{ SuperSuffixArguments a }
-| DOT p=identifier a=arguments 
+| DOT p=identifier a=arguments
 	{ SuperSuffixIdentifier(p, a) }
 
 selector:
-| DOT p=identifier 
+| DOT p=identifier
 	{ SelectorIdentifier(p, NoneArguments) }
-| DOT p=identifier a=arguments 
+| DOT p=identifier a=arguments
 	{ SelectorIdentifier(p, a) }
-| DOT p=explicitGenericInvocation 
+| DOT p=explicitGenericInvocation
 	{ SelectorInvocation p }
-| DOT THIS 
+| DOT THIS
 	{ SelectorThis }
-| DOT SUPER p=superSuffix 
+| DOT SUPER p=superSuffix
 	{ SelectorSuper p }
-| DOT NEW a=optNonWildcardTypeArguments p=innerCreator 
+| DOT NEW a=optNonQUESTION_MARKTypeArguments p=innerCreator
 	{ SelectorNew(p, a, NoneExpression) }
-| DOT NEW a=optNonWildcardTypeArguments p=innerCreator e=expression 
+| DOT NEW a=optNonQUESTION_MARKTypeArguments p=innerCreator e=expression
 	{ SelectorNew(p, a, e) }
-
-arguments:
-| PAROPEN p=separated_list(COMMA, expression) PARCLOSE 
+*/
+%public arguments:
+| OPENING_PARENTHESIS p=separated_list(COMMA, expression) CLOSING_PARENTHESIS
 	{ Arguments(p) }
-
-optNonWildcardTypeArguments:
-| 
+/*
+optNonQUESTION_MARKTypeArguments:
+|
 	{ [] }
-| p=nonWildcardTypeArguments 
+| p=nonQUESTION_MARKTypeArguments
 	{ p }
 
-nonWildcardTypeArguments:
-| LESSTHAN GREATERTHAN 
+nonQUESTION_MARKTypeArguments:
+| OPENING_CHEVRON CLOSING_CHEVRON
 	{ [] }
-| LESSTHAN p=typeList GREATERTHAN 
+| OPENING_CHEVRON p=typeList CLOSING_CHEVRON
 	{ p }
 
 creator:
-| a=optNonWildcardTypeArguments p=createdName r=arrayCreatorRest 
+| a=optNonQUESTION_MARKTypeArguments p=createdName r=arrayCreatorRest
 	{ CreatorArray(p, a, r) }
-| a=optNonWildcardTypeArguments p=createdName r=classCreatorRest 
+| a=optNonQUESTION_MARKTypeArguments p=createdName r=classCreatorRest
 	{ CreatorClass(p, a, r) }
 
 createdName:
-| p=identifier a=optNonWildcardTypeArguments l=createdNameList 
+| p=identifier a=optNonQUESTION_MARKTypeArguments l=createdNameList
 	{ CreatedName(p, a, l) }
 
 createdNameList:
-| 
+|
 	{ [] }
-| e=createdNameList DOT p=identifier a=optNonWildcardTypeArguments 
+| e=createdNameList DOT p=identifier a=optNonQUESTION_MARKTypeArguments
 	{ IdentifierTypeArgs(p, a)::e }
 
 innerCreator:
-| p=identifier r=classCreatorRest 
+| p=identifier r=classCreatorRest
 	{ InnerCreator(p, r) }
 
 classCreatorRest:
-| a=arguments 
+| a=arguments
 	{ ClassCreatorRest(a, NoneClassBody) }
 // TC classBody
 
 arrayCreatorRest:
-| BRACKETOPEN BRACKETCLOSE c=arrayCounter p=arrayInitializer 
+| BRACKETOPEN BRACKETCLOSE c=arrayCounter p=arrayInitializer
 	{ ArrayCreatorRestInit(p, c) }
-| BRACKETOPEN p=expression BRACKETCLOSE e=arrayCreatorRestList c=arrayCounter 
+| BRACKETOPEN p=expression BRACKETCLOSE e=arrayCreatorRestList c=arrayCounter
 	{ ArrayCreatorRestExpression(p::e, c) }
 
 arrayCreatorRestList:
-| 
+|
 	{ [] }
-| e=arrayCreatorRestList BRACKETOPEN p=expression BRACKETCLOSE 
+| e=arrayCreatorRestList BRACKETOPEN p=expression BRACKETCLOSE
 	{ p::e }
 
 arrayCounter:
-| 
+|
 	{ 0 }
-| p=arrayCounter BRACKETOPEN BRACKETCLOSE 
+| p=arrayCounter BRACKETOPEN BRACKETCLOSE
 	{ p + 1 }
 
 arrayInitializer:
-| BRACEOPEN l=variableInitList BRACECLOSE 
+| OPENING_BRACE l=variableInitList CLOSING_BRACE
 	{ ArrayInitializer l }
-| BRACEOPEN l=variableInitList COMMA BRACECLOSE 
+| OPENING_BRACE l=variableInitList COMMA CLOSING_BRACE
 	{ ArrayInitializerTrailing l }
 
 variableInitList:
-| 
+|
 	{ [] }
-| e=variableInitList COMMA p=variableInitializer 
+| e=variableInitList COMMA p=variableInitializer
 	{ p::e }
 
 variableInitializer:
-| p=arrayInitializer 
+| p=arrayInitializer
 	{ VariableInitializerArray p }
-| p=expression 
+| p=expression
 	{ VariableInitializerExpression p }*/
 
 %%
