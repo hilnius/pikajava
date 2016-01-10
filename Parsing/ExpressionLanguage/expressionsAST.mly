@@ -483,7 +483,7 @@ multiplicativeExpression:
 	{ MultiplicativeExpression p }
 | p=multiplicativeExpression MULTIPLY u=unaryExpression
 	{ MultiplicativeExpressionMultiply(p, u) }
-| p=multiplicativeExpression MULTIPLY u=unaryExpression
+| p=multiplicativeExpression DIVIDE u=unaryExpression
 	{ MultiplicativeExpressionDivide(p, u) }
 | p=multiplicativeExpression MODULO u=unaryExpression
 	{ MultiplicativeExpressionModulo(p, u) }
@@ -763,16 +763,16 @@ referenceType:
 classOrInterfaceType:
 | p=classType
 	{ p }
-| p=interfaceType
-	{ p }
+/*| p=interfaceType
+	{ p }*/
 
 classType:
 | p=typeDeclSpecifier a=typeArgumentsOpt
 	{ ClassType(p, a) }
 
-interfaceType:
+/*interfaceType:
 | p=typeDeclSpecifier a=typeArgumentsOpt
-	{ InterfaceType(p, a) }
+	{ InterfaceType(p, a) }*/
 
 typeDeclSpecifier:
 | p=typeName
@@ -850,12 +850,12 @@ identifier:
 | p=IDENTIFIER 
 	{ Identifier(p) }
 
-packageName:
+/*packageName:
 | p=identifier
 	{ PackageName [p] }
 | e=packageName DOT p=identifier
 	{ let PackageName(l) = e in PackageName(p::l) }
-
+*/
 packageOrTypeName:
 | p=identifier
 	{ PackageOrTypeName [p] }
@@ -871,22 +871,22 @@ ambiguousName:
 expressionName:
 | p=identifier
 	{ ExpressionName p }
-| a=ambiguousName DOT p=identifier
-	{ ExpressionNameAmbiguous(p, a) }
+| a=expressionName DOT p=identifier
+	{ ExpressionNameAmbiguous(p, AmbiguousName( [] )) }
 
-methodName:
+/*methodName:
 | p=identifier
 	{ MethodName p }
 | a=ambiguousName DOT p=identifier
 	{ MethodNameAmbiguous(p, a) }
-
+*/
 typeName:
 | p=identifier
 	{ TypeName p }
 | a=packageOrTypeName DOT p=identifier
 	{ TypeNamePackage(p, a) }
 
-className:
+%inline className:
 | p=identifier
 	{ ClassName p }
 //| a=ambiguousName DOT p=identifier
