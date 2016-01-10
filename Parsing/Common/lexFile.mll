@@ -53,56 +53,70 @@ let iniStatic = "static"[' ' '\t' '\n']*"{"
 (*let commentLine = ['/']{2}[^(['\n' '\r'])]*)
 
 rule nextToken = parse
-  | eof {EOF}
-  | "//" { commentLine lexbuf }
-  | "/*" { longComment lexbuf }
-  | "package" {PACKAGE}
-  | "import" {IMPORT}
-  | iniStatic {INISTATIC}
-  | "static" {STATIC}
-  | ";" {SEMICOLON}
-  | "." {DOT}
-  | "*" {STAR}
-  | newLine { Location.incr_line lexbuf; nextToken lexbuf }
-  | space+  { nextToken lexbuf }
-  | "public" {PUBLIC}
-  | "protected" {PROTECTED}
-  | "private" {PRIVATE}
-  |	"abstract" {ABSTRACT}
-  | "final" {FINAL}
-  | "strictfp" {STRICTFP}
-  | "native" {NATIVE}
-  | "synchronized" {SYNCHRONIZED}
-  | "extends" {EXTENDS}
-  | "super" {SUPER}
-  | "implements" {IMPLEMENTS}
-  | "throws" {THROWS}
-  | "," {COMMA}
-  | "interface" {INTERFACE}
-  | "class" {CLASS}
-  | "enum" {ENUM}
-  | "@" {AT}
-  | "<" {OPENING_CHEVRON}
-  | ">" {CLOSING_CHEVRON}
-  | "?" {WILDCARD}
-  | '{' {OPENING_BRACKET}
-  | '}' {CLOSING_BRACKET}
-  | '(' {OPENING_PARENTHESIS}
-  | ')' {CLOSING_PARENTHESIS}
-  | "if" { IF }
-  | "else" { ELSE }
-  | "int" { INTEGER(3) }
-  | "true" { BOOLEAN(true) }
-  | "for" { FOR }
-  | "while" { WHILE }
-  | "void" {VOID}
+  | eof           { EOF }
+  | "//"          { commentLine lexbuf }
+  | "/*"          { longComment lexbuf }
+  | "package"     { PACKAGE }
+  | "import"      { IMPORT }
+  | iniStatic     { INISTATIC }
+  | "static"      { STATIC }
+  | ";"           { SEMICOLON }
+  | ":"           { COLON }
+  | "."           { DOT }
+  | "*"           { STAR }
+  | newLine       { Location.incr_line lexbuf; nextToken lexbuf }
+  | space+        { nextToken lexbuf }
+  | "public"      { PUBLIC }
+  | "protected"   { PROTECTED }
+  | "private"     { PRIVATE }
+  |	"abstract"    { ABSTRACT }
+  | "final"       { FINAL }
+  | "strictfp"    { STRICTFP }
+  | "native"      { NATIVE }
+  | "synchronized"{ SYNCHRONIZED }
+  | "extends"     { EXTENDS }
+  | "super"       { SUPER }
+  | "implements"  { IMPLEMENTS }
+  | "throws"      { THROWS }
+  | ","           { COMMA }
+  | "interface"   { INTERFACE }
+  | "class"       { CLASS }
+  | "enum"        { ENUM }
+  | "@"           { AT }
+  | "<"           { OPENING_CHEVRON }
+  | ">"           { CLOSING_CHEVRON }
+  | "?"           { WILDCARD }
+  | '{'           { OPENING_BRACKET }
+  | '}'           { CLOSING_BRACKET }
+  | '('           { OPENING_PARENTHESIS }
+  | ')'           { CLOSING_PARENTHESIS }
+  | "if"          { IF }
+  | "else"        { ELSE }
+  | "int"         { INTEGER(3) }
+  | "true"        { BOOLEAN(true) }
+  | "for"         { FOR }
+  | "while"       { WHILE }
+  | "void"        { VOID }
+  | "assert"      { ASSERT }
+  | "break"       { BREAK }
+  | "continue"    { CONTINUE }
+  | "switch"      { SWITCH }
+  | "case"        { CASE }
+  | "default"     { DEFAULT }
+  | "do"          { DO }
+  | "return"      { RETURN }
+  | "throw"       { THROW }
+  | "try"         { TRY }
+  | "catch"       { CATCH }
+  | "finally"     { FINALLY }
   | identifierName as identifierName { IDENTIFIER identifierName }
 and commentLine = parse
-  | newLine   { nextToken lexbuf }
-  | _         { commentLine lexbuf }
+  | newLine       { Location.incr_line lexbuf; nextToken lexbuf }
+  | _             { commentLine lexbuf }
 and longComment = parse
-  | "*/"      { nextToken lexbuf }
-  | _         { longComment lexbuf }
+  | "*/"          { nextToken lexbuf }
+  | newLine       { Location.incr_line lexbuf; longComment lexbuf }
+  | _             { longComment lexbuf }
 {
 let rec examineAll lexbuf =
     let res = nextToken lexbuf in

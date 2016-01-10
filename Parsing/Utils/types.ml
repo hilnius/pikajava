@@ -102,7 +102,7 @@ and classContentTree =
 | ErrorDecl of string
 
 and objectTree =
-ClassTree of classTreeMap
+| ClassTree of classTreeMap
 | InterfaceTree of interfaceTreeMap
 | EnumTree of enumTreeMap
 | ErrorDecl of string
@@ -124,7 +124,22 @@ and statement =
   | ForStatement of (statement * expression * expression * block)
   | WhileStatement of (expression * block)
   | BlockStatement of block
+  | AssertStatement of (expression * expression option)
+  | SwitchStatement of (expression * switchCase list)
+  | DoWhileStatement of (expression * statement)
+  | BreakStatement of expression option
+  | ContinueStatement of expression option
+  | ReturnStatement of expression option
+  | ThrowStatement of expression
+  | SynchronizedStatement of (expression * block)
+  | TryStatement of (block * catch list * block)
   | EmptyStatement
+and switchCase =
+  | Case of (expression * blockStatement list)
+  | Default of (blockStatement list)
+and catch =
+	| CatchClause of (expression * block)
+
 
 
 

@@ -154,6 +154,14 @@ and print_expression expression =
   | Bool(false) -> print_string "false"
   | _ -> print_string "something"
 
+and print_optional_expression prefix e =
+  match e with
+  | None -> ()
+  | Some(v2) -> begin
+      print_string prefix;
+      print_expression v2;
+    end
+
 and print_if tabs expression blockIf blockElse =
   begin
   print_tabs tabs;
@@ -173,6 +181,15 @@ and print_if tabs expression blockIf blockElse =
   print_tabs tabs;
   print_string "}";
   print_newline ()
+  end
+
+and print_assert tabs e1 e2 =
+  begin
+  print_tabs tabs;
+  print_string "assert ";
+  print_expression e1;
+  print_optional_expression " : " e2;
+  print_string ";\n";
   end
 
 and print_for tabs statement expression1 expression2 block =
@@ -204,6 +221,48 @@ and print_for tabs statement expression1 expression2 block =
   print_newline ();
   end
 
+and print_switch tabs e l =
+  let rec print_switch_statements tabs st = match st with
+    | [] -> ()
+    | Case(e,b)::q -> begin
+        print_tabs tabs;
+        print_string "case ";
+        print_expression e;
+        print_string ":\n";
+        print_block (tabs + 1) (Block(b));
+        print_switch_statements tabs q;
+      end
+    | Default(b)::q -> begin
+        print_tabs tabs;
+        print_string "default:\n";
+        print_block (tabs + 1) (Block(b));
+        print_switch_statements tabs q;
+      end
+  in
+  begin
+  print_tabs tabs;
+  print_string "switch (";
+  print_expression e;
+  print_string ") {";
+  print_newline ();
+
+  print_switch_statements (tabs + 1) l;
+
+  print_string "}";
+  print_newline ();
+  end
+
+and print_do_while tabs e s =
+  begin
+  print_tabs tabs;
+  print_string "do {\n";
+  print_statement (tabs + 1) s;
+  print_tabs tabs;
+  print_string "} while (";
+  print_expression e;
+  print_string ");\n";
+  end
+
 and print_while tabs expression block =
   begin
   print_tabs tabs;
@@ -219,11 +278,91 @@ and print_while tabs expression block =
   print_newline ();
   end
 
+and print_try tabs tryBlock catches finallyBlock =
+  let rec print_catches l = match l with
+    | [] -> ()
+    | CatchClause(a,b)::q -> begin
+      print_string "catch (";
+      print_expression a;
+      print_string ") {\n";
+      print_block (tabs+1) b;
+      print_string "} ";
+      print_catches q;
+    end
+  in
+  begin
+  print_tabs tabs;
+  print_string "try {\n";
+  print_block (tabs + 1) tryBlock;
+  print_tabs tabs;
+  print_string "} ";
+  print_catches catches;
+  print_string "finally {\n";
+  print_block (tabs + 1) finallyBlock;
+  print_string "}\n";
+  end
+
+and print_synchronized tabs expression block =
+  begin
+  print_tabs tabs;
+  print_string "synchronized (";
+  print_expression expression;
+  print_string ") {";
+  print_newline ();
+
+  print_block (tabs + 1) block;
+
+  print_tabs tabs;
+  print_string "}";
+  print_newline ();
+  end
+
+and print_break tabs expression =
+  begin
+  print_tabs tabs;
+  print_string "break";
+  print_optional_expression " " expression;
+  print_string ";\n";
+  end
+
+and print_continue tabs expression =
+  begin
+  print_tabs tabs;
+  print_string "continue";
+  print_optional_expression " " expression;
+  print_string ";\n";
+  end
+
+and print_return tabs expression =
+  begin
+  print_tabs tabs;
+  print_string "return";
+  print_optional_expression " " expression;
+  print_string ";\n";
+  end
+
+and print_throw tabs expression =
+  begin
+  print_tabs tabs;
+  print_string "throw ";
+  print_expression expression;
+  print_string ";\n";
+  end
+
 and print_statement tabs statement = match statement with
   | IfStatement(expression, blockIf, blockElse) -> print_if tabs expression blockIf blockElse
   | ForStatement(statement, expression1, expression2, block) -> print_for tabs statement expression1 expression2 block
   | WhileStatement(expression, block) -> print_while tabs expression block
   | BlockStatement(block) -> print_block tabs block
+  | AssertStatement(e1, e2) -> print_assert tabs e1 e2
+  | SwitchStatement(e, statements) -> print_switch tabs e statements
+  | DoWhileStatement(e, statement) -> print_do_while tabs e statement
+  | BreakStatement(e) -> print_break tabs e
+  | ContinueStatement(e) -> print_continue tabs e
+  | ReturnStatement(e) -> print_return tabs e
+  | ThrowStatement(e) -> print_throw tabs e
+  | SynchronizedStatement(e, block) -> print_synchronized tabs e block
+  | TryStatement(tryBlock, catches, finallyBlock) -> print_try tabs tryBlock catches finallyBlock
   | EmptyStatement -> ()
 
 and print_block_statement tabs st = match st with
