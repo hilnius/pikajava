@@ -1,0 +1,47 @@
+### TEST simple class with one parameter ###
+@SHOULD_PASS
+class Full<T> {}
+### END ###
+
+### TEST simple class with two parameters ###
+@SHOULD_PASS
+class Full<T,U> {}
+### END ###
+
+### TEST simple class with one parameter with extends ###
+@SHOULD_PASS
+class Full<T extends Object> {}
+### END ###
+
+### TEST simple class with one parameter extends and parent parameter ###
+@SHOULD_PASS
+class Full<T extends List<Object>> {}
+### END ###
+
+### TEST simple class with one parameter extends and parent parameter with a wildcard and extends ###
+@SHOULD_PASS
+class Full<T extends List<? super T>>{}
+### END ###
+
+### TEST simple class with one parameter extends and parent parameter with a wildcard and super ###
+@SHOULD_PASS
+class Full<T extends List<? extends T>> {}
+### END ###
+
+
+### TEST simple class with one parameter super###
+@SHOULD_NOT_PASS
+class Full<T super Aclass> {}
+### END ###
+
+### TEST simple class with two parameters separated by a semicolon###
+@SHOULD_NOT_PASS
+class Full<T;U> {}
+### END ###
+
+### TEST simple class with a parameter without chevron###
+@SHOULD_NOT_PASS
+class Full T,U {}
+### END ###
+
+

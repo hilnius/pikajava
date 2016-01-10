@@ -1,0 +1,105 @@
+### TEST public full declaration ###
+@SHOULD_PASS
+public abstract final class Full {}
+### END ###
+### TEST protected full declaration ###
+@SHOULD_PASS
+protected abstract final class Full {}
+### END ###
+### TEST private full declaration ###
+@SHOULD_PASS
+private abstract final class Full {}
+### END ###
+
+
+### TEST public no abstract ###
+@SHOULD_PASS
+public final class NoAbstract {}
+### END ###
+### TEST private no final ###
+@SHOULD_PASS
+private final class NoAbstract {}
+### END ###
+### TEST protected no final ###
+@SHOULD_PASS
+protected final class NoAbstract {}
+### END ###
+
+
+### TEST public no final ###
+@SHOULD_PASS
+public abstract class NoFinal {}
+### END ###
+### TEST private no final ###
+@SHOULD_PASS
+private abstract class NoFinal {}
+### END ###
+### TEST protected no final ###
+@SHOULD_PASS
+protected abstract class NoFinal {}
+### END ###
+
+
+### TEST public no abstract no final ###
+@SHOULD_PASS
+public class NoAbstractNoFinal {}
+### END ###
+### TEST private no abstract no final ###
+@SHOULD_PASS
+private class NoAbstractNoFinal {}
+### END ###
+### TEST protected no abstract no final ###
+@SHOULD_PASS
+protected class NoAbstractNoFinal {}
+### END ###
+
+
+### TEST no visibility ###
+@SHOULD_PASS
+abstract final class NoVisibility {}
+### END ###
+
+### TEST nothing ###
+@SHOULD_PASS
+class Nothing {}
+### END ###
+
+### TEST other order :  ###
+@SHOULD_PASS
+final public abstract class OtherOrder {}
+### END ###
+### TEST other order : ###
+@SHOULD_PASS
+public final abstract class OtherOrder {}
+### END ###
+### TEST wrong order :  ###
+@SHOULD_NOT_PASS
+public class final abstract WrongOrder {}
+### END ###
+
+### TEST wrong order : fin vis abs class classname ###
+@SHOULD_NOT_PASS
+final public abstract class WrongOrder {}
+### END ###
+### TEST wrong order : vis class fin abs classname ###
+@SHOULD_NOT_PASS
+public class final abstract WrongOrder {}
+### END ###
+
+### TEST without modifier  :  ###
+@SHOULD_PASS
+class OtherOrder {}
+### END ###
+
+### TEST with one modifier  :  ###
+@SHOULD_PASS
+strictfp class OtherOrder {}
+### END ###
+
+### TEST with two modifier  :  ###
+@SHOULD_PASS
+strictfp public class OtherOrder {}
+### END ###
+
+
+

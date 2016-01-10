@@ -1,0 +1,110 @@
+### TEST simple class with an empty method###
+@SHOULD_PASS
+class A {
+	void aMethod(){
+	
+	}
+}
+### END ###
+
+### TEST simple class with an empty public method###
+@SHOULD_PASS
+class A {
+	public void aMethod(){
+	
+	}
+}
+### END ###
+
+### TEST simple class with an empty private method###
+@SHOULD_PASS
+class A {
+	private void aMethod(){
+	
+	}
+}
+### END ###
+
+### TEST simple class with an empty protected method###
+@SHOULD_PASS
+class A {
+	protected void aMethod(){
+	
+	}
+}
+### END ###
+
+### TEST simple class with an empty final method###
+@SHOULD_PASS
+class A {
+	final void aMethod(){
+	
+	}
+}
+### END ###
+
+### TEST simple class with an empty static method###
+@SHOULD_PASS
+class A {
+	static void aMethod(){
+	
+	}
+}
+### END ###
+
+
+### TEST simple class with an empty static method return List###
+@SHOULD_PASS
+class A {
+	static List aMethod(){
+	
+	}
+}
+### END ###
+
+
+### TEST simple class with an empty synchronized method###
+@SHOULD_PASS
+class A {
+	synchronized void aMethod(){
+	
+	}
+}
+### END ###
+
+### TEST simple class with an empty native method###
+@SHOULD_PASS
+class A {
+	native void aMethod(){
+	
+	}
+}
+### END ###
+
+
+### TEST simple class with an empty strictfp method###
+@SHOULD_PASS
+class A {
+	strictfp void aMethod(){
+	
+	}
+}
+### END ###
+
+### TEST simple class with an empty public static method###
+@SHOULD_PASS
+class A {
+	public static void aMethod(){
+	
+	}
+}
+### END ###
+
+### TEST simple class with an empty native method###
+@SHOULD_PASS
+class A {
+	List aMethod(){
+	
+	}
+}
+### END ###
