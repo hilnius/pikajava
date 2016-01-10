@@ -29,8 +29,8 @@ interfaceMemberDeclarations:
 interfaceMemberDeclaration:
 (*TODO |constantDeclaration*)
 |absMethod=abstractMethodDeclaration {absMethod}
-|classDecl=classDeclaration SEMICOLON {ObjectTree classDecl}
-|interfDecl=interfaceDeclaration SEMICOLON {ObjectTree interfDecl}
+|classDecl=classDeclaration {ObjectTree classDecl}
+|interfDecl=interfaceDeclaration {ObjectTree interfDecl}
 
 enumDeclaration:
 | cm=modifiers? ENUM id=IDENTIFIER ifs=implements eb=enumBody { EnumTree({ objectType=Enum; modif=cm; inh=ifs; enumName=Identifier id; con=eb }); }
