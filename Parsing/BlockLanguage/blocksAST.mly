@@ -1,12 +1,11 @@
 %{
 	open Location
 	open Located
-	open BlocksTypes
 	open ExitManagement
 %}
 
 %start blockDeclaration
-%type <BlocksTypes.block> blockDeclaration
+%type <Types.block> blockDeclaration
 %%
 blockDeclaration:
 | c=block { c }
@@ -55,7 +54,6 @@ statement:
 | s=ifThenElseStatement { Statement(s) }
 | s=whileStatement { Statement(s) }
 | s=forStatement { Statement(s) }
-| error { print_string "Error: unable to parse statement "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue(4); Statement(EmptyStatement)  }
 statementWithoutTrailingSubstatement:
 | b=block { Statement(BlockStatement(b)) }
 statementNoShortIf:
@@ -72,7 +70,7 @@ block:
 | 				{ [] }
 blockStatement:
 | lvds=localVariableDeclarationStatement { lvds }
-(* | cd=classDeclaration { cd } *)
+| cd=classDeclaration { ClassDeclarationStatement(cd) }
 | s=statement { s }
 expression:
 | b=BOOLEAN { Bool(b) }

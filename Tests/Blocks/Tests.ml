@@ -7,9 +7,6 @@ let compile_block str =
   let result = Parsers.blockDeclaration LexFile.nextToken lexbuf in
   result;;
 
-let print_block b =
-  PrintBlock.print_block 1 b;;
-
 let () =
 begin
   set_print_function "print_block";

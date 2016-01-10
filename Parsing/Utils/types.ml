@@ -1,5 +1,3 @@
-open BlocksTypes
-
 type visibility =
 	| Public
   | Protected
@@ -14,27 +12,27 @@ type finality =
 	| Final
 	| Extendable
 
-type staticity = 
+type staticity =
 	| Static
 	| NonStatic
 
-type volatility = 
+type volatility =
 	| Volatile
 	| NonVolatile
 
-type synchronization = 
+type synchronization =
 	| Synchronized
 	| NonSynchronized
 
-type nativity = 
+type nativity =
 	| Native
 	| NonNative
-	
+
 type strictfp=
 	| StrictFp
-	| NonStrictFp	
-	
-type objType = 
+	| NonStrictFp
+
+type objType =
 	| Class
 	| Interface
 	| Enum
@@ -43,7 +41,7 @@ type child = string option
 
 type identifier = Identifier of string
 
-type annotation = string 
+type annotation = string
 
 type annotationsList = annotation list option
 
@@ -56,7 +54,7 @@ type parentMap = {name:string;parameters:parameterList}
 
 type parent=Parent of parentMap
 
-type modifier = 
+type modifier =
 | Visibility of visibility
 | Finality of finality
 | Abstraction of abstraction
@@ -84,12 +82,20 @@ type classListAttribute =
 
 type content= block option
 
-type methodTreeMap = {parameters:parameterList; annots:annotationsList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content } 
+and methodTreeMap = {parameters:parameterList; annots:annotationsList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content }
 
 
-type initializerTreeMap = {iniType:staticity;con:block}
+and initializerTreeMap = {iniType:staticity;con:block}
 
-type classContentTree = 
+(* types for blocks *)
+
+and variableDeclaration = Integer of int
+and expression = Bool of bool
+and classDeclaration = Class
+
+(* end of blocks types *)
+
+and classContentTree =
 | MethodTree of methodTreeMap
 | Initializer of initializerTreeMap
 | ObjectTree of objectTree
@@ -101,12 +107,24 @@ ClassTree of classTreeMap
 | EnumTree of enumTreeMap
 | ErrorDecl of string
 
-and interfaceTreeMap = {objectType:objType; annots:annotationsList; modif:modifiers; inh:parent list option; interfaceName:identifier; parameters:parameterList; con:contentClass} 
+and interfaceTreeMap = {objectType:objType; annots:annotationsList; modif:modifiers; inh:parent list option; interfaceName:identifier; parameters:parameterList; con:contentClass}
 and classTreeMap = {objectType:objType; annots:annotationsList; modif:modifiers; parameters:parameterList; inh:parent option; impl:parent list option; className:identifier; con:contentClass}
 and enumTreeMap = {objectType:objType; annots:annotationsList; modif:modifiers; inh:parent list option; enumName:identifier; con:contentClass}
 and contentClass  = classContentTree list option
 
 
+and block = Block of blockStatement list
+and blockStatement =
+    ClassDeclaration of classDeclaration
+  | LocalVariableDeclaration of variableDeclaration
+  | ClassDeclarationStatement of objectTree
+  | Statement of statement
+and statement =
+    IfStatement of (expression * block * block)
+  | ForStatement of (statement * expression * expression * block)
+  | WhileStatement of (expression * block)
+  | BlockStatement of block
+  | EmptyStatement
 
 
 

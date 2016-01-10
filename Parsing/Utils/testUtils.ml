@@ -10,7 +10,7 @@ let set_print_function fn =
 
 let get_print_function () =
   match (!printFunctionName) with
-  | "print_block" -> PrintBlock.print_block 1
+  | "print_block" -> PrintTypes.print_block 1
   (* Add your print functions here, used for debug output *)
 ;;
 
