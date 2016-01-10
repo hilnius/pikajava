@@ -1,3 +1,5 @@
+TEST CLASS
+
 ### TEST simple class with one parameter ###
 @SHOULD_PASS
 class Full<T> {}
@@ -42,6 +44,175 @@ class Full<T;U> {}
 ### TEST simple class with a parameter without chevron###
 @SHOULD_NOT_PASS
 class Full T,U {}
+### END ###
+
+
+
+
+TEST INTERFACE
+
+### TEST simple interface with one parameter ###
+@SHOULD_PASS
+interface Full<T> {}
+### END ###
+
+### TEST simple interface with two parameters ###
+@SHOULD_PASS
+interface Full<T,U> {}
+### END ###
+
+### TEST simple interface with one parameter with extends ###
+@SHOULD_PASS
+interface Full<T extends Object> {}
+### END ###
+
+### TEST simple interface with one parameter extends and parent parameter ###
+@SHOULD_PASS
+interface Full<T extends List<Object>> {}
+### END ###
+
+### TEST simple interface with one parameter extends and parent parameter with a wildcard and extends ###
+@SHOULD_PASS
+interface Full<T extends List<? super T>>{}
+### END ###
+
+### TEST simple interface with one parameter extends and parent parameter with a wildcard and super ###
+@SHOULD_PASS
+interface Full<T extends List<? extends T>> {}
+### END ###
+
+
+### TEST simple interface with one parameter super###
+@SHOULD_NOT_PASS
+interface Full<T super Ainterface> {}
+### END ###
+
+### TEST simple interface with two parameters separated by a semicolon###
+@SHOULD_NOT_PASS
+interface Full<T;U> {}
+### END ###
+
+### TEST simple interface with a parameter without chevron###
+@SHOULD_NOT_PASS
+interface Full T,U {}
+### END ###
+
+
+
+
+TEST ENUM
+
+### TEST simple enum with one parameter ###
+@SHOULD_PASS
+enum Full<T> {}
+### END ###
+
+### TEST simple enum with two parameters ###
+@SHOULD_PASS
+enum Full<T,U> {}
+### END ###
+
+### TEST simple enum with one parameter with extends ###
+@SHOULD_PASS
+enum Full<T extends Object> {}
+### END ###
+
+### TEST simple enum with one parameter extends and parent parameter ###
+@SHOULD_PASS
+enum Full<T extends List<Object>> {}
+### END ###
+
+### TEST simple enum with one parameter extends and parent parameter with a wildcard and extends ###
+@SHOULD_PASS
+enum Full<T extends List<? super T>>{}
+### END ###
+
+### TEST simple enum with one parameter extends and parent parameter with a wildcard and super ###
+@SHOULD_PASS
+enum Full<T extends List<? extends T>> {}
+### END ###
+
+### TEST simple enum with one parameter super###
+@SHOULD_NOT_PASS
+enum Full<T super Aenum> {}
+### END ###
+
+### TEST simple enum with two parameters separated by a semicolon###
+@SHOULD_NOT_PASS
+enum Full<T;U> {}
+### END ###
+
+### TEST simple enum with a parameter without chevron###
+@SHOULD_NOT_PASS
+enum Full T,U {}
+### END ###
+
+
+
+
+TEST METHOD
+
+### TEST simple method with one parameter ###
+@SHOULD_PASS
+class A {
+void method Full<T> {}
+}
+### END ###
+
+### TEST simple method with two parameters ###
+@SHOULD_PASS
+class A {
+void method Full<T,U> {}
+}
+### END ###
+
+### TEST simple method with one parameter with extends ###
+@SHOULD_PASS
+class A {
+void method Full<T extends Object> {}
+}
+### END ###
+
+### TEST simple method with one parameter extends and parent parameter ###
+@SHOULD_PASS
+class A {
+void method Full<T extends List<Object>> {}
+}
+### END ###
+
+### TEST simple method with one parameter extends and parent parameter with a wildcard and extends ###
+@SHOULD_PASS
+class A {
+void method Full<T extends List<? super T>>{}
+}
+### END ###
+
+### TEST simple method with one parameter extends and parent parameter with a wildcard and super ###
+@SHOULD_PASS
+class A {
+void method Full<T extends List<? extends T>> {}
+}
+### END ###
+
+### TEST simple method with one parameter super###
+@SHOULD_NOT_PASS
+class A {
+void method Full<T super Amethod> {}
+}
+### END ###
+
+### TEST simple method with two parameters separated by a semicolon###
+@SHOULD_NOT_PASS
+class A {
+void method Full<T;U> {}
+}
+### END ###
+
+### TEST simple method with a parameter without chevron###
+@SHOULD_NOT_PASS
+class A {
+void method Full T,U {}
+}
 ### END ###
 
 
