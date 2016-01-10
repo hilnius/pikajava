@@ -6,17 +6,31 @@ open ExitManagement
 
 
 
-%start  classDeclaration
-%type <Types.objectTree>  classDeclaration
+%start  objectDeclaration
+%type <Types.objectTree>  objectDeclaration
 %%
+objectDeclaration:
+| interfaceDecl=interfaceDeclaration { interfaceDecl}
+| classDecl=classDeclaration { classDecl}	
+| enum=enumDeclaration { enum }
+| error {print_string "\027[31mError: unable to parse "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; ErrorDecl ("Error : Invalid Declaration\n")}
+
 classDeclaration:
 | modifs=modifiersList CLASS className=IDENTIFIER params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACKET con=classContentDeclarations
 	CLOSING_BRACKET
 	{ClassTree({objectType=Class;modif=modifs;parameters=params;inh=inh;impl=impl;className=Identifier className;con=con});}
-| modifs=modifiersList INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET con=classContentDeclarations CLOSING_BRACKET
-	{InterfaceTree({objectType=Interface;modif=modifs;inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=con});}
-| enum=enumDeclaration { enum }
-| error {print_string "\027[31mError: unable to parse "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; ErrorDecl ("Error : Invalid Declaration\n")}
+interfaceDeclaration:
+| modifs=modifiersList INTERFACE interfaceName=IDENTIFIER params=parametersDeclaration inh=inheritsInterface OPENING_BRACKET con=interfaceMemberDeclarations? CLOSING_BRACKET
+	{InterfaceTree({objectType=Interface;modif=modifs;inh=inh;parameters=params;interfaceName=Identifier interfaceName;con=con});}	
+interfaceMemberDeclarations:
+| interf=interfaceMemberDeclaration {[interf]}
+| interfs=interfaceMemberDeclarations interf=interfaceMemberDeclaration {interfs @ [interf]}
+
+interfaceMemberDeclaration:
+(*TODO |constantDeclaration*)
+|absMethod=abstractMethodDeclaration {absMethod}
+|classDecl=classDeclaration SEMICOLON {ObjectTree classDecl}
+|interfDecl=interfaceDeclaration SEMICOLON {ObjectTree interfDecl}
 
 enumDeclaration:
 | cm=modifiers? ENUM id=IDENTIFIER ifs=implements eb=enumBody { EnumTree({ objectType=Enum; modif=cm; inh=ifs; enumName=Identifier id; con=eb }); }
@@ -26,8 +40,8 @@ enumConstants:
 | e=enumConstant { [e] }
 | es=enumConstants COMMA e=enumConstant { es @ [e] }
 enumConstant:
-| an=annotations? id=IDENTIFIER ar=arguments? cb=classContentDeclarations { { annotations=an; identifier=(Identifier id); arguments=ar; classBody=cb } }
-arguments:
+| an=annotations? id=IDENTIFIER ar=enumConstantsArguments? cb=classContentDeclarations { { annotations=an; identifier=(Identifier id); arguments=ar; classBody=cb } }
+enumConstantsArguments:
 | OPENING_PARENTHESIS  CLOSING_PARENTHESIS { [] } (* FIXME *)
 enumBodyDeclarations:
 | SEMICOLON cb=classContentDeclarations { cb }
@@ -83,6 +97,7 @@ classContentList:
 classContentDeclaration:
 | STATIC b=blockDeclaration { Initializer({iniType=Static;con=b}) }
 | methodDecl=methodDeclaration {methodDecl}
-| objectDecl=classDeclaration {ObjectTree(objectDecl)}
+| abstractMethodDecl=abstractMethodDeclaration {abstractMethodDecl}
+| objectDecl=objectDeclaration {ObjectTree(objectDecl)}
 | block=blockDeclaration {Initializer({iniType=NonStatic;con=block})}
 %%

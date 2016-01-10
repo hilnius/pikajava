@@ -163,7 +163,7 @@ block:
 | bs=blockStatements b=blockStatement     { bs @ [b] }
 blockStatement:
 | lvds=localVariableDeclarationStatement  { lvds }
-| cd=classDeclaration                     { ClassDeclarationStatement(cd) }
+| cd=objectDeclaration                     { ClassDeclarationStatement(cd) }
 | s=statement                             { Statement(s) }
 
 (* expressions *)
