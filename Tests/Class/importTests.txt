@@ -1,0 +1,55 @@
+### TEST package ###
+@SHOULD_PASS
+package java;
+### END ###
+
+### TEST simple import ###
+@SHOULD_PASS
+import java;
+### END ###
+
+### TEST import with dot ###
+@SHOULD_PASS
+import java.lang;
+### END ###
+
+### TEST import with star ###
+@SHOULD_PASS
+import java.lang.*;
+### END ###
+
+### TEST double import with star ###
+@SHOULD_PASS
+import anImport;
+import java.lang.*;
+### END ###
+
+### TEST static import ###
+@SHOULD_PASS
+import static anImport;
+### END ###
+
+### TEST static import and import ###
+@SHOULD_PASS
+import static anImport;
+import java.lang;
+### END ###
+
+
+### TEST package without semicolon ###
+@SHOULD_NOT_PASS
+package aPackage
+### END ###
+
+### TEST import without semicolon ###
+@SHOULD_NOT_PASS
+import anImport
+### END ###
+
+
+### TEST import after package###
+@SHOULD_NOT_PASS
+import anImport;
+package aPackage;
+### END ###
+

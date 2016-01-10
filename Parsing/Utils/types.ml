@@ -115,6 +115,7 @@ and contentClass  = classContentTree list option
 and enumContent = { enumConstants: enumConstant list option; con: contentClass }
 and enumConstant = { annotations : annotation list option; identifier: identifier; arguments: arguments; classBody: contentClass }
 
+
 and block = Block of blockStatement list
 and blockStatement =
     ClassDeclaration of classDeclaration
