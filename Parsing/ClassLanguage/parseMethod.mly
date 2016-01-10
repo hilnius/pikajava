@@ -11,7 +11,6 @@ open ExitManagement
 methodDeclaration :
 | modifs=modifiersMethodList params=parametersDeclaration return=returnType methodName=IDENTIFIER OPENING_PARENTHESIS arguments = arguments CLOSING_PARENTHESIS exceptions=exceptionDecl block=blockOrAbstract
 	{MethodTree({parameters=params; modif=modifs; returnType= return; name= Identifier methodName; args=arguments; thr=exceptions; con=block});}
-(*| error {print_string "Error : Invalid Method Declaration\n";print(symbol_loc $startpos $endpos); setExitCodeValue 3; Empty}*)
 
 modifiersMethodList:
 | modifsMethod = modifiersMethod {Some(modifsMethod)}
@@ -24,18 +23,7 @@ modifiersMethod:
 modifierMethod:
 | syn=synchronization {Synchronization syn}
 | nat=nativity {Nativity nat}
-(*visibilit:
-|PUBLIC {Public}
-|PRIVATE {Private}
-|PROTECTED {Protected}
-abstractio:
-|ABSTRACT {Abstract}
-finalit:
-|FINAL {Final}
-staticity:
-| STATIC {Static}
-strictfp:
-| STRICTFP {StrictFp}*)
+
 nativity:
 | NATIVE {Native}
 synchronization:
