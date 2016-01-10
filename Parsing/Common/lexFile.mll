@@ -43,6 +43,9 @@ let printLexeme = function
   	| WHILE -> print_string "WHILE"
   	| VOID -> print_string "VOID"
   	| IDENTIFIER s -> print_string s
+
+exception SyntaxError of string
+
 }
 
 let identifierName = ['a'-'z' 'A'-'Z']['0'-'9' 'a'-'z' '_' '$' 'A'-'Z']*
@@ -107,6 +110,7 @@ rule nextToken = parse
   | "try"         { TRY }
   | "catch"       { CATCH }
   | "finally"     { FINALLY }
+  | '"'           { readString (Buffer.create 32) lexbuf }
   | identifierName as identifierName { IDENTIFIER identifierName }
 and commentLine = parse
   | newLine       { Location.incr_line lexbuf; nextToken lexbuf }
@@ -115,6 +119,23 @@ and longComment = parse
   | "*/"          { nextToken lexbuf }
   | newLine       { Location.incr_line lexbuf; longComment lexbuf }
   | _             { longComment lexbuf }
+and readString buf = parse
+  | '"'       { STRING (Buffer.contents buf) }
+  | '\\' '/'  { Buffer.add_char buf '/'; readString buf lexbuf }
+  | '\\' '\\' { Buffer.add_char buf '\\'; readString buf lexbuf }
+  | '\\' 'b'  { Buffer.add_char buf '\b'; readString buf lexbuf }
+  | '\\' 'f'  { Buffer.add_char buf '\012'; readString buf lexbuf }
+  | '\\' 'n'  { Buffer.add_char buf '\n'; readString buf lexbuf }
+  | '\\' 'r'  { Buffer.add_char buf '\r'; readString buf lexbuf }
+  | '\\' 't'  { Buffer.add_char buf '\t'; readString buf lexbuf }
+  | '\\' '"'  { Buffer.add_char buf '\"'; readString buf lexbuf }
+  | '\\' '\''  { Buffer.add_string buf "\'"; readString buf lexbuf }
+  | [^ '"' '\\']+
+    { Buffer.add_string buf (Lexing.lexeme lexbuf);
+      readString buf lexbuf
+    }
+  | _ { raise (SyntaxError ("Illegal string character: " ^ Lexing.lexeme lexbuf)) }
+  | eof { raise (SyntaxError ("String is not terminated")) }
 {
 let rec examineAll lexbuf =
     let res = nextToken lexbuf in
