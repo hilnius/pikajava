@@ -25,27 +25,20 @@ whileStatementNoShortIf:
 | WHILE OPENING_PARENTHESIS expr=expression CLOSING_PARENTHESIS s=statementNoShortIf { WhileStatement(expr, Block([Statement(s)])) }
 
 (* for statements *)
-(*forStatement:
+forStatement:
 | s=basicForStatement                     { s }
 | s=enhancedForStatement                  { s }
 basicForStatement:
-| FOR OPENING_PARENTHESIS fi=forInit SEMICOLON expr=expression SEMICOLON update=expression CLOSING_PARENTHESIS s=statement { ForStatement(fi, expr, update, Block([Statement(s)])) }
+| FOR OPENING_PARENTHESIS fi=forInit? SEMICOLON expr=expression? SEMICOLON update=forUpdate? CLOSING_PARENTHESIS s=statement { ForStatement(fi, expr, update, Block([Statement(s)])) }
+enhancedForStatement:
+| FOR OPENING_PARENTHESIS vm=variableModifiers? t=typed i=identifier COLON e=expression CLOSING_PARENTHESIS s=statement { EnhancedForStatement(vm, t, i, e, s) }
 forStatementNoShortIf:
-| FOR OPENING_PARENTHESIS fi=forInitOpt SEMICOLON expr=expressionOpt SEMICOLON update=forUpdateOpt CLOSING_PARENTHESIS s=statementNoShortIf { ForStatement(fi, expr, update, Block([Statement(s)])) }
-forInitOpt:
-| f=forInit 		                          { f }
-|           		                          { EmptyStatement }
-expressionOpt:
-| f=expression 	                          { f }
-|              	                          { BooleanLiteral(true) }
-forUpdateOpt:
-| f=forUpdate 	                          { f }
-|             	                          { BooleanLiteral(true) }
+| FOR OPENING_PARENTHESIS fi=forInit? SEMICOLON expr=expression? SEMICOLON update=forUpdate? CLOSING_PARENTHESIS s=statementNoShortIf { ForStatement(fi, expr, update, Block([Statement(s)])) }
 forInit:
-| s=statementExpressionList               { BlockStatement(Block(s)) }
-| s=localVariableDeclarationStatement     { BlockStatement(Block([s])) } (* be careful, should be a localVariableDeclaration *)
+| s=statementExpressionList               { ForInitStatementExpressionList s }
+| s=localVariableDeclarationStatement     { ForInitLocalVariableDeclarationStatement s }
 forUpdate:
-| s=statementExpressionList               { BooleanLiteral(true) }*)
+| s=statementExpressionList               { s }
 statementExpressionList:
 | s=statementExpression                   { [s] }
 | s=statementExpression COMMA sel=statementExpressionList { s::sel }
@@ -163,7 +156,7 @@ statement:
 | s=ifThenStatement                       { s }
 | s=ifThenElseStatement                   { s }
 | s=whileStatement                        { s }
-(*| s=forStatement                          { s }*)
+| s=forStatement                          { s }
 statementWithoutTrailingSubstatement:
 | b=block                                 { BlockStatement(b) }
 | s=emptyStatement                        { s }
@@ -182,7 +175,7 @@ statementNoShortIf:
 | s=labeledStatementNoShortIf             { s }
 | s=ifThenElseStatementNoShortIf          { s }
 | s=whileStatementNoShortIf               { s }
-(*| s=forStatementNoShortIf                 { s }*)
+| s=forStatementNoShortIf                 { s }
 block:
 | OPENING_BRACE b=blockStatements? CLOSING_BRACE {
     match b with

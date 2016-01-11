@@ -4,6 +4,10 @@ class Yolo {
 
   public <T extends C < ? > > void dsqqsd() {
     double v1, v2 = 5;
+
+    for ( int a : 5 ) {
+
+    }
   }
 
 }

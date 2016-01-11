@@ -144,7 +144,8 @@ and blockStatement =
   | Statement of statement
 and statement =
     IfStatement of (expression * block * block)
-  | ForStatement of (statement * expression * expression * block)
+  | ForStatement of (forInit option * expression option * statementExpression list option * block)
+  | EnhancedForStatement of (variableModifiers option * typed * identifier * expression * statement)
   | WhileStatement of (expression * block)
   | BlockStatement of block
   | AssertStatement of (expression * expression option)
@@ -159,6 +160,9 @@ and statement =
   | LabeledStatement of (identifier * statement)
   | ExpressionStatement of (statementExpression)
   | EmptyStatement
+and forInit =
+  | ForInitStatementExpressionList of statementExpression list
+  | ForInitLocalVariableDeclarationStatement of blockStatement
 and statementExpression =
   | AssignmentStatement of assignment
   | PreIncrementExpressionStatement of preIncrementExpression
