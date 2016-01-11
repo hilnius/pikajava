@@ -6,7 +6,9 @@ class Yolo {
     double v1, v2 = 5;
 
     for ( int a : 5 ) {
+      thisIsACall();
 
+      String a = new Cl();
     }
   }
 
