@@ -140,7 +140,7 @@ castExpression:
 	{ CastExpressionReference(t, p) }
 
 postfixExpression:
- | p=primary
+| p=primary
 	{ PostfixExpressionPrimary p }
 | p=expressionName
 	{ PostfixExpressionName p }
@@ -180,10 +180,10 @@ postfixExpression:
 leftHandSide:
 | p=expressionName
 	{ LeftHandSideExpressionName p }
-//| p=fieldAccess
-//	{ LeftHandSideFieldAccess p }
-//| p=arrayAccess
-//	{ LeftHandSideArrayAccess p }
+| p=fieldAccess
+	{ LeftHandSideFieldAccess p }
+| p=arrayAccess
+	{ LeftHandSideArrayAccess p }
 
 fieldAccess:
 | p=primary DOT i=identifier
@@ -192,6 +192,12 @@ fieldAccess:
         { FieldAccessSuper p }
 | p=className DOT SUPER DOT i=identifier
         { FieldAccessClass(p, i) }
+
+arrayAccess:
+| p=expressionName BRACKETOPEN a=expression BRACKETCLOSE
+	{ ArrayAccessExpression(p, a) }
+| p=primaryNoNewArray BRACKETOPEN a=expression BRACKETCLOSE
+	{ ArrayAccessPrimary(p, a) }
 
 primary:
 | p=primaryNoNewArray
@@ -216,10 +222,22 @@ primaryNoNewArray:
 //	{ PrimaryClassInstanceCreation p }
 | p=fieldAccess
 	{ PrimaryFieldAccess p }
-//| p=methodInvocation
-//	{ PrimaryMethodInvocation p }
-//| p=arrayAccess
-//	{ PrimaryArrayAccess p }
+| p=methodInvocation
+	{ PrimaryMethodInvocation p }
+| p=arrayAccess
+	{ PrimaryArrayAccess p }
+
+methodInvocation:
+| p=methodName a=arguments
+	{ MethodInvocationName(p, a) }
+| p=primary DOT w=option(nonWildTypeArguments) i=identifier a=arguments
+	{ MethodInvocationPrimary(p, w, i, a) }
+| SUPER DOT w=option(nonWildTypeArguments) i=identifier a=arguments
+	{ MethodInvocationSuper(w, i, a) }
+| p=className DOT SUPER DOT w=option(nonWildTypeArguments) i=identifier a=arguments
+	{ MethodInvocationClassSuper(p, w, i, a) }
+| p=typeName DOT w=nonWildTypeArguments i=identifier a=arguments
+	{ MethodInvocationType(p, w, i, a) }
 
 dims:
 | BRACKETOPEN BRACKETCLOSE
@@ -483,12 +501,12 @@ expressionName:
 | e=ambiguousName DOT p=identifier
 	{ let AmbiguousName(l) = e in ExpressionName(p::l) }
 
-(*methodName:
+methodName:
 | p=identifier
-	{ MethodName p }
-| e=ambiguousName DOT p=identifier
-	{ MethodNameAmbiguous(p, a) }
-*)
+	{ MethodName [p] }
+| e=methodName DOT p=identifier
+	{ let MethodName(l) = e in MethodName(p::l) }
+
 typeName:
 | p=identifier
 	{ TypeName [p] }
@@ -554,6 +572,15 @@ selector:
 %public arguments:
 | OPENING_PARENTHESIS p=separated_list(COMMA, expression) CLOSING_PARENTHESIS
 	{ Arguments(p) }
+
+%public argumentList:
+| p=separated_list(COMMA, expression)
+        { p }
+
+nonWildTypeArguments:
+| OPENING_CHEVRON p=separated_nonempty_list(COMMA, referenceType) CLOSING_CHEVRON
+	{ NonWildTypeArguments(p) }
+
 (*
 optNonQUESTION_MARKTypeArguments:
 |
