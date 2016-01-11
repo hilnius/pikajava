@@ -444,7 +444,7 @@ and assignment =
 and leftHandSide =
     LeftHandSideExpressionName of expressionName
   | LeftHandSideFieldAccess of fieldAccess
-  | LeftHandSideArrayAccess
+  | LeftHandSideArrayAccess of arrayAccess
 
 and fieldAccess =
     FieldAccessPrimary of (primary * identifier)
