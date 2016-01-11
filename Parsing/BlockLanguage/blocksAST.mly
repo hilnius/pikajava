@@ -105,7 +105,7 @@ localVariableDeclarationStatement:
 localVariableDeclaration:
 | vm=variableModifiers? t=typed vd=variableDeclarators { match vm with None -> ([], t, vd) | Some(v) -> (v, t, vd)  }
 
-variableDeclarators:
+%public variableDeclarators:
 | vd=variableDeclarator                   { [vd] }
 | vds=variableDeclarators COMMA vd=variableDeclarator { vds @ [vd] }
 

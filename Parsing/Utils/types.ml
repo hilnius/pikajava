@@ -36,6 +36,10 @@ and strictfp=
   | StrictFp
   | NonStrictFp
 
+and transientity=
+  | Transient
+  | NonTransient
+
 and objType =
   | Class
   | Interface
@@ -87,11 +91,13 @@ and modifier =
 | StrictFpity of strictfp
 | Synchronization of synchronization
 | Nativity of nativity
+| Transient of transientity
+| Volatile of volatility
 | Annotation of annotation
 
 and variableModifiers = modifier list
 and methodModifiers = modifier list
-
+and constantModifiers = modifier list
 and exceptionType = ExceptionClassOrInterfaceType of classOrInterfaceType | ExceptionTypeVariable of typeVariable
 and exceptionTypeList = exceptionType list
 
@@ -125,31 +131,28 @@ and classContentTree =
 | InstanceInitializer
 | StaticInitializer
 | ConstructorDeclaration
-| FieldDeclaration
 | MethodDeclaration of methodDeclaration
 | ClassDeclaration of classTreeMap
-| InterfaceDeclaration
+| InterfaceDeclaration of interfaceTreeMap
+| FieldDeclaration of fieldDeclarationTreeMap
+| EnumDeclaration of enumTreeMap
 | EmptyContent
 
-and objectTree =
-| ClassTree of classContentTree
-| InterfaceTree of interfaceTreeMap
-| EnumTree of enumTreeMap
-| ErrorDecl of string
 
-and interfaceTreeMap = {objectType: objType; modif: methodModifiers option; inh:parent list option; interfaceName: identifier; parameters: typeParameterList; con: contentClass}
+and fieldDeclarationTreeMap = {modif: constantModifiers option; varDecl: variableDeclarators}
+and interfaceTreeMap = {objectType: objType; modif: methodModifiers option; inh:interface list option; interfaceName: identifier; parameters: typeParameterList option; con: contentClass}
 and classTreeMap = {objectType: objType; modif: methodModifiers option; parameters: typeParameterList option; super: super option; interfaces: interface list option; className: identifier; con: contentClass}
-and enumTreeMap = {objectType: objType; modif: methodModifiers option; inh:parent list option; enumName: identifier; con: enumContent}
+and enumTreeMap = {objectType: objType; modif: methodModifiers option; inh:interface list option; enumName: identifier; con: enumContent}
 and contentClass  = classContentTree list option
-and enumContent = { enumConstants: enumConstant list option; con: contentClass }
-and enumConstant = { annotations : annotation list option; identifier: identifier; arguments: arguments option; classBody: contentClass }
+and enumContent = { enumConstants: enumConstant list option; con: contentClass option }
+and enumConstant = { annotations : annotation list option; identifier: identifier; arguments: arguments option; classBody: contentClass option }
 
 
 and block = Block of blockStatement list
 and blockStatement =
     ClassDeclaration of classDeclaration
   | LocalVariableDeclarationStatement of localVariableDeclaration
-  | ClassDeclarationStatement of objectTree
+  | ClassDeclarationStatement of classContentTree
   | Statement of statement
 and statement =
     IfStatement of (expression * block * block)

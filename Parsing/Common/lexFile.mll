@@ -16,7 +16,7 @@ let printLexeme = function
     | ABSTRACT -> print_string "ABSTRACT"
     | FINAL -> print_string "FINAL"
     | STRICTFP -> print_string "STRICTFP"
-    | NATIVE -> print_string "SYNCHRONIZED"
+    | NATIVE -> print_string "NATIVE"
 	| EXTENDS -> print_string "EXTENDS"
     | SUPER -> print_string "SUPER"
 	| IMPLEMENTS -> print_string "IMPLEMENTS"
@@ -128,6 +128,8 @@ rule nextToken = parse
   | "strictfp"    { STRICTFP }
   | "native"      { NATIVE }
   | "synchronized"{ SYNCHRONIZED }
+  | "transient"   { TRANSIENT }
+  | "volatile"    { VOLATILE }
   | "extends"     { EXTENDS }
   | "super"       { SUPER }
   | "implements"  { IMPLEMENTS }
