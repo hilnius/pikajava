@@ -10,17 +10,28 @@ open ExitManagement
 %type <Types.objectTree>  objectDeclaration
 %%
 objectDeclaration:
-| interfaceDecl=interfaceDeclaration { interfaceDecl}
-| classDecl=classDeclaration { classDecl}
-| enum=enumDeclaration { enum }
+(*| interfaceDecl=interfaceDeclaration { interfaceDecl}*)
+| classDecl=classDeclaration { ClassTree classDecl }
+(*| enum=enumDeclaration { enum } *)
 | error {print_string "\027[31mError: unable to parse "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; ErrorDecl ("Error : Invalid Declaration\n")}
 
 classDeclaration:
-| modifs=modifiersList CLASS className=identifier params=parametersDeclaration inh=inherits impl=implements  OPENING_BRACE con=classContentDeclarations
-	CLOSING_BRACE
-	{ClassTree({objectType=Class;modif=modifs;parameters=params;inh=inh;impl=impl;className=className;con=con});}
-interfaceDeclaration:
-| modifs=modifiersList INTERFACE interfaceName=identifier params=parametersDeclaration inh=inheritsInterface OPENING_BRACE con=interfaceMemberDeclarations? CLOSING_BRACE
+| cm=classModifiers? CLASS i=identifier tp=typeParameters? s=super? ifs=interfaces? cb=classBody { ClassDeclaration({objectType=Class;modif=cm;parameters=tp;super=s;interfaces=ifs;className=i;con=cb}) }
+
+classModifiers:
+| cm=anyModifiers { cm }
+
+interfaces:
+| IMPLEMENTS itl=interfaceTypeList { itl }
+interfaceTypeList:
+| it=interfaceType { [it] }
+| itl=interfaceTypeList COMMA it=interfaceType { itl @ [it] }
+
+super:
+| EXTENDS ct=classType { Extends(ct) }
+
+(*interfaceDeclaration:
+| modifs=modifiersList INTERFACE interfaceName=identifier params=typeParameters inh=inheritsInterface OPENING_BRACE con=interfaceMemberDeclarations? CLOSING_BRACE
 	{InterfaceTree({objectType=Interface;modif=modifs;inh=inh;parameters=params;interfaceName=interfaceName;con=con});}
 interfaceMemberDeclarations:
 | interf=interfaceMemberDeclaration {[interf]}
@@ -28,11 +39,11 @@ interfaceMemberDeclarations:
 
 interfaceMemberDeclaration:
 (*TODO |constantDeclaration*)
-|absMethod=abstractMethodDeclaration {absMethod}
+(*|absMethod=abstractMethodDeclaration {absMethod}*)
 |classDecl=classDeclaration {ObjectTree classDecl}
-|interfDecl=interfaceDeclaration {ObjectTree interfDecl}
+|interfDecl=interfaceDeclaration {ObjectTree interfDecl}*)
 
-enumDeclaration:
+(*enumDeclaration:
 | cm=modifiers? ENUM id=identifier ifs=implements eb=enumBody { EnumTree({ objectType=Enum; modif=cm; inh=ifs; enumName=id; con=eb }); }
 enumBody:
 | OPENING_BRACE ec=enumConstants? COMMA? ebd=enumBodyDeclarations CLOSING_BRACE { { enumConstants=ec; con=ebd } }
@@ -62,21 +73,27 @@ modifiers:
 | fin=finality {Finality fin}
 | sta=staticity {Staticity sta}
 | strict=strictfp {StrictFpity strict}
-| anno=annotation {Annotation anno}
-visibility:
-|PUBLIC {Public}
-|PRIVATE {Private}
-|PROTECTED {Protected}
-abstraction:
-|ABSTRACT {Abstract}
-staticity:
-|STATIC {Static}
-finality:
-|FINAL {Final}
-strictfp:
-| STRICTFP {StrictFp}
+| anno=annotation {Annotation anno}*)
+
+classBody:
+| OPENING_BRACE cbd=classBodyDeclarations? CLOSING_BRACE { cbd }
+classBodyDeclarations:
+| cbd=classBodyDeclaration { [cbd] }
+| cbds=classBodyDeclarations cbd=classBodyDeclaration { cbds @ [cbd] }
+classBodyDeclaration:
+| cbd=classMemberDeclaration { cbd }
+(*| cbd=instanceInitializer { cbd } *)
+(*| cbd=staticInitializer { cbd } *)
+(*| cbd=constructorDeclaration { cbd } *)
+classMemberDeclaration:
+(*| cmd=fieldDeclaration { cmd }*)
+| cmd=methodDeclaration { cmd }
+| cmd=classDeclaration { cmd }
+(*| cmd=interfaceDeclaration { cmd }*)
+| SEMICOLON { EmptyContent }
+
 inherits:
-| EXTENDS parentName=identifier parameters=parametersDeclaration {Some(Parent({name=parentName;parameters=parameters}))}
+| EXTENDS parentName=identifier parameters=typeParameters {Some(Parent({name=parentName;parameters=parameters}))}
 | {None}
 inheritsInterface:
 | EXTENDS completeInterf=interface {Some(completeInterf)}
@@ -85,19 +102,8 @@ implements:
 | IMPLEMENTS completeInterf=interface {Some(completeInterf)}
 | {None}
 interface:
-| className=identifier parameters=parametersDeclaration COMMA interf=interface {(Parent({name=className; parameters=parameters}))::interf}
-| className=identifier parameters=parametersDeclaration {[Parent({name=className; parameters=parameters})]}
+| className=identifier parameters=typeParameters COMMA interf=interface {(Parent({name=className; parameters=parameters}))::interf}
+| className=identifier parameters=typeParameters {[Parent({name=className; parameters=parameters})]}
 
-classContentDeclarations:
-| classContentList=classContentList {Some(classContentList)}
-| {None}
-classContentList:
-| classContentDecl=classContentDeclaration classContentList=classContentList  {(classContentDecl)::classContentList}
-| classContentDecl=classContentDeclaration {[classContentDecl]}
-classContentDeclaration:
-| STATIC b=blockDeclaration { Initializer({iniType=Static;con=b}) }
-| methodDecl=methodDeclaration {methodDecl}
-| abstractMethodDecl=abstractMethodDeclaration {abstractMethodDecl}
-| objectDecl=objectDeclaration {ObjectTree(objectDecl)}
-| block=blockDeclaration {Initializer({iniType=NonStatic;con=block})}
+
 %%

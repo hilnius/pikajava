@@ -92,6 +92,7 @@ rule nextToken = parse
   | '{'           { OPENING_BRACE }
   | '}'           { CLOSING_BRACE }
 
+  | "..."         { VARIADIC }
   | '='           { EQUAL }
   | "++"          { MOREMORE }
   | "--"          { LESSLESS }

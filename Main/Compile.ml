@@ -16,7 +16,7 @@ let execute lexbuf verbose =
 
  (*LexFile.examineAll lexbuf;*)
 
- (* Parsers.fileDeclaration LexFile.nextToken lexbuf; *)
- PrintFiles.printFileTree(Parsers.fileDeclaration LexFile.nextToken lexbuf);
+ Parsers.fileDeclaration LexFile.nextToken lexbuf;
+ (* PrintFiles.printFileTree(Parsers.fileDeclaration LexFile.nextToken lexbuf); *)
  exit !exitCodeValue
 

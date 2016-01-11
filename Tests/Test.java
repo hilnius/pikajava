@@ -3,30 +3,22 @@
 class Yolo {
 
   public void dsqqsd() {
-    if (1 == 2) {
-      return 12 + 1931 >> 3;
-    }
   }
 
 }
 
 // class Yolo is a swaggy class !
-/*@override
+@override
 class Yolo {
   @override
   static void main() {
-    int
   }
 
-  static {
-    int
-    "hello"
-  }
 
-  public @override static <T, L extends Yolo<? super T>> void main() {
+  public @override static <T, L extends Yolo> void main() {
     class SubClass {
       public void getInstance() {
-        if(true) {
+        /*if(true) {
           int
         }
         assert true ;
@@ -71,10 +63,9 @@ class Yolo {
           int
         } finally {
           int
-        }
+        }*/
       }
     }
   }
 }
 
-*/
