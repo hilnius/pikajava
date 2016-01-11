@@ -55,7 +55,7 @@ interfaceMemberDeclarations:
 | interfs=interfaceMemberDeclarations interf=interfaceMemberDeclaration {interfs @ [interf]}
 
 interfaceMemberDeclaration:
-|constDecl=constantDeclaration {ConstantDeclaration constDecl}
+|constDecl=fieldDeclaration {FieldDeclaration constDecl}
 |absMethod=abstractMethodDeclaration {MethodDeclaration absMethod}
 |classDecl=classDeclaration {classDecl}
 |interfDecl=interfaceDeclaration {InterfaceDeclaration interfDecl}
@@ -67,9 +67,9 @@ abstractMethodDeclaration:
 (*abstractMethodModifiers:
 | any=anyModifiers {any} *)
 
-constantDeclaration:
+(*constantDeclaration:
 | constantModifs=anyModifiers? aType=typed  variableDecls=variableDeclarators SEMICOLON
-	{{modif= constantModifs ; varDecl=variableDecls}}
+	{{modif= constantModifs ; varDecl=variableDecls}}*)
 	
 enumDeclaration:
 | cm=anyModifiers? ENUM id=identifier ifs=interfaces? eb=enumBody { EnumDeclaration({ objectType=Enum; modif=cm; inh=ifs; enumName=id; con=eb }); }
@@ -106,12 +106,15 @@ classBodyDeclaration:
 (*| cbd=staticInitializer { cbd } *)
 (*| cbd=constructorDeclaration { cbd } *)
 classMemberDeclaration:
-(*| cmd=fieldDeclaration { cmd }*)
+| cmd=fieldDeclaration { FieldDeclaration cmd }
 | cmd=methodDeclaration { cmd }
 | cmd=classDeclaration {  cmd }
 | cmd=interfaceDeclaration { InterfaceDeclaration cmd }
 | SEMICOLON { EmptyContent }
 
+fieldDeclaration:
+| fieldModifs=anyModifiers? aType=typed varDecls=variableDeclarators SEMICOLON {{modif= fieldModifs ; varDecl=varDecls}}
+(*
 inherits:
 | EXTENDS parentName=identifier parameters=typeParameters {Some(Parent({name=parentName;parameters=parameters}))}
 | {None}
@@ -123,7 +126,7 @@ implements:
 | {None}
 interface:
 | className=identifier parameters=typeParameters COMMA interf=interface {(Parent({name=className; parameters=parameters}))::interf}
-| className=identifier parameters=typeParameters {[Parent({name=className; parameters=parameters})]}
+| className=identifier parameters=typeParameters {[Parent({name=className; parameters=parameters})]}*)
 
 
 %%

@@ -18,7 +18,7 @@ someMethodDeclaration:
       MethodDeclaration({ parameters=tp; modif=mm; returnType=rt; methodDeclarator=md; thr=th; con=mb })
   }
 methodHeader:
-| mm=methodModifiers? tp=typeParameters? rt=resultType md=methodDeclarator th=throws? { { parameters=tp; modif=mm; returnType=rt; methodDeclarator=md; thr=th; con=(Some (Block [])) } }
+| mm=anyModifiers? tp=typeParameters? rt=resultType md=methodDeclarator th=throws? { { parameters=tp; modif=mm; returnType=rt; methodDeclarator=md; thr=th; con=(Some (Block [])) } }
 methodBody:
 | b=blockDeclaration { Some(b) }
 | SEMICOLON { None }
@@ -44,8 +44,6 @@ lastFormalParameter:
 | fp=formalParameter { fp }
 typedVariadic:
 | t=typed VARIADIC { VariadicType(t) }
-methodModifiers:
-| an=anyModifiers { an }
 %public anyModifiers:
 | mm=anyModifier { [mm] }
 | mms=anyModifiers mm=anyModifier { mms @ [mm] }
@@ -60,6 +58,8 @@ methodModifiers:
 | SYNCHRONIZED { Synchronization(Synchronized) }
 | NATIVE { Nativity(Native) }
 | STRICTFP { StrictFpity(StrictFp) }
+| TRANSIENT {Transient(Transient)}
+| VOLATILE {Volatile(Volatile)}
 %public throws:
 | THROWS etl=exceptionTypeList { etl }
 exceptionTypeList:

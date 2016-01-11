@@ -48,6 +48,10 @@ and strictfp=
   | StrictFp
   | NonStrictFp
 
+and transientity=
+  | Transient
+  | NonTransient
+
 and objType =
   | Class
   | Interface
@@ -78,6 +82,8 @@ and modifier =
 | StrictFpity of strictfp
 | Synchronization of synchronization
 | Nativity of nativity
+| Transient of transientity
+| Volatile of volatility
 | Annotation of annotation
 
 and variableModifiers = modifier list
@@ -116,16 +122,15 @@ and classContentTree =
 | InstanceInitializer
 | StaticInitializer
 | ConstructorDeclaration
-| FieldDeclaration
 | MethodDeclaration of methodDeclaration
 | ClassDeclaration of classTreeMap
 | InterfaceDeclaration of interfaceTreeMap
-| ConstantDeclaration of constantDeclarationTreeMap
+| FieldDeclaration of fieldDeclarationTreeMap
 | EnumDeclaration of enumTreeMap
 | EmptyContent
 
 
-and constantDeclarationTreeMap = {modif: constantModifiers option; varDecl: variableDeclarators}
+and fieldDeclarationTreeMap = {modif: constantModifiers option; varDecl: variableDeclarators}
 and interfaceTreeMap = {objectType: objType; modif: methodModifiers option; inh:interface list option; interfaceName: identifier; parameters: typeParameterList option; con: contentClass}
 and classTreeMap = {objectType: objType; modif: methodModifiers option; parameters: typeParameterList option; super: super option; interfaces: interface list option; className: identifier; con: contentClass}
 and enumTreeMap = {objectType: objType; modif: methodModifiers option; inh:interface list option; enumName: identifier; con: enumContent}
