@@ -100,8 +100,7 @@ finally:
 
 (* expressions *)
 localVariableDeclarationStatement:
-| lvd=localVariableDeclaration SEMICOLON  { print_string "LVDS"; LocalVariableDeclarationStatement(lvd) }
-(*| error {print_string "\027[31mError: unable to parse variable declaration "; print_token_full (symbol_loc $startpos $endpos); print_string "\027[0m"; Statement(EmptyStatement) }*)
+| lvd=localVariableDeclaration SEMICOLON  { LocalVariableDeclarationStatement(lvd) }
 
 localVariableDeclaration:
 | vm=variableModifiers? t=typed vd=variableDeclarators { match vm with None -> ([], t, vd) | Some(v) -> (v, t, vd)  }
@@ -109,7 +108,6 @@ localVariableDeclaration:
 variableDeclarators:
 | vd=variableDeclarator                   { [vd] }
 | vds=variableDeclarators COMMA vd=variableDeclarator { vds @ [vd] }
-| error {print_string "\027[31mError: unable to parse variable declarators "; print_token_full (symbol_loc $startpos $endpos); print_string "\027[0m"; raise (SyntaxError "coucou") }
 
 variableDeclarator:
 | vdi=variableDeclaratorId                { let (a,b) = vdi in (a,b,None) }
@@ -139,16 +137,15 @@ synchronizedStatement:
 doStatement:
 | DO s=statement WHILE OPENING_PARENTHESIS e=expression CLOSING_PARENTHESIS SEMICOLON { DoWhileStatement(e, s) }
 expressionStatement:
-| s=statementExpression SEMICOLON { print_string "EXPR"; ExpressionStatement(s) }
+| s=statementExpression SEMICOLON { ExpressionStatement(s) }
 statementExpression:
 | e=assignment                            { AssignmentStatement e }
 | e=preIncrementExpression                { PreIncrementExpressionStatement e }
 | e=preDecrementExpression                { PreDecrementExpressionStatement e }
 | e=postIncrementExpression               { PostIncrementExpressionStatement e }
 | e=postDecrementExpression               { PostDecrementExpressionStatement e }
-| error {print_string "\027[31mError: unable to parse expression statement "; print_token_full (symbol_loc $startpos $endpos); print_string "\027[0m"; raise (SyntaxError "yolo") }
-(*| e=methodInvocation                      { MethodInvocationStatement e } *)
-(*| e=classInstanceCreationExpression       { ClassInstanceCreationExpressionStatement e }*)
+| e=methodInvocation                      { MethodInvocationStatement e }
+| e=classInstanceCreationExpression       { ClassInstanceCreationExpressionStatement e }
 (* blocks *)
 statement:
 | s=statementWithoutTrailingSubstatement  { s }

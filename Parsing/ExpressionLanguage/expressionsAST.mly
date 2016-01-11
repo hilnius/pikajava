@@ -218,8 +218,8 @@ primaryNoNewArray:
 	{ PrimaryClassThis p }
 | OPENING_PARENTHESIS p=expression CLOSING_PARENTHESIS
 	{ PrimaryExpression p }
-//| p=classInstanceCreationExpression
-//	{ PrimaryClassInstanceCreation p }
+| p=classInstanceCreationExpression
+	{ PrimaryClassInstanceCreation p }
 | p=fieldAccess
 	{ PrimaryFieldAccess p }
 | p=methodInvocation
@@ -227,7 +227,7 @@ primaryNoNewArray:
 | p=arrayAccess
 	{ PrimaryArrayAccess p }
 
-methodInvocation:
+%public methodInvocation:
 | p=methodName a=arguments
 	{ MethodInvocationName(p, a) }
 | p=primary DOT w=option(nonWildTypeArguments) i=identifier a=arguments
@@ -238,6 +238,13 @@ methodInvocation:
 	{ MethodInvocationClassSuper(p, w, i, a) }
 | p=typeName DOT w=nonWildTypeArguments i=identifier a=arguments
 	{ MethodInvocationType(p, w, i, a) }
+
+%public classInstanceCreationExpression:
+| NEW ta=typeArguments? c=classOrInterfaceType OPENING_PARENTHESIS al=argumentList? CLOSING_PARENTHESIS {
+		match al with
+		| None -> ClassInstanceCreationExpression(ta,c,None)
+		| Some(l) -> ClassInstanceCreationExpression(ta,c,Some(Arguments(l)))
+	}
 
 dims:
 | BRACKETOPEN BRACKETCLOSE

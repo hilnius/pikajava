@@ -318,7 +318,7 @@ and arrayCreationExpression =
     ArrayCreationExpression
 
 and classInstanceCreationExpression =
-    ClassInstanceCreationExpression
+    ClassInstanceCreationExpression of (typeArguments option * classOrInterfaceType * arguments option)
 
 and methodInvocation =
     MethodInvocationName of (methodName * arguments)
