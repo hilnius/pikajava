@@ -158,7 +158,7 @@ and print_local_variable_declaration tabs v = match v with
 
 and print_expression expression =
   match expression with (* todo *)
-  | _ -> print_string "something"
+  | _ -> print_string(convert_expression expression)
 
 and print_optional_expression prefix e =
   match e with
@@ -385,9 +385,80 @@ and print_block_statement tabs st = match st with
   | Statement(st) -> print_statement tabs st
   | _ -> ()
 
+
+and convert_expression e = match e with
+(*  | Expression(AssignmentExpressionAssignment(p)) -> convert_assignment p
+  | Expression(AssignmentExpressionConditional(p)) -> convert_conditionalExpression p*)
+  | _ -> "none"
+
+(*and convert_assignment e =
+  let rec convert_assignmentaux e match e with
+  | Assignment(l, o, AssignmentExpressionAssignment(p)) -> "(assignment)" ^ convert_leftHandSide l ^ " " ^ convert_assignmentOperator ^ " " ^ convert_assignmentaux p
+  | Assignment(l, o, AssignmentExpressionConditional(p)) -> "(assignment)" ^ convert_leftHandSide l ^ " " ^ convert_assignmentOperator ^ " " ^ convert_assignmentaux p in
+    convert_assignmentaux e
+
+and convert_leftHandSide e = match e with
+  | LeftHandSideExpressionName(p) -> convert_expressionName p
+  (*| LeftHandSideFieldAccess(p) -> convert_fieldAccess p
+  | LeftHandSideArrayAccess(p) -> convert_arrayAccess p*)
+
+and convert_identifier e = match e with
+  | Identifier(s) -> s
+  | _ -> "none"
+
+and rec convert_expressionName e = match e with
+  | ExpressionName([]) -> ""
+  | ExpressionName( h::t ) -> convert_identifier h ^ "." ^ convert_expressionName t
+
+and convert_assignmentOperator e = match e with
+  | Equal -> "="
+  | EqualMore -> "+="
+  | EqualMinus -> "-="
+  | EqualMultiply -> "*="
+  | EqualDivide -> "/="
+  | EqualAnd -> "&="
+  | EqualOr -> "|="
+  | EqualXor -> "^="
+  | EqualModulo -> "%="
+  | EqualLeft -> "<<="
+  | EqualRight -> ">>="
+  | EqualShiftRightUnsigned -> ">>>="
+  | _ -> "OP"
+
+and rec convert_conditionalExpression e = match e with
+  | ConditionalExpression(p) -> convert_conditionalOrExpression p
+  | ConditionalExpressionTernary(p, x, c) -> "(" ^ convert_conditionalOrExpression p ^ " ? " ^ convert_expression x ^ " : " ^ convert_conditionalExpression c ^ ")"
+
+and rec convert_conditionalOrExpression e = match e with
+  | ConditionalOrExpression([]) -> ""
+  | ConditionalOrExpression( h::t ) -> "(" ^ convert_conditionalAndExpression h ^ ") || " ^ convert_conditionalOrExpression t
+
+and rec convert_conditionalAndExpression e = match e with
+  | ConditionalAndExpression([]) -> ""
+  | ConditionalAndExpression( h::t ) -> "(" ^ convert_inclusiveOrExpression h ^ ") && " ^ convert_conditionalAndExpression t
+
+and rec convert_inclusiveOrExpression e = match e with
+  | InclusiveOrExpression([]) -> ""
+  | InclusiveOrExpression( h::t ) -> "(" ^ convert_exclusiveOrExpression h ^ ") | " ^ convert_inclusiveOrExpression t
+
+and rec convert_exclusiveOrExpression e = match e with
+  | ExclusiveOrExpression([]) -> ""
+  | ExclusiveOrExpression( h::t ) -> "(" ^ convert_andExpression h ^ ") ^ " ^ convert_exclusiveOrExpression t
+
+and rec convert_andExpression e = match e with
+  | AndExpression([]) -> ""
+  | AndExpression( h::t ) -> "(" ^ convert_equalityExpression h ^ ") & " ^ convert_andExpression t
+
+and rec convert_equalityExpression e = match e with
+  | EqualityExpression(p) -> convert_relationExpression p
+  | EqualityExpressionEqual(p, s) -> convert_equalityExpression p ^ " = " ^ convert_relationalExpression s
+  | EqualityExpressionDifferent(p, s) -> convert_equalityExpression p ^ " != " ^ convert_relationalExpression s
+
+and convert_relationalExpression e = match e with
+  | _ -> "(r e)"*)
+
 and printAST t =
-  ()
-  (* print_block 0 t *)
+  print_block 0 t
 ;;
 
 
