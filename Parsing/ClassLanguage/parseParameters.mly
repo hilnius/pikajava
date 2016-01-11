@@ -4,24 +4,23 @@ open Location
 open ExitManagement
 %}
 
-%start  parametersDeclaration
-%type <Types.parameterList>  parametersDeclaration
+%start  typeParameters
+%type <Types.typeParameterList>  typeParameters
 %%
 
-parametersDeclaration:
-| OPENING_CHEVRON paramList=parameterList CLOSING_CHEVRON {Some(paramList)}
-| {None}
-parameterList:
-| param=parameter COMMA paramList = parameterList {(param)::paramList}
-| param=parameter {[param]}
+typeParameters:
+| OPENING_CHEVRON paramList=typeParameterList CLOSING_CHEVRON { paramList }
+typeParameterList:
+| tp=typeParameter { [tp] }
+| tpl=typeParameterList COMMA tp=typeParameter { tpl @ [tp] }
 
-parameter:
-| paramName = IDENTIFIER {{name=Identifier paramName;param=None;extends=None;super=None}}
-| paramName = IDENTIFIER EXTENDS firstParent=parentParameter {{name= Identifier paramName; param=None;extends=Some(firstParent);super=None}}
-
-parentParameter:
-| parentName=IDENTIFIER {{name= Identifier parentName;param=None; extends=None; super=None}}
-| parentName=IDENTIFIER OPENING_CHEVRON parentParam=parentParameter CLOSING_CHEVRON {{name= Identifier parentName; param=Some(parentParam); extends=None; super=None}}
-| parentName=IDENTIFIER OPENING_CHEVRON QUESTION_MARK EXTENDS someParent=parentParameter CLOSING_CHEVRON {{name= Identifier parentName;param=Some({name=Identifier "?";param=None;extends=Some(someParent); super=None}); extends=None; super=None}}
-| parentName=IDENTIFIER OPENING_CHEVRON QUESTION_MARK SUPER someParent=parentParameter CLOSING_CHEVRON {{name= Identifier parentName;param=Some({name=Identifier "?";param=None;extends=None; super=Some(someParent)});extends=None;super=None}}
+typeParameter:
+| tv=typeVariable tb=typeBound? { (tv, tb)  }
+typeBound:
+| EXTENDS coif=classOrInterfaceType abl=additionalBoundList? { (coif, abl) }
+additionalBoundList:
+| ab=additionalBound abl=additionalBoundList { ab::abl }
+| ab=additionalBound { [ab] }
+additionalBound:
+| BITAND it=interfaceType { it }
 

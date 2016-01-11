@@ -102,11 +102,8 @@ catchClause:
 finally:
 | FINALLY b=block                         { b }
 formalParameter:
-| vdi=variableDeclaratorId                { vdi }
-(* real here : | variableModifiers type variableDeclaratorId *)
-variableDeclaratorId:
-| i=expression                            { i }
-(*| variableDeclaratorId [ ] *)
+| vdi=variableDeclaratorId                { let (a,b) = vdi in { modifiers=[]; typed=None; declarator=(a,b,None) } }
+| vm=variableModifiers t=typed vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=vm; typed=Some(t); declarator=(a,b,None) } }
 
 (* small statements *)
 emptyStatement:
@@ -155,26 +152,45 @@ statementNoShortIf:
 | s=whileStatementNoShortIf               { s }
 (*| s=forStatementNoShortIf                 { s }*)
 block:
-| OPENING_BRACE b=blockStatements CLOSING_BRACE { Block(b) }
-| OPENING_BRACE CLOSING_BRACE { Block([]) }
+| OPENING_BRACE b=blockStatements? CLOSING_BRACE {
+    match b with
+    | None -> Block([])
+    | Some(bl) -> Block(bl)
+  }
 %public blockStatements:
 | b=blockStatement                        { [b] }
 | bs=blockStatements b=blockStatement     { bs @ [b] }
 blockStatement:
 | lvds=localVariableDeclarationStatement  { lvds }
-| cd=objectDeclaration                     { ClassDeclarationStatement(cd) }
+| cd=objectDeclaration                    { ClassDeclarationStatement(cd) } (* TODO : check this *)
 | s=statement                             { Statement(s) }
 
 (* expressions *)
 localVariableDeclarationStatement:
-| i=INTEGER                               { LocalVariableDeclaration(IntegerLiteral(90)) }
+| lvd=localVariableDeclaration SEMICOLON  { LocalVariableDeclarationStatement(lvd) }
+localVariableDeclaration:
+| vm=variableModifiers t=typed vd=variableDeclarators { (vm, t, vd) }
+variableDeclarators:
+| vd=variableDeclarator                   { [vd] }
+| vds=variableDeclarators COMMA vd=variableDeclarator { vds @ [vd] }
+variableDeclarator:
+| vdi=variableDeclaratorId                { let (a,b) = vdi in (a,b,None) }
+| vdi=variableDeclaratorId EQUAL vi=variableInitializer { let (a,b) = vdi in (a,b,Some(vi)) }
+%public variableDeclaratorId:
+| id=identifier                           { (id,0) }
+| vdi=variableDeclaratorId BRACKETOPEN BRACKETCLOSE { let (a,b) = vdi in (a,b + 1) }
+variableInitializer:
+| e=expression                            { VariableInitializerExpression(e) }
+
+(*| ai=arrayInitializer *)
+
 (* empty parsers *)
 labeledStatement:
-| i=INTEGER                               { BlockStatement(Block([LocalVariableDeclaration(IntegerLiteral(91))])) }
+| i=identifier COLON s=statement          { LabeledStatement(i,s) }
 labeledStatementNoShortIf:
-| i=INTEGER                               { BlockStatement(Block([LocalVariableDeclaration(IntegerLiteral(92))])) }
+| i=identifier COLON s=statementNoShortIf { LabeledStatement(i,s) }
 statementExpression:
-| i=INTEGER                               { LocalVariableDeclaration(IntegerLiteral(93)) }
+| i=INTEGER                               { LocalVariableDeclarationStatement(IntegerLiteral(93)) }
 constantExpression:
 | b=expression                            { b }
 %%

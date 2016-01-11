@@ -331,7 +331,7 @@ literal:
 | p=FLOATING_POINT_NUMERAL
 	{ FloatingPointLiteral(p) }
 
-typed:
+%public typed:
 | p=primitiveType
 	{ TypePrimitive p }
 | p=referenceType
@@ -375,19 +375,19 @@ referenceType:
 | p=arrayType
 	{ ReferenceTypeArray p }
 
-classOrInterfaceType:
+%public classOrInterfaceType:
 | p=classType
 	{ p }
-/*| p=interfaceType
-	{ p }*/
+| p=interfaceType
+	{ p }
 
-classType:
+%public classType:
 | p=typeDeclSpecifier a=typeArgumentsOpt
 	{ ClassType(p, a) }
 
-/*interfaceType:
+%public interfaceType:
 | p=typeDeclSpecifier a=typeArgumentsOpt
-	{ InterfaceType(p, a) }*/
+	{ InterfaceType(p, a) }
 
 typeDeclSpecifier:
 | p=typeName
@@ -395,7 +395,7 @@ typeDeclSpecifier:
 | t=classOrInterfaceType DOT p=identifier
 	{ TypeDeclSpecifierIdentifier(t, p) }
 
-typeVariable:
+%public typeVariable:
 | p=identifier
 	{ TypeVariable p }
 

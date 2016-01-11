@@ -58,11 +58,13 @@ and annotation = string
 and annotationsList = annotation list option
 
 
-and parameter = {name:identifier; param: parameter option ;extends:parameter option; super:parameter option}
+and formalParameter = { modifiers: variableModifiers; typed: typed option; declarator: variableDeclarator }
 
-and parameterList = parameter list option
+and typeParameterList = typeParameter list
+and typeParameter = typeVariable * typeBound option
+and typeBound = classOrInterfaceType * classOrInterfaceType list option
 
-and parentMap = {name:identifier;parameters:parameterList}
+and parentMap = { name: identifier; parameters: typeParameterList}
 
 and parent=Parent of parentMap
 
@@ -76,9 +78,11 @@ and modifier =
 | Nativity of nativity
 | Annotation of annotation
 
-and modifiers = modifier list option
+and variableModifiers = modifier list
+and methodModifiers = modifier list
 
-and exceptionList = identifier list option
+and exceptionType = ExceptionClassOrInterfaceType of classOrInterfaceType | ExceptionTypeVariable of typeVariable
+and exceptionTypeList = exceptionType list
 
 (*TODO and classAttribute to be implemented*)
 and classAttribute = Empty
@@ -89,35 +93,42 @@ and classListAttribute =
 
 (*TODO types classMethod to be implemented*)
 
-and content= block option
+and methodDeclarator = { identifier: identifier; parameters: formalParameter list option }
+and methodDeclaration = { parameters: typeParameterList option; modif: methodModifiers option; returnType: typed; methodDeclarator: methodDeclarator; thr: exceptionTypeList option; con: block option }
 
-and methodTreeMap = {parameters:parameterList; modif:modifiers; returnType:identifier; name:identifier; args:arguments; thr:exceptionList; con:content }
 
-
-and initializerTreeMap = {iniType:staticity;con:block}
+and initializerTreeMap = { iniType: staticity; con: block}
 
 (* types for blocks *)
 
-and variableDeclaration = IntegerLiteral of int
+and localVariableDeclaration = (variableModifiers * typed * variableDeclarators)
+and variableDeclarators = variableDeclarator list
+and variableDeclarator = (identifier * int * variableInitializer option)
 and classDeclaration = Class
+and super = Extends of classOrInterfaceType
+and interface = classOrInterfaceType
 
 (* end of blocks types *)
 
 and classContentTree =
-| MethodTree of methodTreeMap
-| Initializer of initializerTreeMap
-| ObjectTree of objectTree
-| ErrorDecl of string
+| InstanceInitializer
+| StaticInitializer
+| ConstructorDeclaration
+| FieldDeclaration
+| MethodDeclaration of methodDeclaration
+| ClassDeclaration of classTreeMap
+| InterfaceDeclaration
+| EmptyContent
 
 and objectTree =
-| ClassTree of classTreeMap
+| ClassTree of classContentTree
 | InterfaceTree of interfaceTreeMap
 | EnumTree of enumTreeMap
 | ErrorDecl of string
 
-and interfaceTreeMap = {objectType: objType; modif: modifiers; inh:parent list option; interfaceName: identifier; parameters: parameterList; con: contentClass}
-and classTreeMap = {objectType: objType; modif: modifiers; parameters: parameterList; inh:parent option; impl: parent list option; className: identifier; con: contentClass}
-and enumTreeMap = {objectType: objType; modif: modifiers; inh:parent list option; enumName: identifier; con: enumContent}
+and interfaceTreeMap = {objectType: objType; modif: methodModifiers option; inh:parent list option; interfaceName: identifier; parameters: typeParameterList; con: contentClass}
+and classTreeMap = {objectType: objType; modif: methodModifiers option; parameters: typeParameterList option; super: super option; interfaces: interface list option; className: identifier; con: contentClass}
+and enumTreeMap = {objectType: objType; modif: methodModifiers option; inh:parent list option; enumName: identifier; con: enumContent}
 and contentClass  = classContentTree list option
 and enumContent = { enumConstants: enumConstant list option; con: contentClass }
 and enumConstant = { annotations : annotation list option; identifier: identifier; arguments: arguments option; classBody: contentClass }
@@ -126,7 +137,7 @@ and enumConstant = { annotations : annotation list option; identifier: identifie
 and block = Block of blockStatement list
 and blockStatement =
     ClassDeclaration of classDeclaration
-  | LocalVariableDeclaration of variableDeclaration
+  | LocalVariableDeclarationStatement of localVariableDeclaration
   | ClassDeclarationStatement of objectTree
   | Statement of statement
 and statement =
@@ -143,12 +154,13 @@ and statement =
   | ThrowStatement of expression
   | SynchronizedStatement of (expression * block)
   | TryStatement of (block * catch list * block)
+  | LabeledStatement of (identifier * statement)
   | EmptyStatement
 and switchCase =
   | Case of (expression * blockStatement list)
   | Default of (blockStatement list)
 and catch =
-  | CatchClause of (expression * block)
+  | CatchClause of (formalParameter * block)
 
 
 and assignmentOperator =
@@ -206,6 +218,7 @@ and typed =
     NoneType
   | TypeReference of referenceType
   | TypePrimitive of primitiveType
+  | VariadicType of typed
 
 and referenceType =
     ReferenceTypeClassOrInterface of classOrInterfaceType
@@ -257,15 +270,13 @@ and primitiveType =
   | Float
   | Double
   | Boolean
+  | Void
 
 and identifierArgs =
     IdentifierArgs of (identifier * (typeArgument list))
 
 and identifierTypeArgs =
     IdentifierTypeArgs of (identifier * (typed list))
-
-and variableDeclarators =
-    VariableId of string
 
 and literal =
     IntegerLiteral of int

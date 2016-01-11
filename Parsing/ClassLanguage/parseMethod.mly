@@ -4,50 +4,72 @@ open Location
 open ExitManagement
 %}
 
-%start  someMethodDeclaration
-%type <Types.classContentTree>  someMethodDeclaration
+%start someMethodDeclaration
+%type <Types.classContentTree> someMethodDeclaration
 %%
 
 
 someMethodDeclaration:
-|abstractMethodDecl=abstractMethodDeclaration {abstractMethodDecl}
-|methodDecl=methodDeclaration {methodDecl}
+(*|abstractMethodDecl=abstractMethodDeclaration {abstractMethodDecl}*)
+| methodDecl=methodDeclaration { methodDecl }
 %public methodDeclaration :
-| modifs=modifiersMethodList params=parametersDeclaration return=returnType methodName=identifier arguments=arguments exceptions=exceptionDecl block=blockOrAbstract
-	{MethodTree({parameters=params; modif=modifs; returnType= return; name= methodName; args=arguments; thr=exceptions; con=block});}
-%public abstractMethodDeclaration:
-| modifs=modifiersMethodList params=parametersDeclaration return=returnType methodName=identifier arguments=arguments exceptions=exceptionDecl SEMICOLON
-	{MethodTree({parameters=params; modif=modifs; returnType= return; name= methodName; args=arguments; thr=exceptions; con=None});}
-modifiersMethodList:
-| modifsMethod = modifiersMethod {Some(modifsMethod)}
-| {None}
-modifiersMethod:
-| modif=modifierMethod modifs=modifiersMethod {(modif)::modifs}
-| modif=modifierMethod {[modif]}
-| modif=modifierClass modifs=modifiersMethod {(modif)::modifs}
-| modif=modifierClass {[modif]}
-modifierMethod:
-| syn=synchronization {Synchronization syn}
-| nat=nativity {Nativity nat}
+| mh=methodHeader mb=methodBody {
+  let { parameters=tp; modif=mm; returnType=rt; methodDeclarator=md; thr=th } = mh in
+      MethodDeclaration({ parameters=tp; modif=mm; returnType=rt; methodDeclarator=md; thr=th; con=mb })
+  }
+methodHeader:
+| mm=methodModifiers? tp=typeParameters? rt=resultType md=methodDeclarator th=throws? { { parameters=tp; modif=mm; returnType=rt; methodDeclarator=md; thr=th; con=(Some (Block [])) } }
+methodBody:
+| b=blockDeclaration { Some(b) }
+| SEMICOLON { None }
+resultType:
+| t=typed { t }
+| VOID { TypePrimitive(Void) }
+methodDeclarator:
+| id=identifier OPENING_PARENTHESIS fpl=formalParameterList? CLOSING_PARENTHESIS { { identifier=id; parameters=fpl } }
+formalParameterList:
+| lfp=lastFormalParameter { [lfp] }
+| fp=formalParameters COMMA lfp=lastFormalParameter { fp @ [lfp] }
+formalParameters:
+| fp=formalParameter { [fp] }
+| fps=formalParameters COMMA fp=formalParameter { fps @ [fp] }
+formalParameter:
+| vm=variableModifiers t=typed vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=vm; typed=Some(t); declarator=(a,b,None) } }
+%public variableModifiers:
+| vm=variableModifier { [vm] }
+| vms=variableModifiers vm=variableModifier { vms @ [vm] }
+variableModifier:
+| FINAL { Finality(Final) }
+| an=annotation { Annotation(an) }
+lastFormalParameter:
+| vm=variableModifiers tv=typedVariadic? vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=vm; typed=tv; declarator=(a,b,None) } }
+| fp=formalParameter { fp }
+typedVariadic:
+| t=typed VARIADIC { VariadicType(t) }
+methodModifiers:
+| an=anyModifiers { an }
+%public anyModifiers:
+| mm=anyModifier { [mm] }
+| mms=anyModifiers mm=anyModifier { mms @ [mm] }
+%public anyModifier:
+| an=annotation { Annotation(an) }
+| PUBLIC { Visibility(Public) }
+| PROTECTED { Visibility(Protected) }
+| PRIVATE { Visibility(Private) }
+| ABSTRACT { Abstraction(Abstract) }
+| STATIC { Staticity(Static) }
+| FINAL { Finality(Final) }
+| SYNCHRONIZED { Synchronization(Synchronized) }
+| NATIVE { Nativity(Native) }
+| STRICTFP { StrictFpity(StrictFp) }
+throws:
+| THROWS etl=exceptionTypeList { etl }
+exceptionTypeList:
+| et=exceptionType { [et] }
+| ets=exceptionTypeList COMMA et=exceptionType { ets @ [et] }
+exceptionType:
+| ct=classType { ExceptionClassOrInterfaceType(ct) }
+| tv=typeVariable { ExceptionTypeVariable(tv) }
 
-nativity:
-| NATIVE {Native}
-synchronization:
-| SYNCHRONIZED {Synchronized}
-
-returnType:
-| VOID {Identifier "void"}
-| ret=identifier { ret}
-
-exceptionDecl:
-| THROWS exceptions=exceptionsList {Some(exceptions)}
-| {None}
-exceptionsList:
-| exc=except COMMA excList=exceptionsList {(exc)::excList}
-| exc=except {[exc]}
-except:
-| exceptType=identifier { exceptType}
-blockOrAbstract:
-|blockDecl = blockDeclaration {Some(blockDecl)}
 
 %%
