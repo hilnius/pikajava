@@ -1,5 +1,12 @@
 
-package java.lang.String;
+@Coucou(a = b)
+@ComplexAnnotation(
+    @SimpleAnnotation(a=6, b=3)
+)
+package Yolo.qsd;
+
+import java.qsd.*;
+import java.qsd.*;
 
 // class Yolo is a swaggy class !
 class Yolo {
@@ -15,7 +22,7 @@ class Yolo {
   }
 
 }
-
+/*
 // class Yolo is a swaggy class !
 @override
 class Yolo {
@@ -26,7 +33,7 @@ class Yolo {
   public void main() {
     //class SubClass {
       //public void getInstance() {
-        /*if(true) {
+        if(true) {
           int
         }
         assert true ;
@@ -71,9 +78,9 @@ class Yolo {
           int
         } finally {
           int
-        }*/
+        }
       //}
     //}
   }
-}
+}*/
 

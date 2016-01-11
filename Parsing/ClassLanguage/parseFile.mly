@@ -13,6 +13,7 @@ open ExitManagement
 (*TODO HANDLE SEVERAL CLASSES OR NONE*)
 fileDeclaration:
 | c=compilationUnit EOF { c }
+| error {print_string "\027[31mError: unable to parse file "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; raise (SyntaxError "Cannot parse file") }
 
 compilationUnit:
 | pd=packageDeclaration? id=importDeclarations? td=typeDeclarations? { (pd,id,td) }
@@ -24,7 +25,7 @@ typeDeclarations:
 | tds=typeDeclarations td=typeDeclaration { tds @ [td] }
 
 packageDeclaration:
-| an=annotations? PACKAGE p=packageName { (an, p) }
+| an=annotations? PACKAGE p=packageName SEMICOLON { (an, p) }
 
 importDeclaration:
 | id=singleTypeImportDeclaration { SingleImportDeclaration id }
