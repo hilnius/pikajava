@@ -107,6 +107,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 		elif [ "$syntaxChecker" -eq "0" ]; then
 			if ! [[ $line =~ $regexEmptyLine ]]; then
 				printf "WARNING unexpected data line $lineNumber \n"
+				continue
 			fi
 		else
 			printf "ERROR unexpected test content line $lineNumber \n"

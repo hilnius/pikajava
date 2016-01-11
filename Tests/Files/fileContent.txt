@@ -1,0 +1,62 @@
+SIMPLE TEST CLASS
+### TEST Simple class ###
+@SHOULD_PASS
+class A {}
+### END ###
+### TEST Simple class + simple Interface ###
+@SHOULD_PASS
+class A {}
+interface B {}
+### END ###
+### TEST Simple class + simple Enum ###
+@SHOULD_PASS
+class A {}
+enum B {}
+### END ###
+### TEST Simple class + simple Class ###
+@SHOULD_PASS
+class A {}
+class B {}
+### END ###
+
+SIMPLE TEST INTERFACE
+### TEST Simple interface ###
+@SHOULD_PASS
+interface A {}
+### END ###
+### TEST Simple interface + simple Class ###
+@SHOULD_PASS
+interface A {}
+class B {}
+### END ###
+### TEST Simple interface + simple Enum ###
+@SHOULD_PASS
+interface A {}
+enum B {}
+### END ###
+### TEST Simple interface + simple interface ###
+@SHOULD_PASS
+interface A {}
+interface B {}
+### END ###
+
+SIMPLE TEST ENUM
+### TEST Simple enum ###
+@SHOULD_PASS
+enum A {}
+### END ###
+### TEST Simple enum + simple Class ###
+@SHOULD_PASS
+enum A {}
+class B {}
+### END ###
+### TEST Simple enum + simple interface ###
+@SHOULD_PASS
+enum A {}
+interface B {}
+### END ###
+### TEST Simple enum + simple enum ###
+@SHOULD_PASS
+enum A {}
+enum B {}
+### END ###
