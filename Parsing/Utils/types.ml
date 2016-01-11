@@ -186,7 +186,7 @@ and statement =
   | EmptyStatement
 and forInit =
   | ForInitStatementExpressionList of statementExpression list
-  | ForInitLocalVariableDeclarationStatement of (variableModifiers * typed * (identifier * int * variableInitializer option) list)
+  | ForInitLocalVariableDeclarationStatement of blockStatement
 and statementExpression =
   | AssignmentStatement of assignment
   | PreIncrementExpressionStatement of preIncrementExpression

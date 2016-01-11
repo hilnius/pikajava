@@ -7,27 +7,26 @@ import java.lang.*;
 
   @test
 )
-public class Yolo <T extends List<? super T> > {
+public class Yolo  {
 
-  @qsdqsdsqd
   @ interface ClassPreamble {
     abstract public void dsqqsd() {
 
     }
   }
-@qsdqsdsqd
+
   public static enum QSD {
     DSQ, QSD;
     class Yolo {
 
     }
   }
-@qsdqsdsqd
-  public interface Vehicule<T extends List<? super T> >  {
+
+  public interface Vehicule {
 
     abstract public void dsqqsd();
   }
-@qsdqsdsqd
+
   public static class A<T extends S> {
 
   }
@@ -41,26 +40,10 @@ public class Yolo <T extends List<? super T> > {
   }
 
   static Dqlsqdl ( ) {
-    @qsdqsdsqd
-    @ interface ClassPreamble {
-      abstract public void dsqqsd() {
 
-      }
-    }
-      public class MyTest {
-
-      }
   }
 
   public void dsqqsd() {
-    if(1)
-      if(3) {
-        return 3 + 5;
-      }
-      else {
-        return 4 + 2;
-      }
-    else return 12 + 15;
 
   }
 
