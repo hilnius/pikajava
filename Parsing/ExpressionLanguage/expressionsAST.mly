@@ -382,12 +382,12 @@ referenceType:
 	{ p }
 
 %public classType:
-| p=typeDeclSpecifier a=typeArgumentsOpt
-	{ ClassType(p, a) }
+| p=typeDeclSpecifier a=typeArguments?
+	{ let ta = match a with None -> NoneTypeArguments | Some(b) -> b in ClassType(p, ta) }
 
 %public interfaceType:
-| p=typeDeclSpecifier a=typeArgumentsOpt
-	{ InterfaceType(p, a) }
+| p=typeDeclSpecifier a=typeArguments?
+	{ let ta = match a with None -> NoneTypeArguments | Some(b) -> b in InterfaceType(p, ta) }
 
 typeDeclSpecifier:
 | p=typeName
@@ -402,12 +402,6 @@ typeDeclSpecifier:
 arrayType:
 | p=typed BRACKETOPEN BRACKETCLOSE
 	{ ArrayType p }
-
-typeArgumentsOpt:
-|
-	{ NoneTypeArguments }
-| p=typeArguments
-	{ p }
 
 typeArguments:
 | OPENING_CHEVRON p=actualTypeArgumentList CLOSING_CHEVRON

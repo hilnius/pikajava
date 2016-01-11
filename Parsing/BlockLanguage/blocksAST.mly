@@ -101,7 +101,7 @@ catchClause:
 | CATCH OPENING_PARENTHESIS f=formalParameter CLOSING_PARENTHESIS b=block { CatchClause(f, b) }
 finally:
 | FINALLY b=block                         { b }
-formalParameter:
+%public formalParameter:
 | vdi=variableDeclaratorId                { let (a,b) = vdi in { modifiers=[]; typed=None; declarator=(a,b,None) } }
 | vm=variableModifiers t=typed vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=vm; typed=Some(t); declarator=(a,b,None) } }
 

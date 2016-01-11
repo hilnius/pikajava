@@ -2,7 +2,7 @@
 // class Yolo is a swaggy class !
 class Yolo {
 
-  public void dsqqsd() {
+  public <T extends C < ? > > void dsqqsd() {
   }
 
 }
@@ -15,9 +15,9 @@ class Yolo {
   }
 
 
-  public @override static <T, L extends Yolo> void main() {
-    class SubClass {
-      public void getInstance() {
+  public void main() {
+    //class SubClass {
+      //public void getInstance() {
         /*if(true) {
           int
         }
@@ -64,8 +64,8 @@ class Yolo {
         } finally {
           int
         }*/
-      }
-    }
+      //}
+    //}
   }
 }
 

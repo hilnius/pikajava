@@ -33,8 +33,6 @@ formalParameterList:
 formalParameters:
 | fp=formalParameter { [fp] }
 | fps=formalParameters COMMA fp=formalParameter { fps @ [fp] }
-formalParameter:
-| vm=variableModifiers t=typed vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=vm; typed=Some(t); declarator=(a,b,None) } }
 %public variableModifiers:
 | vm=variableModifier { [vm] }
 | vms=variableModifiers vm=variableModifier { vms @ [vm] }
