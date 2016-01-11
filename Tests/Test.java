@@ -3,6 +3,7 @@
 class Yolo {
 
   public <T extends C < ? > > void dsqqsd() {
+    coucou = dsqlsdq;
   }
 
 }
@@ -10,10 +11,9 @@ class Yolo {
 // class Yolo is a swaggy class !
 @override
 class Yolo {
-  @override
+  @overrideu
   static void main() {
   }
-
 
   public void main() {
     //class SubClass {

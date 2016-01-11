@@ -123,7 +123,16 @@ synchronizedStatement:
 | SYNCHRONIZED OPENING_PARENTHESIS e=expression CLOSING_PARENTHESIS b=block { SynchronizedStatement(e, b) }
 doStatement:
 | DO s=statement WHILE OPENING_PARENTHESIS e=expression CLOSING_PARENTHESIS SEMICOLON { DoWhileStatement(e, s) }
-
+expressionStatement:
+| s=statementExpression SEMICOLON { ExpressionStatement(s) }
+statementExpression:
+| e=assignment                            { AssignmentStatement e }
+| e=preIncrementExpression                { PreIncrementExpressionStatement e }
+| e=preDecrementExpression                { PreDecrementExpressionStatement e }
+| e=postIncrementExpression               { PostIncrementExpressionStatement e }
+| e=postDecrementExpression               { PostDecrementExpressionStatement e }
+(*| e=methodInvocation                      { MethodInvocationStatement e } *)
+(*| e=classInstanceCreationExpression       { ClassInstanceCreationExpressionStatement e }*)
 (* blocks *)
 statement:
 | s=statementWithoutTrailingSubstatement  { s }
@@ -135,7 +144,7 @@ statement:
 statementWithoutTrailingSubstatement:
 | b=block                                 { BlockStatement(b) }
 | s=emptyStatement                        { s }
-(*| s=expressionStatement                   { }*)
+| s=expressionStatement                   { s }
 | s=assertStatement                       { s }
 | s=switchStatement                       { s }
 | s=doStatement                           { s }
@@ -189,8 +198,6 @@ labeledStatement:
 | i=identifier COLON s=statement          { LabeledStatement(i,s) }
 labeledStatementNoShortIf:
 | i=identifier COLON s=statementNoShortIf { LabeledStatement(i,s) }
-statementExpression:
-| i=INTEGER                               { LocalVariableDeclarationStatement(IntegerLiteral(93)) }
 constantExpression:
 | b=expression                            { b }
 %%

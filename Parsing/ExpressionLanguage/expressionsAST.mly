@@ -115,11 +115,11 @@ unaryExpression:
 | p=unaryExpressionNotPlusMinus
 	{ UnaryExpressionNotPlusMinus p }
 
-preIncrementExpression:
+%public preIncrementExpression:
 | MOREMORE p=unaryExpression
 	{ PreIncrementExpression p }
 
-preDecrementExpression:
+%public preDecrementExpression:
 | LESSLESS p=unaryExpression
 	{ PreDecrementExpression p }
 
@@ -149,11 +149,11 @@ postfixExpression:
 | p=postDecrementExpression
 	{ PostfixExpressionPostDec p }
 
-postIncrementExpression:
+%public postIncrementExpression:
 | p=postfixExpression MOREMORE
 	{ PostIncrementExpression p }
 
-postDecrementExpression:
+%public postDecrementExpression:
 | p=postfixExpression LESSLESS
 	{ PostDecrementExpression p }
 
@@ -173,7 +173,7 @@ postDecrementExpression:
 | p=
 	{  p }*/
 
-assignment:
+%public assignment:
 | l=leftHandSide o=assignmentOperator p=assignmentExpression
 	{ Assignment(l, o, p) }
 
