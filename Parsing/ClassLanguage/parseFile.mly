@@ -8,12 +8,8 @@ open ExitManagement
 %type <Types.compilationUnit> fileDeclaration
 %%
 
-(*TODO EOF?????*)
-
-(*TODO HANDLE SEVERAL CLASSES OR NONE*)
 fileDeclaration:
 | c=compilationUnit EOF { c }
-| error {print_string "\027[31mError: unable to parse file "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; raise (SyntaxError "Cannot parse file") }
 
 compilationUnit:
 | td=typeDeclarations? { (None,None,td) }
