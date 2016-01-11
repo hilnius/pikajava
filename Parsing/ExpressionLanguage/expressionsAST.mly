@@ -14,14 +14,14 @@ expression:
 assignmentExpression:
 | p=conditionalExpression
 	{ AssignmentExpressionConditional p }
-| p=assignment
-	{ AssignmentExpressionAssignment p }
+(*| p=assignment
+	{ AssignmentExpressionAssignment p }*)
 
 conditionalExpression:
 | p=conditionalOrExpression
 	{ ConditionalExpression p }
-| p=conditionalOrExpression QUESTION_MARK e=expression COLON c=conditionalExpression
-	{ ConditionalExpressionTernary(p, e, c) }
+(*| p=conditionalOrExpression QUESTION_MARK e=expression COLON c=conditionalExpression
+	{ ConditionalExpressionTernary(p, e, c) }*)
 
 conditionalOrExpression:
 | p=conditionalAndExpression
@@ -130,8 +130,8 @@ unaryExpressionNotPlusMinus:
 	{ UnaryExpressionNotPlusMinusBitnot p }
 | EXCLAMATION_MARK p=unaryExpression
 	{ UnaryExpressionNotPlusMinusNot p }
-| p=castExpression
-	{ UnaryExpressionNotPlusMinusCast p }
+(*| p=castExpression
+	{ UnaryExpressionNotPlusMinusCast p }*)
 
 castExpression:
 | OPENING_PARENTHESIS t=primitiveType c=dimsopt CLOSING_PARENTHESIS p=unaryExpression
@@ -140,8 +140,8 @@ castExpression:
 	{ CastExpressionReference(t, p) }
 
 postfixExpression:
-| p=primary
-	{ PostfixExpressionPrimary p }
+(*| p=primary
+	{ PostfixExpressionPrimary p }*)
 | p=expressionName
 	{ PostfixExpressionName p }
 | p=postIncrementExpression
@@ -180,8 +180,8 @@ assignment:
 leftHandSide:
 | p=expressionName
 	{ LeftHandSideExpressionName p }
-| p=fieldAccess
-	{ LeftHandSideFieldAccess p }
+//| p=fieldAccess
+//	{ LeftHandSideFieldAccess p }
 //| p=arrayAccess
 //	{ LeftHandSideArrayAccess p }
 
@@ -259,7 +259,7 @@ assignmentOperator:
 | SHIFT_RIGHT_UNSIGNED_EQUAL
 	{ EqualShiftRightUnsigned }
 
-/*prefixop:
+(*prefixop:
 | MOREMORE
 	{ PrefixMoreMore }
 | LESSLESS
@@ -317,13 +317,13 @@ infixop:
 | DIVIDE
 	{ InfixDivide }
 | MODULO
-	{ InfixModulo }*/
+	{ InfixModulo }*)
 
-/*identifierList:
+(*identifierList:
 | p=identifier
 	{ [p] }
 | e=identifierList DOT p=identifier
-	{ p::e }*/
+	{ p::e }*)
 
 literal:
 | p=INTEGER_NUMERAL
@@ -378,16 +378,16 @@ referenceType:
 classOrInterfaceType:
 | p=classType
 	{ p }
-/*| p=interfaceType
-	{ p }*/
+(*| p=interfaceType
+	{ p }*)
 
 classType:
 | p=typeDeclSpecifier a=typeArgumentsOpt
 	{ ClassType(p, a) }
 
-/*interfaceType:
+(*interfaceType:
 | p=typeDeclSpecifier a=typeArgumentsOpt
-	{ InterfaceType(p, a) }*/
+	{ InterfaceType(p, a) }*)
 
 typeDeclSpecifier:
 | p=typeName
@@ -433,7 +433,7 @@ wildcard:
 | QUESTION_MARK SUPER p=referenceType
 	{ WildcardSuper p }
 
-/*typedList:
+(*typedList:
 | p=typedIdarg
 	{ [p] }
 | e=typedList DOT p=typedIdarg
@@ -459,18 +459,18 @@ typeList:
 | p=typed
 	{ [p] }
 | e=typeList p=typed
-	{ p::e }*/
+	{ p::e }*)
 
 %public identifier:
 | p=IDENTIFIER
 	{ Identifier(p) }
 
-/*packageName:
+(*packageName:
 | p=identifier
 	{ PackageName [p] }
 | e=packageName DOT p=identifier
 	{ let PackageName(l) = e in PackageName(p::l) }
-*/
+
 packageOrTypeName:
 | p=identifier
 	{ PackageOrTypeName [p] }
@@ -481,33 +481,33 @@ ambiguousName:
 | p=identifier
 	{ AmbiguousName [p] }
 | e=ambiguousName DOT p=identifier
-	{ let AmbiguousName(l) = e in AmbiguousName(p::l) }
+	{ let AmbiguousName(l) = e in AmbiguousName(p::l) }*)
 
 expressionName:
 | p=identifier
-	{ ExpressionName p }
-| a=expressionName DOT p=identifier
-	{ ExpressionNameAmbiguous(p, AmbiguousName( [] )) }
+	{ ExpressionName [p] }
+| e=expressionName DOT p=identifier
+	{ let ExpressionName(l) = e in ExpressionName(p::l) }
 
-/*methodName:
+(*methodName:
 | p=identifier
 	{ MethodName p }
-| a=ambiguousName DOT p=identifier
+| e=ambiguousName DOT p=identifier
 	{ MethodNameAmbiguous(p, a) }
-*/
+*)
 typeName:
 | p=identifier
-	{ TypeName p }
-| a=packageOrTypeName DOT p=identifier
-	{ TypeNamePackage(p, a) }
+	{ TypeName [p] }
+| e=typeName DOT p=identifier
+	{ let TypeName(l) = e in TypeName(p::l) }
 
 %inline className:
 | p=identifier
-	{ ClassName p }
+	{ ClassName [p] }
 //| a=ambiguousName DOT p=identifier
 //	{ ClassNameAmbiguous(p, a) }
 
-/*identifierSuffix:
+(*identifierSuffix:
 | BRACKETOPEN BRACKETCLOSE c=arrayCounter DOT CLASS
 	{ IdentifierSuffixArrayClass(c + 1) }
 | BRACKETOPEN e=expression BRACKETCLOSE
@@ -556,11 +556,11 @@ selector:
 	{ SelectorNew(p, a, NoneExpression) }
 | DOT NEW a=optNonQUESTION_MARKTypeArguments p=innerCreator e=expression
 	{ SelectorNew(p, a, e) }
-*/
+*)
 %public arguments:
 | OPENING_PARENTHESIS p=separated_list(COMMA, expression) CLOSING_PARENTHESIS
 	{ Arguments(p) }
-/*
+(*
 optNonQUESTION_MARKTypeArguments:
 |
 	{ [] }
@@ -632,7 +632,7 @@ variableInitializer:
 | p=arrayInitializer
 	{ VariableInitializerArray p }
 | p=expression
-	{ VariableInitializerExpression p }*/
+	{ VariableInitializerExpression p }*)
 
 %%
 

@@ -297,25 +297,6 @@ and classInstanceCreationExpression =
 and methodInvocation =
     MethodInvocation
 
-and expression3Cast =
-    Expression3CastType of typed
-  | Expression3CastExpr of expression
-
-and expression3infix =
-    Expression3Infix of (infixOp * expression3)
-
-and expression3 =
-    Expression3 of (primary * (expression3Cast list) * (prefixOp list) * (postfixOp list) * (selector list))
-
-and expression2 =
-    Expression2 of (expression3)
-  | Expression2Infix of (expression3 * (expression3infix list))
-  | Expression2InstanceOf of (expression3 * typed)
-
-and expression1 =
-    NoneExpression1
-  | Expression1 of (expression2 * expression * expression1)
-
 and identifier =
     NoneIdentifier
   | Identifier of string
@@ -327,20 +308,16 @@ and packageOrTypeName =
     PackageOrTypeName of (identifier list)
 
 and typeName =
-    TypeName of identifier
-  | TypeNamePackage of (identifier * packageOrTypeName)
+    TypeName of (identifier list)
 
 and expressionName =
-    ExpressionName of identifier
-  | ExpressionNameAmbiguous of (identifier * ambiguousName)
+    ExpressionName of (identifier list)
 
 and methodName =
-    MethodName of identifier
-  | MethodNameAmbiguous of (identifier * ambiguousName)
+    MethodName of (identifier list)
 
 and className =
-    ClassName of identifier
-  | ClassNameAmbiguous of (identifier * ambiguousName)
+    ClassName of (identifier list)
 
 and ambiguousName =
     AmbiguousName of (identifier list)
