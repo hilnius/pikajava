@@ -47,8 +47,7 @@ and objType =
 
 and child = string option
 
-and compilationUnit = (packageDeclaration option * importDeclaration list option * classContentTree list option)
-and packageDeclaration = (annotations option * packageName)
+and compilationUnit = (classContentTree option * importDeclaration list option * classContentTree list option)
 and importDeclaration =
  | SingleImportDeclaration of typeName
  | TypeImportOnDemandDeclaration of packageOrTypeName
@@ -146,6 +145,7 @@ and declaration =
 | AnnotationType of annotationTypeDeclaration
 | AnnotationTypeElement of typed * identifier * defaultValue option
 | AnnotationTypeDeclaration of classContentTree
+| PackageDeclaration of packageName
 | EmptyDeclaration
 and constructorDeclarator = (typeParameterList option * typeName * formalParameter list option)
 and constructorBody = explicitConstructorInvocation option  * blockStatement list option
