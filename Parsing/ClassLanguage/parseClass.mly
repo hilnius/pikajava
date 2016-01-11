@@ -15,8 +15,6 @@ objectDeclaration:
 (*| enum=enumDeclaration { enum } *)
 | error {print_string "\027[31mError: unable to parse content declaration"; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; EmptyContent}
 
-%public classDeclaration:
-| any=anyModifiers? umn=unmodifiedClassDeclaration { ModifiedDeclaration(any, umn) }
 unmodifiedClassDeclaration:
 | CLASS i=identifier tp=typeParameters? s=super? ifs=interfaces? cb=classBody { ClassDeclaration({objectType=Class;parameters=tp;super=s;interfaces=ifs;className=i;con=cb}) }
 interfaces:
@@ -28,8 +26,6 @@ interfaceTypeList:
 super:
 | EXTENDS ct=classType { Extends(ct) }
 
-interfaceDeclaration:
-| im=anyModifiers? id=unmodifiedInterfaceDeclaration { ModifiedDeclaration(im, id) }
 unmodifiedInterfaceDeclaration:
 | INTERFACE i=identifier tp=typeParameters? ext=extendsInterfaces? body=interfaceBody { InterfaceDeclaration({objectType=Interface; inh=ext; interfaceName=i; parameters=tp; con=body}) }
 | AT_INTERFACE i=identifier a=annotationTypeBody { AnnotationType(i,a) }
@@ -52,14 +48,9 @@ interfaceBody:
 | OPENING_BRACE interfMembers=interfaceMemberDeclarations? CLOSING_BRACE {interfMembers}
 
 interfaceMemberDeclarations:
-| interf=interfaceMemberDeclaration {[interf]}
-| interfs=interfaceMemberDeclarations interf=interfaceMemberDeclaration {interfs @ [interf]}
+| interf=classMemberDeclaration {[interf]}
+| interfs=interfaceMemberDeclarations interf=classMemberDeclaration {interfs @ [interf]}
 
-interfaceMemberDeclaration:
-| d=classMemberDeclaration { d }
-
-enumDeclaration:
-| cm=anyModifiers? ed=unmodifiedEnumDeclaration { ModifiedDeclaration(cm, ed) }
 unmodifiedEnumDeclaration:
 | ENUM id=identifier ifs=interfaces? eb=enumBody { EnumDeclaration({ objectType=Enum; inh=ifs; enumName=id; con=eb }); }
 enumBody:
@@ -81,7 +72,7 @@ classBodyDeclaration:
 | cbd=instanceInitializer { cbd }
 | cbd=staticInitializer { cbd }
 | cbd=classMemberDeclaration { cbd }
-%inline classMemberDeclaration:
+%public classMemberDeclaration:
 | am=anyModifiers? md=modifiedDeclaration { print_string "reading modifiers..."; ModifiedDeclaration(am, md) }
 %inline modifiedDeclaration:
 | cmd=methodDeclaration { cmd }
@@ -89,6 +80,7 @@ classBodyDeclaration:
 | cmd=unmodifiedClassDeclaration { cmd }
 | cmd=unmodifiedInterfaceDeclaration { cmd }
 | cmd=unmodifiedEnumDeclaration { cmd }
+| cmd=unmodifiedPackageDeclaration { cmd }
 (*| cmd=unmodifiedAnnotationTypeElementDeclaration { cmd } *)
 | SEMICOLON { EmptyDeclaration }
 %inline instanceInitializer:

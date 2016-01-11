@@ -16,16 +16,19 @@ fileDeclaration:
 | error {print_string "\027[31mError: unable to parse file "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; raise (SyntaxError "Cannot parse file") }
 
 compilationUnit:
-| pd=packageDeclaration? id=importDeclarations? td=typeDeclarations? { (pd,id,td) }
+| td=typeDeclarations? { (None,None,td) }
+| id=importDeclarations td=typeDeclarations? { (None,Some(id),td) }
+| td=typeDeclarations? { (None,None,td) }
+| pd=classMemberDeclaration id=importDeclarations td=typeDeclarations? { (Some(pd),Some(id),td) }
 importDeclarations:
 | id=importDeclaration { [id] }
 | ids=importDeclarations id=importDeclaration { ids @ [id] }
 typeDeclarations:
-| td=typeDeclaration { [td] }
-| tds=typeDeclarations td=typeDeclaration { tds @ [td] }
+| td=classMemberDeclaration { [td] }
+| tds=typeDeclarations td=classMemberDeclaration { tds @ [td] }
 
-packageDeclaration:
-| an=annotations? PACKAGE p=packageName SEMICOLON { (an, p) }
+%public unmodifiedPackageDeclaration:
+| PACKAGE p=packageName SEMICOLON { PackageDeclaration(p) }
 
 importDeclaration:
 | id=singleTypeImportDeclaration { SingleImportDeclaration id }
@@ -41,10 +44,6 @@ singleStaticImportDeclaration:
 staticImportOnDemandDeclaration:
 | IMPORT STATIC t=typeName DOT ASTERISK SEMICOLON { t }
 
-typeDeclaration:
-| c=classDeclaration { c }
-(*| i=interfaceDeclaration { i } *)
-| SEMICOLON { EmptyContent }
 
 %%
 

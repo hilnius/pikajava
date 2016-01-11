@@ -1,4 +1,12 @@
 
+package Yolo;
+
+import java.lang.*;
+
+@qsdqsdsqd(
+
+  @test
+)
 public class Yolo  {
 
   @ interface ClassPreamble {
