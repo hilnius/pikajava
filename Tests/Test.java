@@ -1,19 +1,31 @@
 
-@Coucou(a = b)
 @ComplexAnnotation(
     @SimpleAnnotation(a=6, b=3)
 )
 package Yolo.qsd;
 
-import java.qsd.*;
-import java.qsd.*;
-
 // class Yolo is a swaggy class !
-class Yolo {
+@averride
+public class Yolo  {
 
+  static {  }
+
+  {
+
+  }
+
+
+  static Dqlsqdl ( ) {
+
+  }
+
+  @Override(
+      @SimpleAnnotation(a=6, b=3)
+  )
   public <T extends C < ? > > void dsqqsd() {
-    double v1, v2 = 5;
+    double v1;
 
+    funCall();
     /*for ( int a : 5 ) {
       thisIsACall();
 

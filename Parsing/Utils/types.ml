@@ -1,6 +1,15 @@
 
 exception SyntaxError of string
-
+(*
+type decl =
+  | MethodDeclaration of method1
+  | ConstructorDeclaration of constructor
+and method1 =
+  | Method
+and constructor =
+  | Constructor
+;;
+*)
 type visibility =
   | Public
   | Protected
@@ -98,9 +107,10 @@ and modifier =
 and variableModifiers = modifier list
 and methodModifiers = modifier list
 and constantModifiers = modifier list
+and constructorModifiers = modifier list
 and exceptionType = ExceptionClassOrInterfaceType of classOrInterfaceType | ExceptionTypeVariable of typeVariable
 and exceptionTypeList = exceptionType list
-
+and throws = exceptionTypeList
 (*TODO and classAttribute to be implemented*)
 and classAttribute = Empty
 
@@ -111,8 +121,11 @@ and classListAttribute =
 (*TODO types classMethod to be implemented*)
 
 and methodDeclarator = { identifier: identifier; parameters: formalParameter list option }
-and methodDeclaration = { parameters: typeParameterList option; modif: methodModifiers option; returnType: typed; methodDeclarator: methodDeclarator; thr: exceptionTypeList option; con: block option }
-
+and methodDeclaration =
+| Method of methodImpl
+| Constructor of constructorImpl
+and methodImpl = { parameters: typeParameterList option; modif: methodModifiers option; returnType: typed; methodDeclarator: methodDeclarator; thr: exceptionTypeList option; con: block option }
+and constructorImpl = { parameters: typeParameterList option; modif: methodModifiers option; methodDeclarator: methodDeclarator; thr: exceptionTypeList option; con: block option }
 
 and initializerTreeMap = { iniType: staticity; con: block}
 
@@ -128,16 +141,19 @@ and interface = classOrInterfaceType
 (* end of blocks types *)
 
 and classContentTree =
-| InstanceInitializer
-| StaticInitializer
-| ConstructorDeclaration
-| MethodDeclaration of methodDeclaration
+| InstanceInitializer of block
+| StaticInitializer of block
+| ConstructorDeclaration of (constructorModifiers option * constructorDeclarator * throws option * constructorBody)
+| MethodDeclaration of (methodDeclaration * block option)
 | ClassDeclaration of classTreeMap
 | InterfaceDeclaration of interfaceTreeMap
 | FieldDeclaration of fieldDeclarationTreeMap
 | EnumDeclaration of enumTreeMap
 | EmptyContent
-
+and constructorDeclarator = (typeParameterList option * typeName * formalParameter list option)
+and constructorBody = explicitConstructorInvocation option  * blockStatement list option
+and explicitConstructorInvocation = (nonWildTypeArguments option * constructorInvocationType * arguments option)
+and constructorInvocationType = This | Super
 
 and fieldDeclarationTreeMap = {modif: constantModifiers option; varDecl: variableDeclarators}
 and interfaceTreeMap = {objectType: objType; modif: methodModifiers option; inh:interface list option; interfaceName: identifier; parameters: typeParameterList option; con: contentClass}
@@ -152,6 +168,7 @@ and block = Block of blockStatement list
 and blockStatement =
     ClassDeclaration of classDeclaration
   | LocalVariableDeclarationStatement of localVariableDeclaration
+  | ConstructorInitialization of explicitConstructorInvocation
   | ClassDeclarationStatement of classContentTree
   | Statement of statement
 and statement =
@@ -330,7 +347,7 @@ and arrayCreationExpression =
     ArrayCreationExpression
 
 and classInstanceCreationExpression =
-    ClassInstanceCreationExpression of (typeArguments option * classOrInterfaceType * arguments option)
+    ClassInstanceCreationExpression of (typeArguments option * classOrInterfaceType * arguments option * contentClass option)
 
 and methodInvocation =
     MethodInvocationName of (methodName * arguments)

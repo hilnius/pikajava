@@ -199,7 +199,7 @@ arrayAccess:
 | p=primaryNoNewArray BRACKETOPEN a=expression BRACKETCLOSE
   { ArrayAccessPrimary(p, a) }
 
-primary:
+%public primary:
 | p=primaryNoNewArray
   { PrimaryNoNewArray p }
 //| p=arrayCreationExpression
@@ -240,12 +240,10 @@ primaryNoNewArray:
   { MethodInvocationType(p, w, i, a) }
 
 %public classInstanceCreationExpression:
-| NEW ta=typeArguments? c=classOrInterfaceType OPENING_PARENTHESIS al=argumentList? CLOSING_PARENTHESIS {
-    match al with
-    | None -> ClassInstanceCreationExpression(ta,c,None)
-    | Some(l) -> ClassInstanceCreationExpression(ta,c,Some(Arguments(l)))
+| NEW ta=typeArguments? c=classOrInterfaceType OPENING_PARENTHESIS al=argumentList? CLOSING_PARENTHESIS cb=classBody? {
+    ClassInstanceCreationExpression(ta,c,al,cb)
   }
-
+(*| primary. NEW typeArguments? tdentifier typeArguments? ( argumentList? ) classBody? { } *)
 dims:
 | BRACKETOPEN BRACKETCLOSE
   { 1 }
@@ -392,7 +390,7 @@ floatingPointType:
 | DOUBLE
   { Double }
 
-referenceType:
+%public referenceType:
 | p=classOrInterfaceType
   { ReferenceTypeClassOrInterface p }
 | p=typeVariable
@@ -577,16 +575,18 @@ selector:
   { SelectorNew(p, a, e) }
 *)
 %public arguments:
-| OPENING_PARENTHESIS p=separated_list(COMMA, expression) CLOSING_PARENTHESIS
-  { Arguments(p) }
-
+| OPENING_PARENTHESIS p=argumentList? CLOSING_PARENTHESIS {
+    match p with
+    | None -> NoneArguments
+    | Some(args) -> args
+  }
 %public argumentList:
-| p=separated_list(COMMA, expression)
-        { p }
-
-nonWildTypeArguments:
-| OPENING_CHEVRON p=separated_nonempty_list(COMMA, referenceType) CLOSING_CHEVRON
-  { NonWildTypeArguments(p) }
+| e=expression { Arguments [e] }
+| al=argumentList COMMA ex=expression {
+    match al with
+    | NoneArguments -> Arguments [ex]
+    | Arguments(l) -> Arguments (l @ [ex])
+  }
 
 (*
 optNonQUESTION_MARKTypeArguments:

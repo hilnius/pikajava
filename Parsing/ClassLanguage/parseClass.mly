@@ -63,7 +63,7 @@ interfaceMemberDeclaration:
 
 abstractMethodDeclaration:
 | abstrModif=anyModifiers? tp=typeParameters? rt=resultType methDecl=methodDeclarator exc=throws? SEMICOLON
-	{{ parameters=tp ; modif=abstrModif; returnType=rt; methodDeclarator=methDecl; thr=exc; con=None}}
+	{ (Method { parameters=tp ; modif=abstrModif; returnType=rt; methodDeclarator=methDecl; thr=exc; con=None}, None) }
 (*abstractMethodModifiers:
 | any=anyModifiers {any} *)
 
@@ -91,38 +91,56 @@ enumBodyDeclarations:
 constantModifier:
 |any=anyModifier {any}*)
 
-classBody:
+%public classBody:
 | OPENING_BRACE cbd=classBodyDeclarations? CLOSING_BRACE { cbd }
 classBodyDeclarations:
 | cbd=classBodyDeclaration { [cbd] }
 | cbds=classBodyDeclarations cbd=classBodyDeclaration { cbds @ [cbd] }
 classBodyDeclaration:
-| cbd=classMemberDeclaration { cbd }
-(*| cbd=instanceInitializer { cbd } *)
-(*| cbd=staticInitializer { cbd } *)
-(*| cbd=constructorDeclaration { cbd } *)
+| cbd=instanceInitializer { print_string "coucou"; cbd }
+| cbd=staticInitializer {  print_string "coucou2";cbd }
+| cbd=classMemberDeclaration {  print_string "coucou4";cbd }
 classMemberDeclaration:
 | cmd=fieldDeclaration { FieldDeclaration cmd }
 | cmd=methodDeclaration { cmd }
 | cmd=classDeclaration {  cmd }
 | cmd=interfaceDeclaration { InterfaceDeclaration cmd }
 | SEMICOLON { EmptyContent }
+instanceInitializer:
+| b=blockDeclaration { InstanceInitializer b }
+staticInitializer:
+| STATIC b=blockDeclaration { StaticInitializer b }
+%public constructorBody:
+| OPENING_BRACE bl=blockStatements? CLOSING_BRACE {
+    match bl with
+    | None -> Block( [] )
+    | Some(l) -> Block( l )
+  }
+| OPENING_BRACE eci=explicitConstructorInvocation? bl=blockStatements? CLOSING_BRACE {
+    let eciBlock = match eci with
+    | None -> []
+    | Some(ecib) -> [ConstructorInitialization ecib]
+    in
+    match bl with
+    | None -> Block( eciBlock )
+    | Some(l) -> Block( eciBlock @ l )
+  }
+%inline explicitConstructorInvocation:
+| nwta=nonWildTypeArguments? THIS OPENING_PARENTHESIS al=argumentList? CLOSING_PARENTHESIS SEMICOLON {
+    (nwta, This, al)
+  }
+| nwta=nonWildTypeArguments? SUPER OPENING_PARENTHESIS al=argumentList? CLOSING_PARENTHESIS SEMICOLON {
+    (nwta, Super, al)
+  }
+(*| p=primary nwta=nonWildTypeArguments? SUPER OPENING_PARENTHESIS al=argumentList? CLOSING_PARENTHESIS SEMICOLON { } *)
+%public %inline nonWildTypeArguments:
+| OPENING_CHEVRON rtl=referenceTypeList CLOSING_CHEVRON { NonWildTypeArguments(rtl) }
+referenceTypeList:
+| rt=referenceType { [rt] }
+| rtl=referenceTypeList COMMA rt=referenceType { rtl @ [rt] }
 
 fieldDeclaration:
 | fieldModifs=anyModifiers? aType=typed varDecls=variableDeclarators SEMICOLON {{modif= fieldModifs ; varDecl=varDecls}}
-(*
-inherits:
-| EXTENDS parentName=identifier parameters=typeParameters {Some(Parent({name=parentName;parameters=parameters}))}
-| {None}
-inheritsInterface:
-| EXTENDS completeInterf=interface {Some(completeInterf)}
-| {None}
-implements:
-| IMPLEMENTS completeInterf=interface {Some(completeInterf)}
-| {None}
-interface:
-| className=identifier parameters=typeParameters COMMA interf=interface {(Parent({name=className; parameters=parameters}))::interf}
-| className=identifier parameters=typeParameters {[Parent({name=className; parameters=parameters})]}*)
 
 
 %%

@@ -18,5 +18,11 @@ let execute lexbuf verbose =
 
   Parsers.fileDeclaration LexFile.nextToken lexbuf;
  (*PrintFiles.printFileTree(Parsers.fileDeclaration LexFile.nextToken lexbuf); *)
- exit !exitCodeValue
+
+  (* let a = Parsers.declaration LexFile.nextToken lexbuf in
+  match a with
+  | MethodDeclaration(_) -> print_string "parsed method\n"
+  | ConstructorDeclaration(_) -> print_string "parsed constructor\n"; *)
+
+  exit !exitCodeValue
 

@@ -13,21 +13,19 @@ someMethodDeclaration:
 (*|abstractMethodDecl=abstractMethodDeclaration {abstractMethodDecl}*)
 | methodDecl=methodDeclaration { methodDecl }
 %public methodDeclaration :
-| mh=methodHeader mb=methodBody {
-  let { parameters=tp; modif=mm; returnType=rt; methodDeclarator=md; thr=th } = mh in
-      MethodDeclaration({ parameters=tp; modif=mm; returnType=rt; methodDeclarator=md; thr=th; con=mb })
-  }
+| mh=methodHeader mb=methodBody { MethodDeclaration(mh, mb) }
 methodHeader:
-| mm=anyModifiers? tp=typeParameters? rt=resultType md=methodDeclarator th=throws? { { parameters=tp; modif=mm; returnType=rt; methodDeclarator=md; thr=th; con=(Some (Block [])) } }
+| mm=anyModifiers? tp=typeParameters? rt=resultType md=methodDeclarator th=throws? { Method { parameters=tp; modif=mm; returnType=rt; methodDeclarator=md; thr=th; con=(Some (Block [])) } }
+| mm=anyModifiers? tp=typeParameters? md=methodDeclarator th=throws? { Constructor { parameters=tp; modif=mm; methodDeclarator=md; thr=th; con=(Some (Block [])) } }
 methodBody:
-| b=blockDeclaration { Some(b) }
+| b=constructorBody { Some(b) }
 | SEMICOLON { None }
 %public resultType:
 | t=typed { t }
 | VOID { TypePrimitive(Void) }
 %public methodDeclarator:
 | id=identifier OPENING_PARENTHESIS fpl=formalParameterList? CLOSING_PARENTHESIS { { identifier=id; parameters=fpl } }
-formalParameterList:
+%public formalParameterList:
 | lfp=lastFormalParameter { [lfp] }
 | fp=formalParameters COMMA lfp=lastFormalParameter { fp @ [lfp] }
 formalParameters:
