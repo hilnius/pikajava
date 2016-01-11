@@ -22,7 +22,7 @@ elementValuePairs:
 | es=elementValuePairs COMMA e=elementValuePair { es @ [e] }
 elementValuePair:
 | i=identifier EQUAL ev=elementValue { (i, ev) }
-elementValue:
+%public elementValue:
 | ev=conditionalExpression { ConditionalExpression ev }
 | ev=annotation { Annotation ev }
 | ev=elementValueArrayInitializer { ElementValueArrayInitializer ev }

@@ -372,7 +372,7 @@ numericType:
 | p=floatingPointType
   { p }
 
-integralType:
+%public integralType:
 | BYTE
   { Byte }
 | SHORTINT

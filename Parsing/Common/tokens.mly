@@ -33,4 +33,6 @@
 %token <string> STRING_LITERAL
 %token <string> IDENTIFIER
 
+%token AT_INTERFACE
+
 %%

@@ -1,36 +1,42 @@
 
-@ComplexAnnotation(
-    @SimpleAnnotation(a=6, b=3)
-)
-package Yolo.qsd;
-
-// class Yolo is a swaggy class !
-@averride
 public class Yolo  {
 
-  static {  }
+  @ interface ClassPreamble {
+    abstract public void dsqqsd() {
+
+    }
+  }
+
+  public static enum QSD {
+    DSQ, QSD;
+    class Yolo {
+
+    }
+  }
+
+  public interface Vehicule {
+
+    abstract public void dsqqsd();
+  }
+
+  public static class A<T extends S> {
+
+  }
+
+  static {
+
+  }
 
   {
 
   }
 
-
   static Dqlsqdl ( ) {
 
   }
 
-  @Override(
-      @SimpleAnnotation(a=6, b=3)
-  )
-  public <T extends C < ? > > void dsqqsd() {
-    double v1;
+  public void dsqqsd() {
 
-    funCall();
-    /*for ( int a : 5 ) {
-      thisIsACall();
-
-      String a = new Cl();
-    }*/
   }
 
 }

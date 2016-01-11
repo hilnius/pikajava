@@ -1,1 +1,1 @@
-ParseFile ParseClass Tokens ParseParameters ParseMethod ParseAnnotation BlocksAST ExpressionsAST
+ParseFile ParseClass Tokens ParseParameters ParseAnnotation BlocksAST ExpressionsAST

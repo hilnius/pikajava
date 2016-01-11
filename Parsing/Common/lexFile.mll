@@ -168,6 +168,8 @@ rule nextToken = parse
   | "double"      { DOUBLE }
   | "boolean"     { BOOLEAN }
 
+  | '@' (space)* "interface" { AT_INTERFACE }
+
   | integer as i  { print_string "integer numeral : "; print_string i; INTEGER_NUMERAL (int_of_string i) }
   | float as i    { print_string "floating point numeral : "; print_string i; FLOATING_POINT_NUMERAL (float_of_string i) }
   | "true"        { BOOLEAN_LITERAL true }

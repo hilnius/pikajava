@@ -1,15 +1,6 @@
 
 exception SyntaxError of string
-(*
-type decl =
-  | MethodDeclaration of method1
-  | ConstructorDeclaration of constructor
-and method1 =
-  | Method
-and constructor =
-  | Constructor
-;;
-*)
+
 type visibility =
   | Public
   | Protected
@@ -81,6 +72,7 @@ and elementValue =
 and elementValueArrayInitializer = elementValue list option
 and annotationsList = annotation list option
 
+and annotationTypeDeclaration = identifier * classContentTree list option
 
 and formalParameter = { modifiers: variableModifiers; typed: typed option; declarator: variableDeclarator }
 
@@ -124,8 +116,8 @@ and methodDeclarator = { identifier: identifier; parameters: formalParameter lis
 and methodDeclaration =
 | Method of methodImpl
 | Constructor of constructorImpl
-and methodImpl = { parameters: typeParameterList option; modif: methodModifiers option; returnType: typed; methodDeclarator: methodDeclarator; thr: exceptionTypeList option; con: block option }
-and constructorImpl = { parameters: typeParameterList option; modif: methodModifiers option; methodDeclarator: methodDeclarator; thr: exceptionTypeList option; con: block option }
+and methodImpl = { parameters: typeParameterList option; returnType: typed; methodDeclarator: methodDeclarator; thr: exceptionTypeList option; con: block option }
+and constructorImpl = { parameters: typeParameterList option; methodDeclarator: methodDeclarator; thr: exceptionTypeList option; con: block option }
 
 and initializerTreeMap = { iniType: staticity; con: block}
 
@@ -134,31 +126,35 @@ and initializerTreeMap = { iniType: staticity; con: block}
 and localVariableDeclaration = (variableModifiers * typed * variableDeclarators)
 and variableDeclarators = variableDeclarator list
 and variableDeclarator = (identifier * int * variableInitializer option)
-and classDeclaration = Class
 and super = Extends of classOrInterfaceType
 and interface = classOrInterfaceType
-
+and defaultValue = elementValue
 (* end of blocks types *)
 
 and classContentTree =
 | InstanceInitializer of block
 | StaticInitializer of block
-| ConstructorDeclaration of (constructorModifiers option * constructorDeclarator * throws option * constructorBody)
+| ModifiedDeclaration of variableModifiers option * declaration
+| EmptyContent
+and declaration =
+| ConstructorDeclaration of (constructorDeclarator * throws option * constructorBody)
 | MethodDeclaration of (methodDeclaration * block option)
 | ClassDeclaration of classTreeMap
 | InterfaceDeclaration of interfaceTreeMap
-| FieldDeclaration of fieldDeclarationTreeMap
+| FieldDeclaration of typed * variableDeclarators
 | EnumDeclaration of enumTreeMap
-| EmptyContent
+| AnnotationType of annotationTypeDeclaration
+| AnnotationTypeElement of typed * identifier * defaultValue option
+| AnnotationTypeDeclaration of classContentTree
+| EmptyDeclaration
 and constructorDeclarator = (typeParameterList option * typeName * formalParameter list option)
 and constructorBody = explicitConstructorInvocation option  * blockStatement list option
 and explicitConstructorInvocation = (nonWildTypeArguments option * constructorInvocationType * arguments option)
 and constructorInvocationType = This | Super
 
-and fieldDeclarationTreeMap = {modif: constantModifiers option; varDecl: variableDeclarators}
-and interfaceTreeMap = {objectType: objType; modif: methodModifiers option; inh:interface list option; interfaceName: identifier; parameters: typeParameterList option; con: contentClass}
-and classTreeMap = {objectType: objType; modif: methodModifiers option; parameters: typeParameterList option; super: super option; interfaces: interface list option; className: identifier; con: contentClass}
-and enumTreeMap = {objectType: objType; modif: methodModifiers option; inh:interface list option; enumName: identifier; con: enumContent}
+and interfaceTreeMap = {objectType: objType; inh:interface list option; interfaceName: identifier; parameters: typeParameterList option; con: contentClass}
+and classTreeMap = {objectType: objType; parameters: typeParameterList option; super: super option; interfaces: interface list option; className: identifier; con: contentClass}
+and enumTreeMap = {objectType: objType; inh:interface list option; enumName: identifier; con: enumContent}
 and contentClass  = classContentTree list option
 and enumContent = { enumConstants: enumConstant list option; con: contentClass option }
 and enumConstant = { annotations : annotation list option; identifier: identifier; arguments: arguments option; classBody: contentClass option }
@@ -166,7 +162,6 @@ and enumConstant = { annotations : annotation list option; identifier: identifie
 
 and block = Block of blockStatement list
 and blockStatement =
-    ClassDeclaration of classDeclaration
   | LocalVariableDeclarationStatement of localVariableDeclaration
   | ConstructorInitialization of explicitConstructorInvocation
   | ClassDeclarationStatement of classContentTree
