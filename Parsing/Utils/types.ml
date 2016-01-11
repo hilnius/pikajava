@@ -265,8 +265,8 @@ and referenceType =
   | ReferenceTypeArray of arrayType
 
 and classOrInterfaceType =
-    ClassType of (typeDeclSpecifier * typeArguments)
-  | InterfaceType of (typeDeclSpecifier * typeArguments)
+    ClassType of (qualifiedName * typeArguments)
+  | InterfaceType of (qualifiedName * typeArguments)
 
 and typeDeclSpecifier =
     TypeDeclSpecifierName of typeName
@@ -331,7 +331,7 @@ and primaryNoNewArray =
   | PrimaryType of typed
   | PrimaryVoidClass
   | PrimaryThis
-  | PrimaryClassThis of className
+  | PrimaryClassThis of qualifiedName
   | PrimaryExpression of expression
   | PrimaryClassInstanceCreation of classInstanceCreationExpression
   | PrimaryFieldAccess of fieldAccess
@@ -364,17 +364,14 @@ and packageOrTypeName =
 and typeName =
     TypeName of (identifier list)
 
-and expressionName =
-    ExpressionName of (identifier list)
-
 and methodName =
     MethodName of (identifier list)
 
 and className =
     ClassName of (identifier list)
 
-and ambiguousName =
-    AmbiguousName of (identifier list)
+and qualifiedName =
+    QualifiedName of (identifier list)
 
 and expression =
     NoneExpression
@@ -458,7 +455,7 @@ and castExpression =
 
 and postfixExpression =
     PostfixExpressionPrimary of primary
-  | PostfixExpressionName of expressionName
+  | PostfixExpressionName of qualifiedName
   | PostfixExpressionPostInc of postIncrementExpression
   | PostfixExpressionPostDec of postDecrementExpression
 
@@ -472,17 +469,17 @@ and assignment =
   | Assignment of (leftHandSide * assignmentOperator * assignmentExpression)
 
 and leftHandSide =
-    LeftHandSideExpressionName of expressionName
+    LeftHandSideExpressionName of qualifiedName
   | LeftHandSideFieldAccess of fieldAccess
   | LeftHandSideArrayAccess of arrayAccess
 
 and fieldAccess =
     FieldAccessPrimary of (primary * identifier)
   | FieldAccessSuper of (identifier)
-  | FieldAccessClass of (className * identifier)
+  | FieldAccessClass of (qualifiedName * identifier)
 
 and arrayAccess =
-    ArrayAccessExpression of (expressionName * expression)
+    ArrayAccessExpression of (qualifiedName * expression)
   | ArrayAccessPrimary of (primaryNoNewArray * expression)
 
 and selector =

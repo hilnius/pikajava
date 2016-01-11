@@ -142,7 +142,7 @@ castExpression:
 postfixExpression:
 | p=primary
   { PostfixExpressionPrimary p }
-| p=expressionName
+| p=qualifiedName
   { PostfixExpressionName p }
 | p=postIncrementExpression
   { PostfixExpressionPostInc p }
@@ -157,29 +157,13 @@ postfixExpression:
 | p=postfixExpression LESSLESS
   { PostDecrementExpression p }
 
-/*:
-| p=
-  {  p }
-
-:
-| p=
-  {  p }
-
-:
-| p=
-  {  p }
-
-:
-| p=
-  {  p }*/
-
 %public assignment:
 | l=leftHandSide o=assignmentOperator p=assignmentExpression
   { Assignment(l, o, p) }
 
-leftHandSide:
-| p=expressionName
-  { LeftHandSideExpressionName p }
+%inline leftHandSide:
+| p=qualifiedName
+  { print_string "leftHandSide" ; LeftHandSideExpressionName p }
 | p=fieldAccess
   { LeftHandSideFieldAccess p }
 | p=arrayAccess
@@ -190,11 +174,11 @@ fieldAccess:
         { FieldAccessPrimary(p, i) }
 | SUPER DOT p=identifier
         { FieldAccessSuper p }
-| p=className DOT SUPER DOT i=identifier
+| p=qualifiedName DOT SUPER DOT i=identifier
         { FieldAccessClass(p, i) }
 
 arrayAccess:
-| p=expressionName BRACKETOPEN a=expression BRACKETCLOSE
+| p=qualifiedName BRACKETOPEN a=expression BRACKETCLOSE
   { ArrayAccessExpression(p, a) }
 | p=primaryNoNewArray BRACKETOPEN a=expression BRACKETCLOSE
   { ArrayAccessPrimary(p, a) }
@@ -214,16 +198,16 @@ primaryNoNewArray:
   { PrimaryVoidClass }
 | THIS
   { PrimaryThis }
-| p=className DOT THIS
+| p=qualifiedName DOT THIS
   { PrimaryClassThis p }
 | OPENING_PARENTHESIS p=expression CLOSING_PARENTHESIS
   { PrimaryExpression p }
-| p=classInstanceCreationExpression
-  { PrimaryClassInstanceCreation p }
+(*| p=classInstanceCreationExpression
+  { PrimaryClassInstanceCreation p }*)
 | p=fieldAccess
   { PrimaryFieldAccess p }
-| p=methodInvocation
-  { PrimaryMethodInvocation p }
+(*| p=methodInvocation
+  { PrimaryMethodInvocation p }*)
 | p=arrayAccess
   { PrimaryArrayAccess p }
 
@@ -354,7 +338,7 @@ literal:
 | p=FLOATING_POINT_NUMERAL
   { FloatingPointLiteral(p) }
 
-%public typed:
+%public %inline typed:
 | p=primitiveType
   { TypePrimitive p }
 | p=referenceType
@@ -390,26 +374,29 @@ floatingPointType:
 | DOUBLE
   { Double }
 
-%public referenceType:
+%public %inline referenceType:
 | p=classOrInterfaceType
   { ReferenceTypeClassOrInterface p }
-| p=typeVariable
+(*| p=typeVariable
   { ReferenceTypeVariable p }
 | p=arrayType
-  { ReferenceTypeArray p }
+  { ReferenceTypeArray p }*)
 
-%public classOrInterfaceType:
-| p=classType
-  { p }
-| p=interfaceType
-  { p }
+%public %inline classOrInterfaceType:
+| p=qualifiedName
+  { ClassType(p, NoneTypeArguments) }
+| p=qualifiedName a=typeArguments
+  { ClassType(p, a) }
+  (*{ let ta = match a with None -> NoneTypeArguments | Some(b) -> b in ClassType(p, ta) }*)
+(*| p=interfaceType
+  { p }*)
 
-%public classType:
-| p=typeDeclSpecifier a=typeArguments?
+%public %inline classType:
+| p=qualifiedName COMMA COMMA a=typeArguments?
   { let ta = match a with None -> NoneTypeArguments | Some(b) -> b in ClassType(p, ta) }
 
-%public interfaceType:
-| p=typeDeclSpecifier a=typeArguments?
+%public %inline interfaceType:
+| p=qualifiedName a=typeArguments?
   { let ta = match a with None -> NoneTypeArguments | Some(b) -> b in InterfaceType(p, ta) }
 
 typeDeclSpecifier:
@@ -418,7 +405,7 @@ typeDeclSpecifier:
 | t=classOrInterfaceType DOT p=identifier
   { TypeDeclSpecifierIdentifier(t, p) }
 
-%public typeVariable:
+%public %inline typeVariable:
 | p=identifier
   { TypeVariable p }
 
@@ -494,17 +481,17 @@ typeList:
 | e=packageOrTypeName DOT p=identifier
   { let PackageOrTypeName(l) = e in PackageOrTypeName(p::l) }
 
-ambiguousName:
+(*ambiguousName:
 | p=identifier
   { AmbiguousName [p] }
 | e=ambiguousName DOT p=identifier
-  { let AmbiguousName(l) = e in AmbiguousName(p::l) }
+  { let AmbiguousName(l) = e in AmbiguousName(p::l) }*)
 
-expressionName:
+qualifiedName:
 | p=identifier
-  { ExpressionName [p] }
-| e=ambiguousName DOT p=identifier
-  { let AmbiguousName(l) = e in ExpressionName(p::l) }
+  { QualifiedName [p] }
+| e=qualifiedName DOT p=identifier
+  { print_string "qualifiedName" ; let QualifiedName(l) = e in QualifiedName(p::l) }
 
 methodName:
 | p=identifier

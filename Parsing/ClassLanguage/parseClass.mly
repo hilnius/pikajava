@@ -176,12 +176,12 @@ typedVariadic:
 | TRANSIENT {Transient(Transient)}
 | VOLATILE {Volatile(Volatile)}
 %public throws:
-| THROWS etl=exceptionTypeList { etl }
+| THROWS { [] } (*etl=exceptionTypeList { etl }
 exceptionTypeList:
 | et=exceptionType { [et] }
 | ets=exceptionTypeList COMMA et=exceptionType { ets @ [et] }
 exceptionType:
 | ct=classType { ExceptionClassOrInterfaceType(ct) }
-| tv=typeVariable { ExceptionTypeVariable(tv) }
+| tv=identifier { ExceptionTypeVariable(TypeVariable(tv)) }*)
 
 %%
