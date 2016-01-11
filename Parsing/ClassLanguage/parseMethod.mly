@@ -22,10 +22,10 @@ methodHeader:
 methodBody:
 | b=blockDeclaration { Some(b) }
 | SEMICOLON { None }
-resultType:
+%public resultType:
 | t=typed { t }
 | VOID { TypePrimitive(Void) }
-methodDeclarator:
+%public methodDeclarator:
 | id=identifier OPENING_PARENTHESIS fpl=formalParameterList? CLOSING_PARENTHESIS { { identifier=id; parameters=fpl } }
 formalParameterList:
 | lfp=lastFormalParameter { [lfp] }
@@ -60,7 +60,7 @@ methodModifiers:
 | SYNCHRONIZED { Synchronization(Synchronized) }
 | NATIVE { Nativity(Native) }
 | STRICTFP { StrictFpity(StrictFp) }
-throws:
+%public throws:
 | THROWS etl=exceptionTypeList { etl }
 exceptionTypeList:
 | et=exceptionType { [et] }

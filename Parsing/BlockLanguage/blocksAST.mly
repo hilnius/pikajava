@@ -106,7 +106,7 @@ localVariableDeclarationStatement:
 localVariableDeclaration:
 | vm=variableModifiers? t=typed vd=variableDeclarators { match vm with None -> ([], t, vd) | Some(v) -> (v, t, vd)  }
 
-variableDeclarators:
+%public variableDeclarators:
 | vd=variableDeclarator                   { [vd] }
 | vds=variableDeclarators COMMA vd=variableDeclarator { vds @ [vd] }
 | error {print_string "\027[31mError: unable to parse variable declarators "; print_token_full (symbol_loc $startpos $endpos); print_string "\027[0m"; raise (SyntaxError "coucou") }

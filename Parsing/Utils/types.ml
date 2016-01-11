@@ -10,7 +10,7 @@ and importsList = import list option
 and fileTreeMap = { pack: package; imports : importsList }
 
 and fileTree =
-  | FileTree of (fileTreeMap * (objectTree list option))
+  | FileTree of (fileTreeMap * (classContentTree list option))
   | Empty
 
 and visibility =
@@ -82,7 +82,7 @@ and modifier =
 
 and variableModifiers = modifier list
 and methodModifiers = modifier list
-
+and constantModifiers = modifier list
 and exceptionType = ExceptionClassOrInterfaceType of classOrInterfaceType | ExceptionTypeVariable of typeVariable
 and exceptionTypeList = exceptionType list
 
@@ -119,16 +119,14 @@ and classContentTree =
 | FieldDeclaration
 | MethodDeclaration of methodDeclaration
 | ClassDeclaration of classTreeMap
-| InterfaceDeclaration
+| InterfaceDeclaration of interfaceTreeMap
+| ConstantDeclaration of constantDeclarationTreeMap
+| EnumDeclaration of enumTreeMap
 | EmptyContent
 
-and objectTree =
-| ClassTree of classContentTree
-| InterfaceTree of interfaceTreeMap
-| EnumTree of enumTreeMap
-| ErrorDecl of string
 
-and interfaceTreeMap = {objectType: objType; modif: methodModifiers option; inh:parent list option; interfaceName: identifier; parameters: typeParameterList; con: contentClass}
+and constantDeclarationTreeMap = {modif: constantModifiers option; varDecl: variableDeclarators}
+and interfaceTreeMap = {objectType: objType; modif: methodModifiers option; inh:interface list option; interfaceName: identifier; parameters: typeParameterList option; con: contentClass}
 and classTreeMap = {objectType: objType; modif: methodModifiers option; parameters: typeParameterList option; super: super option; interfaces: interface list option; className: identifier; con: contentClass}
 and enumTreeMap = {objectType: objType; modif: methodModifiers option; inh:parent list option; enumName: identifier; con: enumContent}
 and contentClass  = classContentTree list option
@@ -140,7 +138,7 @@ and block = Block of blockStatement list
 and blockStatement =
     ClassDeclaration of classDeclaration
   | LocalVariableDeclarationStatement of localVariableDeclaration
-  | ClassDeclarationStatement of objectTree
+  | ClassDeclarationStatement of classContentTree
   | Statement of statement
 and statement =
     IfStatement of (expression * block * block)
