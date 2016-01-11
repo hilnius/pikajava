@@ -14,8 +14,8 @@ expression:
 assignmentExpression:
 | p=conditionalExpression
 	{ AssignmentExpressionConditional p }
-(*| p=assignment
-	{ AssignmentExpressionAssignment p }*)
+| p=assignment
+	{ AssignmentExpressionAssignment p }
 
 conditionalExpression:
 | p=conditionalOrExpression
@@ -140,8 +140,8 @@ castExpression:
 	{ CastExpressionReference(t, p) }
 
 postfixExpression:
-(*| p=primary
-	{ PostfixExpressionPrimary p }*)
+ | p=primary
+	{ PostfixExpressionPrimary p }
 | p=expressionName
 	{ PostfixExpressionName p }
 | p=postIncrementExpression
@@ -202,8 +202,8 @@ primary:
 primaryNoNewArray:
 | p=literal
 	{ PrimaryLiteral p }
-| p=typed DOT CLASS
-	{ PrimaryType p }
+(*| p=typed DOT CLASS
+	{ PrimaryType p } *)
 | VOID DOT CLASS
 	{ PrimaryVoidClass }
 | THIS
@@ -470,18 +470,18 @@ packageOrTypeName:
 	{ PackageOrTypeName [p] }
 | e=packageOrTypeName DOT p=identifier
 	{ let PackageOrTypeName(l) = e in PackageOrTypeName(p::l) }
-
+*)
 ambiguousName:
 | p=identifier
 	{ AmbiguousName [p] }
 | e=ambiguousName DOT p=identifier
-	{ let AmbiguousName(l) = e in AmbiguousName(p::l) }*)
+	{ let AmbiguousName(l) = e in AmbiguousName(p::l) }
 
 expressionName:
 | p=identifier
 	{ ExpressionName [p] }
-| e=expressionName DOT p=identifier
-	{ let ExpressionName(l) = e in ExpressionName(p::l) }
+| e=ambiguousName DOT p=identifier
+	{ let AmbiguousName(l) = e in ExpressionName(p::l) }
 
 (*methodName:
 | p=identifier

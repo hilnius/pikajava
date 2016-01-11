@@ -3,7 +3,7 @@
 class Yolo {
 
   public <T extends C < ? > > void dsqqsd() {
-    coucou = dsqlsdq;
+    double v1, v2 = 5;
   }
 
 }

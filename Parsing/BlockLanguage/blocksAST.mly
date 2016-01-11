@@ -105,6 +105,28 @@ finally:
 | vdi=variableDeclaratorId                { let (a,b) = vdi in { modifiers=[]; typed=None; declarator=(a,b,None) } }
 | vm=variableModifiers t=typed vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=vm; typed=Some(t); declarator=(a,b,None) } }
 
+(* expressions *)
+localVariableDeclarationStatement:
+| lvd=localVariableDeclaration SEMICOLON  { print_string "LVDS"; LocalVariableDeclarationStatement(lvd) }
+(*| error {print_string "\027[31mError: unable to parse variable declaration "; print_token_full (symbol_loc $startpos $endpos); print_string "\027[0m"; Statement(EmptyStatement) }*)
+
+localVariableDeclaration:
+| vm=variableModifiers? t=typed vd=variableDeclarators { match vm with None -> ([], t, vd) | Some(v) -> (v, t, vd)  }
+
+variableDeclarators:
+| vd=variableDeclarator                   { [vd] }
+| vds=variableDeclarators COMMA vd=variableDeclarator { vds @ [vd] }
+| error {print_string "\027[31mError: unable to parse variable declarators "; print_token_full (symbol_loc $startpos $endpos); print_string "\027[0m"; raise (SyntaxError "coucou") }
+
+variableDeclarator:
+| vdi=variableDeclaratorId                { let (a,b) = vdi in (a,b,None) }
+| vdi=variableDeclaratorId EQUAL vi=variableInitializer { let (a,b) = vdi in (a,b,Some(vi)) }
+%public variableDeclaratorId:
+| id=identifier                           { (id,0) }
+| vdi=variableDeclaratorId BRACKETOPEN BRACKETCLOSE { let (a,b) = vdi in (a,b + 1) }
+variableInitializer:
+| e=expression                            { VariableInitializerExpression(e) }
+
 (* small statements *)
 emptyStatement:
 | SEMICOLON                               { EmptyStatement }
@@ -124,13 +146,14 @@ synchronizedStatement:
 doStatement:
 | DO s=statement WHILE OPENING_PARENTHESIS e=expression CLOSING_PARENTHESIS SEMICOLON { DoWhileStatement(e, s) }
 expressionStatement:
-| s=statementExpression SEMICOLON { ExpressionStatement(s) }
+| s=statementExpression SEMICOLON { print_string "EXPR"; ExpressionStatement(s) }
 statementExpression:
 | e=assignment                            { AssignmentStatement e }
 | e=preIncrementExpression                { PreIncrementExpressionStatement e }
 | e=preDecrementExpression                { PreDecrementExpressionStatement e }
 | e=postIncrementExpression               { PostIncrementExpressionStatement e }
 | e=postDecrementExpression               { PostDecrementExpressionStatement e }
+| error {print_string "\027[31mError: unable to parse expression statement "; print_token_full (symbol_loc $startpos $endpos); print_string "\027[0m"; raise (SyntaxError "yolo") }
 (*| e=methodInvocation                      { MethodInvocationStatement e } *)
 (*| e=classInstanceCreationExpression       { ClassInstanceCreationExpressionStatement e }*)
 (* blocks *)
@@ -173,23 +196,6 @@ blockStatement:
 | lvds=localVariableDeclarationStatement  { lvds }
 | cd=objectDeclaration                    { ClassDeclarationStatement(cd) } (* TODO : check this *)
 | s=statement                             { Statement(s) }
-
-(* expressions *)
-localVariableDeclarationStatement:
-| lvd=localVariableDeclaration SEMICOLON  { LocalVariableDeclarationStatement(lvd) }
-localVariableDeclaration:
-| vm=variableModifiers t=typed vd=variableDeclarators { (vm, t, vd) }
-variableDeclarators:
-| vd=variableDeclarator                   { [vd] }
-| vds=variableDeclarators COMMA vd=variableDeclarator { vds @ [vd] }
-variableDeclarator:
-| vdi=variableDeclaratorId                { let (a,b) = vdi in (a,b,None) }
-| vdi=variableDeclaratorId EQUAL vi=variableInitializer { let (a,b) = vdi in (a,b,Some(vi)) }
-%public variableDeclaratorId:
-| id=identifier                           { (id,0) }
-| vdi=variableDeclaratorId BRACKETOPEN BRACKETCLOSE { let (a,b) = vdi in (a,b + 1) }
-variableInitializer:
-| e=expression                            { VariableInitializerExpression(e) }
 
 (*| ai=arrayInitializer *)
 

@@ -166,13 +166,13 @@ rule nextToken = parse
   | "double"      { DOUBLE }
   | "boolean"     { BOOLEAN }
 
-  | integer as i  { INTEGER_NUMERAL (int_of_string i) }
-  | float as i    { FLOATING_POINT_NUMERAL (float_of_string i) }
+  | integer as i  { print_string "integer numeral : "; print_string i; INTEGER_NUMERAL (int_of_string i) }
+  | float as i    { print_string "floating point numeral : "; print_string i; FLOATING_POINT_NUMERAL (float_of_string i) }
   | "true"        { BOOLEAN_LITERAL true }
   | "false"       { BOOLEAN_LITERAL false }
   | "null"        { NULL }
 
-  | identifierName as v { IDENTIFIER v }
+  | identifierName as v { print_string ("identifier : " ^ v ^ "\n"); IDENTIFIER v }
 
 and commentLine = parse
   | newLine       { Location.incr_line lexbuf; nextToken lexbuf }

@@ -1,4 +1,6 @@
 
+exception SyntaxError of string
+
 type package = string option
 
 and import = Import of (staticity * string)

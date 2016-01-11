@@ -13,7 +13,7 @@ objectDeclaration:
 (*| interfaceDecl=interfaceDeclaration { interfaceDecl}*)
 | classDecl=classDeclaration { ClassTree classDecl }
 (*| enum=enumDeclaration { enum } *)
-| error {print_string "\027[31mError: unable to parse "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; ErrorDecl ("Error : Invalid Declaration\n")}
+(*| error {print_string "\027[31mError: unable to parse "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; ErrorDecl ("Error : Invalid Declaration\n")}*)
 
 classDeclaration:
 | cm=classModifiers? CLASS i=identifier tp=typeParameters? s=super? ifs=interfaces? cb=classBody { ClassDeclaration({objectType=Class;modif=cm;parameters=tp;super=s;interfaces=ifs;className=i;con=cb}) }
