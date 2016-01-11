@@ -47,35 +47,18 @@ statementExpressionList:
 switchStatement:
 | SWITCH OPENING_PARENTHESIS e=expression CLOSING_PARENTHESIS bl=switchBlock { SwitchStatement(e, bl) }
 switchBlock:
-| OPENING_BRACE gr=switchBlockStatementGroups? labels=switchLabels? CLOSING_BRACE {
-    match gr,labels with
-    | Some(l1), Some(l2) -> l1 @ l2
-    | Some(l1), None -> l1
-    | None, Some(l2) -> l2
-    | None, None -> []
-  }
-switchBlockStatementGroups:
-| s=switchBlockStatementGroup             { s }
-| gr=switchBlockStatementGroups s=switchBlockStatementGroup { gr @ s }
-switchBlockStatementGroup:
-| labels=switchLabels st=blockStatements  {
-    let rec buildWithLast labels st =
-      match labels with
-      | [Case(e,_)] -> [Case(e, st)]
-      | [Default(_)] -> [Default(st)]
-      | t::q -> t::(buildWithLast q st)
-    in
-      buildWithLast labels st
+| OPENING_BRACE labels=switchLabels? CLOSING_BRACE {
+    match labels with
+    | Some(l1) -> l1
+    | None -> []
   }
 switchLabels:
 | sl=switchLabel                          { [sl] }
 | sls=switchLabels sl=switchLabel         { sls @ [sl] }
 switchLabel:
-| CASE e=constantExpression COLON         { Case(e, []) }
-| CASE e=enumConstantName COLON           { Case(e, []) }
+| CASE e=expression COLON                 { Case(e, []) }
+| CASE e=expression COLON st=blockStatements { Case(e, st) }
 | DEFAULT COLON                           { Default([]) }
-enumConstantName:
-| i=expression                            { i }
 
 (* try statement *)
 tryStatement:
@@ -194,6 +177,5 @@ labeledStatement:
 | i=identifier COLON s=statement          { LabeledStatement(i,s) }
 labeledStatementNoShortIf:
 | i=identifier COLON s=statementNoShortIf { LabeledStatement(i,s) }
-constantExpression:
-| b=expression                            { b }
+
 %%
