@@ -306,7 +306,11 @@ and classInstanceCreationExpression =
     ClassInstanceCreationExpression
 
 and methodInvocation =
-    MethodInvocation
+    MethodInvocationName of (methodName * arguments)
+  | MethodInvocationPrimary of (primary * nonWildTypeArguments option * identifier * arguments)
+  | MethodInvocationSuper of (nonWildTypeArguments option * identifier * arguments)
+  | MethodInvocationClassSuper of (className * nonWildTypeArguments option * identifier * arguments)
+  | MethodInvocationType of (typeName * nonWildTypeArguments * identifier * arguments)
 
 and identifier =
     NoneIdentifier
@@ -453,6 +457,9 @@ and selector =
 and arguments =
     NoneArguments
   | Arguments of (expression list)
+
+and nonWildTypeArguments =
+    NonWildTypeArguments of (referenceType list)
 
 and superSuffix =
     NoneSuperSuffix
