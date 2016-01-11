@@ -155,7 +155,16 @@ and statement =
   | SynchronizedStatement of (expression * block)
   | TryStatement of (block * catch list * block)
   | LabeledStatement of (identifier * statement)
+  | ExpressionStatement of (statementExpression)
   | EmptyStatement
+and statementExpression =
+  | AssignmentStatement of assignment
+  | PreIncrementExpressionStatement of preIncrementExpression
+  | PreDecrementExpressionStatement of preDecrementExpression
+  | PostIncrementExpressionStatement of postIncrementExpression
+  | PostDecrementExpressionStatement of postDecrementExpression
+  | MethodInvocationStatement of methodInvocation
+  | ClassInstanceCreationExpressionStatement of classInstanceCreationExpression
 and switchCase =
   | Case of (expression * blockStatement list)
   | Default of (blockStatement list)

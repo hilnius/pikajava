@@ -1,5 +1,5 @@
 open Types
-(*)
+
 (*functions to print the different modifiers *)
 let printVisibility vis = match vis with
 |Public -> print_string "visibility:public\n"
@@ -391,7 +391,7 @@ and convert_expression e = match e with
   | Expression(AssignmentExpressionConditional(p)) -> convert_conditionalExpression p*)
   | _ -> "none"
 
-(*and convert_assignment e =
+(* and convert_assignment e =
   let rec convert_assignmentaux e match e with
   | Assignment(l, o, AssignmentExpressionAssignment(p)) -> "(assignment)" ^ convert_leftHandSide l ^ " " ^ convert_assignmentOperator ^ " " ^ convert_assignmentaux p
   | Assignment(l, o, AssignmentExpressionConditional(p)) -> "(assignment)" ^ convert_leftHandSide l ^ " " ^ convert_assignmentOperator ^ " " ^ convert_assignmentaux p in
@@ -455,12 +455,12 @@ and rec convert_equalityExpression e = match e with
   | EqualityExpressionDifferent(p, s) -> convert_equalityExpression p ^ " != " ^ convert_relationalExpression s
 
 and convert_relationalExpression e = match e with
-  | _ -> "(r e)"*)
+  | _ -> "(r e)" *)
 
 and printAST t =
   print_block 0 t
 ;;
 
 
-*)
+
 
