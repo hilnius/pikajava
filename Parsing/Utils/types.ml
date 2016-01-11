@@ -1,19 +1,7 @@
 
 exception SyntaxError of string
 
-type package = string option
-
-and import = Import of (staticity * string)
-and importsList = import list option
-
-
-and fileTreeMap = { pack: package; imports : importsList }
-
-and fileTree =
-  | FileTree of (fileTreeMap * (objectTree list option))
-  | Empty
-
-and visibility =
+type visibility =
   | Public
   | Protected
   | Private
@@ -55,8 +43,29 @@ and objType =
 
 and child = string option
 
-and annotation = string
+and compilationUnit = (packageDeclaration option * importDeclaration list option * classContentTree list option)
+and packageDeclaration = (annotations option * packageName)
+and importDeclaration =
+ | SingleImportDeclaration of typeName
+ | TypeImportOnDemandDeclaration of packageOrTypeName
+ | SingleStaticImportDeclaration of typeName * identifier
+ | StaticImportOnDemandDeclaration of typeName
 
+and annotations = annotation list
+and annotation =
+  | NormalAnnotation of normalAnnotation
+  | MarkerAnnotation of markerAnnotation
+  | SingleElementAnnotation of singleElementAnnotation
+and normalAnnotation = typeName * elementValuePairs option
+and markerAnnotation = typeName
+and singleElementAnnotation = typeName * elementValue
+and elementValuePairs = elementValuePair list
+and elementValuePair = identifier * elementValue
+and elementValue =
+  | ConditionalExpression of conditionalExpression
+  | Annotation of annotation
+  | ElementValueArrayInitializer of elementValueArrayInitializer
+and elementValueArrayInitializer = elementValue list option
 and annotationsList = annotation list option
 
 

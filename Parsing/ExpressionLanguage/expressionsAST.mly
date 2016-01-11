@@ -9,181 +9,181 @@
 %%
 expression:
 | p=assignmentExpression
-	{ ExpressionAssignment p }
+  { ExpressionAssignment p }
 
 assignmentExpression:
 | p=conditionalExpression
-	{ AssignmentExpressionConditional p }
+  { AssignmentExpressionConditional p }
 | p=assignment
-	{ AssignmentExpressionAssignment p }
+  { AssignmentExpressionAssignment p }
 
-conditionalExpression:
+%public conditionalExpression:
 | p=conditionalOrExpression
-	{ ConditionalExpression p }
+  { ConditionalExpression p }
 (*| p=conditionalOrExpression QUESTION_MARK e=expression COLON c=conditionalExpression
-	{ ConditionalExpressionTernary(p, e, c) }*)
+  { ConditionalExpressionTernary(p, e, c) }*)
 
 conditionalOrExpression:
 | p=conditionalAndExpression
-	{ ConditionalOrExpression [p] }
+  { ConditionalOrExpression [p] }
 | o=conditionalOrExpression OR p=conditionalAndExpression
-	{ let ConditionalOrExpression(e) = o in ConditionalOrExpression( p::e ) }
+  { let ConditionalOrExpression(e) = o in ConditionalOrExpression( p::e ) }
 
 conditionalAndExpression:
 | p=inclusiveOrExpression
-	{ ConditionalAndExpression [p] }
+  { ConditionalAndExpression [p] }
 | o=conditionalAndExpression AND p=inclusiveOrExpression
-	{ let ConditionalAndExpression(e) = o in ConditionalAndExpression( p::e ) }
+  { let ConditionalAndExpression(e) = o in ConditionalAndExpression( p::e ) }
 
 inclusiveOrExpression:
 | p=exclusiveOrExpression
-	{ InclusiveOrExpression [p] }
+  { InclusiveOrExpression [p] }
 | o=inclusiveOrExpression BITOR p=exclusiveOrExpression
-	{ let InclusiveOrExpression(e) = o in InclusiveOrExpression( p::e  ) }
+  { let InclusiveOrExpression(e) = o in InclusiveOrExpression( p::e  ) }
 
 exclusiveOrExpression:
 | p=andExpression
-	{ ExclusiveOrExpression [p] }
+  { ExclusiveOrExpression [p] }
 | o=exclusiveOrExpression BITXOR p=andExpression
-	{ let ExclusiveOrExpression(e) = o in ExclusiveOrExpression( p::e ) }
+  { let ExclusiveOrExpression(e) = o in ExclusiveOrExpression( p::e ) }
 
 andExpression:
 | p=equalityExpression
-	{ AndExpression [p] }
+  { AndExpression [p] }
 | o=andExpression BITAND p=equalityExpression
-	{ let AndExpression(e) = o in AndExpression( p::e ) }
+  { let AndExpression(e) = o in AndExpression( p::e ) }
 
 equalityExpression:
 | p=relationalExpression
-	{ EqualityExpression p }
+  { EqualityExpression p }
 | p=equalityExpression EQUALEQUAL r=relationalExpression
-	{ EqualityExpressionEqual(p, r) }
+  { EqualityExpressionEqual(p, r) }
 | p=equalityExpression DIFFERENT r=relationalExpression
-	{ EqualityExpressionDifferent(p, r) }
+  { EqualityExpressionDifferent(p, r) }
 
 relationalExpression:
 | p=shiftExpression
-	{ RelationalExpression p }
+  { RelationalExpression p }
 | p=relationalExpression OPENING_CHEVRON s=shiftExpression
-	{ RelationalExpressionLess(p, s) }
+  { RelationalExpressionLess(p, s) }
 | p=relationalExpression CLOSING_CHEVRON s=shiftExpression
-	{ RelationalExpressionGreater(p, s) }
+  { RelationalExpressionGreater(p, s) }
 | p=relationalExpression LESSEQUALTHAN s=shiftExpression
-	{ RelationalExpressionLessEqualThan(p, s) }
+  { RelationalExpressionLessEqualThan(p, s) }
 | p=relationalExpression GREATEREQUALTHAN s=shiftExpression
-	{ RelationalExpressionGreaterEqualThan(p, s) }
+  { RelationalExpressionGreaterEqualThan(p, s) }
 | p=relationalExpression INSTANCEOF t=referenceType
-	{ RelationalExpressionInstanceOf(p, t) }
+  { RelationalExpressionInstanceOf(p, t) }
 
 shiftExpression:
 | p=additiveExpression
-	{ ShiftExpression p }
+  { ShiftExpression p }
 | p=shiftExpression SHIFTLEFT a=additiveExpression
-	{ ShiftExpressionLeft(p, a) }
+  { ShiftExpressionLeft(p, a) }
 | p=shiftExpression SHIFTRIGHT a=additiveExpression
-	{ ShiftExpressionRight(p, a) }
+  { ShiftExpressionRight(p, a) }
 | p=shiftExpression SHIFT_RIGHT_UNSIGNED a=additiveExpression
-	{ ShiftExpressionUnsignedRight(p, a) }
+  { ShiftExpressionUnsignedRight(p, a) }
 
 additiveExpression:
 | p=multiplicativeExpression
-	{ AdditiveExpression p }
+  { AdditiveExpression p }
 | p=additiveExpression MORE m=multiplicativeExpression
-	{ AdditiveExpressionAdd(p, m) }
+  { AdditiveExpressionAdd(p, m) }
 | p=additiveExpression LESS m=multiplicativeExpression
-	{ AdditiveExpressionSubstract(p, m) }
+  { AdditiveExpressionSubstract(p, m) }
 
 multiplicativeExpression:
 | p=unaryExpression
-	{ MultiplicativeExpression p }
+  { MultiplicativeExpression p }
 | p=multiplicativeExpression ASTERISK u=unaryExpression
-	{ MultiplicativeExpressionMultiply(p, u) }
+  { MultiplicativeExpressionMultiply(p, u) }
 | p=multiplicativeExpression DIVIDE u=unaryExpression
-	{ MultiplicativeExpressionDivide(p, u) }
+  { MultiplicativeExpressionDivide(p, u) }
 | p=multiplicativeExpression MODULO u=unaryExpression
-	{ MultiplicativeExpressionModulo(p, u) }
+  { MultiplicativeExpressionModulo(p, u) }
 
 unaryExpression:
 | p=preIncrementExpression
-	{ UnaryExpressionPreInc p }
+  { UnaryExpressionPreInc p }
 | p=preDecrementExpression
-	{ UnaryExpressionPreDec p }
+  { UnaryExpressionPreDec p }
 | MORE p=unaryExpression
-	{ UnaryExpressionPlus p }
+  { UnaryExpressionPlus p }
 | LESS p=unaryExpression
-	{ UnaryExpressionMinus p }
+  { UnaryExpressionMinus p }
 | p=unaryExpressionNotPlusMinus
-	{ UnaryExpressionNotPlusMinus p }
+  { UnaryExpressionNotPlusMinus p }
 
 %public preIncrementExpression:
 | MOREMORE p=unaryExpression
-	{ PreIncrementExpression p }
+  { PreIncrementExpression p }
 
 %public preDecrementExpression:
 | LESSLESS p=unaryExpression
-	{ PreDecrementExpression p }
+  { PreDecrementExpression p }
 
 unaryExpressionNotPlusMinus:
 | p=postfixExpression
-	{ UnaryExpressionNotPlusMinusPostfix p }
+  { UnaryExpressionNotPlusMinusPostfix p }
 | TILD p=unaryExpression
-	{ UnaryExpressionNotPlusMinusBitnot p }
+  { UnaryExpressionNotPlusMinusBitnot p }
 | EXCLAMATION_MARK p=unaryExpression
-	{ UnaryExpressionNotPlusMinusNot p }
+  { UnaryExpressionNotPlusMinusNot p }
 (*| p=castExpression
-	{ UnaryExpressionNotPlusMinusCast p }*)
+  { UnaryExpressionNotPlusMinusCast p }*)
 
 castExpression:
 | OPENING_PARENTHESIS t=primitiveType c=dimsopt CLOSING_PARENTHESIS p=unaryExpression
-	{ CastExpressionPrimitive(t, c, p) }
+  { CastExpressionPrimitive(t, c, p) }
 | OPENING_PARENTHESIS t=referenceType CLOSING_PARENTHESIS p=unaryExpressionNotPlusMinus
-	{ CastExpressionReference(t, p) }
+  { CastExpressionReference(t, p) }
 
 postfixExpression:
 | p=primary
-	{ PostfixExpressionPrimary p }
+  { PostfixExpressionPrimary p }
 | p=expressionName
-	{ PostfixExpressionName p }
+  { PostfixExpressionName p }
 | p=postIncrementExpression
-	{ PostfixExpressionPostInc p }
+  { PostfixExpressionPostInc p }
 | p=postDecrementExpression
-	{ PostfixExpressionPostDec p }
+  { PostfixExpressionPostDec p }
 
 %public postIncrementExpression:
 | p=postfixExpression MOREMORE
-	{ PostIncrementExpression p }
+  { PostIncrementExpression p }
 
 %public postDecrementExpression:
 | p=postfixExpression LESSLESS
-	{ PostDecrementExpression p }
+  { PostDecrementExpression p }
 
 /*:
 | p=
-	{  p }
+  {  p }
 
 :
 | p=
-	{  p }
+  {  p }
 
 :
 | p=
-	{  p }
+  {  p }
 
 :
 | p=
-	{  p }*/
+  {  p }*/
 
 %public assignment:
 | l=leftHandSide o=assignmentOperator p=assignmentExpression
-	{ Assignment(l, o, p) }
+  { Assignment(l, o, p) }
 
 leftHandSide:
 | p=expressionName
-	{ LeftHandSideExpressionName p }
+  { LeftHandSideExpressionName p }
 | p=fieldAccess
-	{ LeftHandSideFieldAccess p }
+  { LeftHandSideFieldAccess p }
 | p=arrayAccess
-	{ LeftHandSideArrayAccess p }
+  { LeftHandSideArrayAccess p }
 
 fieldAccess:
 | p=primary DOT i=identifier
@@ -195,390 +195,390 @@ fieldAccess:
 
 arrayAccess:
 | p=expressionName BRACKETOPEN a=expression BRACKETCLOSE
-	{ ArrayAccessExpression(p, a) }
+  { ArrayAccessExpression(p, a) }
 | p=primaryNoNewArray BRACKETOPEN a=expression BRACKETCLOSE
-	{ ArrayAccessPrimary(p, a) }
+  { ArrayAccessPrimary(p, a) }
 
 primary:
 | p=primaryNoNewArray
-	{ PrimaryNoNewArray p }
+  { PrimaryNoNewArray p }
 //| p=arrayCreationExpression
-//	{ PrimaryArrayCreation p }
+//  { PrimaryArrayCreation p }
 
 primaryNoNewArray:
 | p=literal
-	{ PrimaryLiteral p }
-(*| p=typed DOT CLASS
-	{ PrimaryType p } *)
+  { PrimaryLiteral p }
+| p=typed DOT CLASS
+  { PrimaryType p }
 | VOID DOT CLASS
-	{ PrimaryVoidClass }
+  { PrimaryVoidClass }
 | THIS
-	{ PrimaryThis }
+  { PrimaryThis }
 | p=className DOT THIS
-	{ PrimaryClassThis p }
+  { PrimaryClassThis p }
 | OPENING_PARENTHESIS p=expression CLOSING_PARENTHESIS
-	{ PrimaryExpression p }
+  { PrimaryExpression p }
 | p=classInstanceCreationExpression
-	{ PrimaryClassInstanceCreation p }
+  { PrimaryClassInstanceCreation p }
 | p=fieldAccess
-	{ PrimaryFieldAccess p }
+  { PrimaryFieldAccess p }
 | p=methodInvocation
-	{ PrimaryMethodInvocation p }
+  { PrimaryMethodInvocation p }
 | p=arrayAccess
-	{ PrimaryArrayAccess p }
+  { PrimaryArrayAccess p }
 
 %public methodInvocation:
 | p=methodName a=arguments
-	{ MethodInvocationName(p, a) }
+  { MethodInvocationName(p, a) }
 | p=primary DOT w=option(nonWildTypeArguments) i=identifier a=arguments
-	{ MethodInvocationPrimary(p, w, i, a) }
+  { MethodInvocationPrimary(p, w, i, a) }
 | SUPER DOT w=option(nonWildTypeArguments) i=identifier a=arguments
-	{ MethodInvocationSuper(w, i, a) }
+  { MethodInvocationSuper(w, i, a) }
 | p=className DOT SUPER DOT w=option(nonWildTypeArguments) i=identifier a=arguments
-	{ MethodInvocationClassSuper(p, w, i, a) }
+  { MethodInvocationClassSuper(p, w, i, a) }
 | p=typeName DOT w=nonWildTypeArguments i=identifier a=arguments
-	{ MethodInvocationType(p, w, i, a) }
+  { MethodInvocationType(p, w, i, a) }
 
 %public classInstanceCreationExpression:
 | NEW ta=typeArguments? c=classOrInterfaceType OPENING_PARENTHESIS al=argumentList? CLOSING_PARENTHESIS {
-		match al with
-		| None -> ClassInstanceCreationExpression(ta,c,None)
-		| Some(l) -> ClassInstanceCreationExpression(ta,c,Some(Arguments(l)))
-	}
+    match al with
+    | None -> ClassInstanceCreationExpression(ta,c,None)
+    | Some(l) -> ClassInstanceCreationExpression(ta,c,Some(Arguments(l)))
+  }
 
 dims:
 | BRACKETOPEN BRACKETCLOSE
-	{ 1 }
+  { 1 }
 | p=dims BRACKETOPEN BRACKETCLOSE
-	{ p + 1 }
+  { p + 1 }
 
 dimsopt:
 |
-	{ 0 }
+  { 0 }
 | p=dims
-	{ p }
+  { p }
 
 assignmentOperator:
 | EQUAL
-	{ Equal }
+  { Equal }
 | MORE_EQUAL
-	{ EqualMore }
+  { EqualMore }
 | LESS_EQUAL
-	{ EqualMinus }
+  { EqualMinus }
 | ASTERISK_EQUAL
-	{ EqualMultiply }
+  { EqualMultiply }
 | DIVIDE_EQUAL
-	{ EqualDivide }
+  { EqualDivide }
 | AND_EQUAL
-	{ EqualAnd }
+  { EqualAnd }
 | OR_EQUAL
-	{ EqualOr }
+  { EqualOr }
 | XOR_EQUAL
-	{ EqualXor }
+  { EqualXor }
 | MODULO_EQUAL
-	{ EqualModulo }
+  { EqualModulo }
 | LEFT_EQUAL
-	{ EqualLeft }
+  { EqualLeft }
 | RIGHT_EQUAL
-	{ EqualRight }
+  { EqualRight }
 | SHIFT_RIGHT_UNSIGNED_EQUAL
-	{ EqualShiftRightUnsigned }
+  { EqualShiftRightUnsigned }
 
 (*prefixop:
 | MOREMORE
-	{ PrefixMoreMore }
+  { PrefixMoreMore }
 | LESSLESS
-	{ PrefixLessLess }
+  { PrefixLessLess }
 | MORE
-	{ PrefixMore }
+  { PrefixMore }
 | LESS
-	{ PrefixLess }
+  { PrefixLess }
 | EXCLAMATION_MARK
-	{ PrefixNot }
+  { PrefixNot }
 | TILD
-	{ PrefixTild }
+  { PrefixTild }
 
 postfixop:
 | MOREMORE
-	{ PostfixMoreMore }
+  { PostfixMoreMore }
 | LESSLESS
-	{ PostfixLessLess }
+  { PostfixLessLess }
 
 infixop:
 | OR
-	{ InfixOr }
+  { InfixOr }
 | AND
-	{ InfixAnd }
+  { InfixAnd }
 | BITOR
-	{ InfixBitOr }
+  { InfixBitOr }
 | BITXOR
-	{ InfixBitXor }
+  { InfixBitXor }
 | BITAND
-	{ InfixBitAnd }
+  { InfixBitAnd }
 | EQUALEQUAL
-	{ InfixEqual }
+  { InfixEqual }
 | DIFFERENT
-	{ InfixDifferent }
+  { InfixDifferent }
 | OPENING_CHEVRON
-	{ InfixLessThan }
+  { InfixLessThan }
 | CLOSING_CHEVRON
-	{ InfixGreaterThan }
+  { InfixGreaterThan }
 | LESSEQUALTHAN
-	{ InfixLessEqual }
+  { InfixLessEqual }
 | GREATEREQUALTHAN
-	{ InfixGreaterEqual }
+  { InfixGreaterEqual }
 | SHIFTLEFT
-	{ InfixShiftLeft }
+  { InfixShiftLeft }
 | SHIFTRIGHT
-	{ InfixShiftRight }
+  { InfixShiftRight }
 | SHIFT_RIGHT_UNSIGNED
-	{ InfixShiftRightUnsigned }
+  { InfixShiftRightUnsigned }
 | MORE
-	{ InfixMore }
+  { InfixMore }
 | LESS
-	{ InfixLess }
+  { InfixLess }
 | ASTERISK
-	{ InfixASTERISK }
+  { InfixASTERISK }
 | DIVIDE
-	{ InfixDivide }
+  { InfixDivide }
 | MODULO
-	{ InfixModulo }*)
+  { InfixModulo }*)
 
 (*identifierList:
 | p=identifier
-	{ [p] }
+  { [p] }
 | e=identifierList DOT p=identifier
-	{ p::e }*)
+  { p::e }*)
 
 literal:
 | p=INTEGER_NUMERAL
-	{ IntegerLiteral(p) }
+  { IntegerLiteral(p) }
 | p=FLOATING_POINT_NUMERAL
-	{ FloatingPointLiteral(p) }
+  { FloatingPointLiteral(p) }
 
 %public typed:
 | p=primitiveType
-	{ TypePrimitive p }
+  { TypePrimitive p }
 | p=referenceType
-	{ TypeReference p }
+  { TypeReference p }
 
 primitiveType:
 | p=numericType
-	{ p }
+  { p }
 | BOOLEAN
-	{ Boolean }
+  { Boolean }
 
 numericType:
 | p=integralType
-	{ p }
+  { p }
 | p=floatingPointType
-	{ p }
+  { p }
 
 integralType:
 | BYTE
-	{ Byte }
+  { Byte }
 | SHORTINT
-	{ Short }
+  { Short }
 | INTEGER
-	{ Integer }
+  { Integer }
 | LONGINT
-	{ Long }
+  { Long }
 | CHAR
-	{ Char }
+  { Char }
 
 floatingPointType:
 | FLOAT
-	{ Float }
+  { Float }
 | DOUBLE
-	{ Double }
+  { Double }
 
 referenceType:
 | p=classOrInterfaceType
-	{ ReferenceTypeClassOrInterface p }
+  { ReferenceTypeClassOrInterface p }
 | p=typeVariable
-	{ ReferenceTypeVariable p }
+  { ReferenceTypeVariable p }
 | p=arrayType
-	{ ReferenceTypeArray p }
+  { ReferenceTypeArray p }
 
 %public classOrInterfaceType:
 | p=classType
-	{ p }
+  { p }
 | p=interfaceType
-	{ p }
+  { p }
 
 %public classType:
 | p=typeDeclSpecifier a=typeArguments?
-	{ let ta = match a with None -> NoneTypeArguments | Some(b) -> b in ClassType(p, ta) }
+  { let ta = match a with None -> NoneTypeArguments | Some(b) -> b in ClassType(p, ta) }
 
 %public interfaceType:
 | p=typeDeclSpecifier a=typeArguments?
-	{ let ta = match a with None -> NoneTypeArguments | Some(b) -> b in InterfaceType(p, ta) }
+  { let ta = match a with None -> NoneTypeArguments | Some(b) -> b in InterfaceType(p, ta) }
 
 typeDeclSpecifier:
 | p=typeName
-	{ TypeDeclSpecifierName p }
+  { TypeDeclSpecifierName p }
 | t=classOrInterfaceType DOT p=identifier
-	{ TypeDeclSpecifierIdentifier(t, p) }
+  { TypeDeclSpecifierIdentifier(t, p) }
 
 %public typeVariable:
 | p=identifier
-	{ TypeVariable p }
+  { TypeVariable p }
 
 arrayType:
 | p=typed BRACKETOPEN BRACKETCLOSE
-	{ ArrayType p }
+  { ArrayType p }
 
 typeArguments:
 | OPENING_CHEVRON p=actualTypeArgumentList CLOSING_CHEVRON
-	{ TypeArguments p }
+  { TypeArguments p }
 
 actualTypeArgumentList:
 | p=actualTypeArgument
-	{ [p] }
+  { [p] }
 | e=actualTypeArgumentList COMMA p=actualTypeArgument
-	{ p::e }
+  { p::e }
 
 actualTypeArgument:
 | p=referenceType
-	{ ActualTypeArgumentReferenceType p }
+  { ActualTypeArgumentReferenceType p }
 | p=wildcard
-	{ ActualTypeArgumentWildcard p }
+  { ActualTypeArgumentWildcard p }
 
 wildcard:
 | QUESTION_MARK
-	{ Wildcard }
+  { Wildcard }
 | QUESTION_MARK EXTENDS p=referenceType
-	{ WildcardExtends p }
+  { WildcardExtends p }
 | QUESTION_MARK SUPER p=referenceType
-	{ WildcardSuper p }
+  { WildcardSuper p }
 
 (*typedList:
 | p=typedIdarg
-	{ [p] }
+  { [p] }
 | e=typedList DOT p=typedIdarg
-	{ p::e }
+  { p::e }
 
 typedIdarg:
 | p=identifier
-	{ IdentifierArgs(p, []) }
+  { IdentifierArgs(p, []) }
 | p=identifier OPENING_CHEVRON a=separated_nonempty_list(COMMA, typeArgument) CLOSING_CHEVRON
-	{ IdentifierArgs(p, a) }
+  { IdentifierArgs(p, a) }
 
 typeArgument:
 | p=typed
-	{ TypeArgumentType p }
+  { TypeArgumentType p }
 | QUESTION_MARK
-	{ TypeArgumentGeneric(NoneType, NoneTypeArgument) }
+  { TypeArgumentGeneric(NoneType, NoneTypeArgument) }
 | QUESTION_MARK EXTENDS p=typed
-	{ TypeArgumentGeneric(p, TypeArgumentExtends) }
+  { TypeArgumentGeneric(p, TypeArgumentExtends) }
 | QUESTION_MARK SUPER p=typed
-	{ TypeArgumentGeneric(p, TypeArgumentSuper) }
+  { TypeArgumentGeneric(p, TypeArgumentSuper) }
 
 typeList:
 | p=typed
-	{ [p] }
+  { [p] }
 | e=typeList p=typed
-	{ p::e }*)
+  { p::e }*)
 
 %public identifier:
 | p=IDENTIFIER
-	{ Identifier(p) }
+  { Identifier(p) }
 
-(*packageName:
+%public packageName:
 | p=identifier
-	{ PackageName [p] }
+  { PackageName [p] }
 | e=packageName DOT p=identifier
-	{ let PackageName(l) = e in PackageName(p::l) }
+  { let PackageName(l) = e in PackageName(p::l) }
 
-packageOrTypeName:
+%public packageOrTypeName:
 | p=identifier
-	{ PackageOrTypeName [p] }
+  { PackageOrTypeName [p] }
 | e=packageOrTypeName DOT p=identifier
-	{ let PackageOrTypeName(l) = e in PackageOrTypeName(p::l) }
-*)
+  { let PackageOrTypeName(l) = e in PackageOrTypeName(p::l) }
+
 ambiguousName:
 | p=identifier
-	{ AmbiguousName [p] }
+  { AmbiguousName [p] }
 | e=ambiguousName DOT p=identifier
-	{ let AmbiguousName(l) = e in AmbiguousName(p::l) }
+  { let AmbiguousName(l) = e in AmbiguousName(p::l) }
 
 expressionName:
 | p=identifier
-	{ ExpressionName [p] }
+  { ExpressionName [p] }
 | e=ambiguousName DOT p=identifier
-	{ let AmbiguousName(l) = e in ExpressionName(p::l) }
+  { let AmbiguousName(l) = e in ExpressionName(p::l) }
 
 methodName:
 | p=identifier
-	{ MethodName [p] }
+  { MethodName [p] }
 | e=methodName DOT p=identifier
-	{ let MethodName(l) = e in MethodName(p::l) }
+  { let MethodName(l) = e in MethodName(p::l) }
 
-typeName:
+%public typeName:
 | p=identifier
-	{ TypeName [p] }
-| e=typeName DOT p=identifier
-	{ let TypeName(l) = e in TypeName(p::l) }
+  { TypeName [p] }
+| e=packageOrTypeName DOT p=identifier
+  { let PackageOrTypeName(l) = e in TypeName(p::l) }
 
 %inline className:
 | p=identifier
-	{ ClassName [p] }
+  { ClassName [p] }
 //| a=ambiguousName DOT p=identifier
-//	{ ClassNameAmbiguous(p, a) }
+//  { ClassNameAmbiguous(p, a) }
 
 (*identifierSuffix:
 | BRACKETOPEN BRACKETCLOSE c=arrayCounter DOT CLASS
-	{ IdentifierSuffixArrayClass(c + 1) }
+  { IdentifierSuffixArrayClass(c + 1) }
 | BRACKETOPEN e=expression BRACKETCLOSE
-	{ IdentifierSuffixArrayExpression e }
+  { IdentifierSuffixArrayExpression e }
 | p=arguments
-	{ IdentifierSuffixArguments p }
+  { IdentifierSuffixArguments p }
 | DOT CLASS
-	{ IdentifierSuffixDotClass }
+  { IdentifierSuffixDotClass }
 | DOT p=explicitGenericInvocation
-	{ IdentifierSuffixDotInvocation p }
+  { IdentifierSuffixDotInvocation p }
 | DOT THIS
-	{ IdentifierSuffixDotThis }
+  { IdentifierSuffixDotThis }
 | DOT SUPER p=arguments
-	{ IdentifierSuffixDotSuperArguments p }
+  { IdentifierSuffixDotSuperArguments p }
 | DOT NEW e=optNonQUESTION_MARKTypeArguments p=innerCreator
-	{ IdentifierSuffixDotNew(p, e) }
+  { IdentifierSuffixDotNew(p, e) }
 
 explicitGenericInvocation:
 | p=nonQUESTION_MARKTypeArguments e=explicitGenericInvocationSuffix
-	{ ExplicitGenericInvocation(p, e) }
+  { ExplicitGenericInvocation(p, e) }
 
 explicitGenericInvocationSuffix:
 | SUPER p=superSuffix
-	{ ExplicitGenericInvocationSuffixSuper p }
+  { ExplicitGenericInvocationSuffixSuper p }
 | p=identifier a=arguments
-	{ ExplicitGenericInvocationSuffixIdentifier(p, a) }
+  { ExplicitGenericInvocationSuffixIdentifier(p, a) }
 
 superSuffix:
 | a=arguments
-	{ SuperSuffixArguments a }
+  { SuperSuffixArguments a }
 | DOT p=identifier a=arguments
-	{ SuperSuffixIdentifier(p, a) }
+  { SuperSuffixIdentifier(p, a) }
 
 selector:
 | DOT p=identifier
-	{ SelectorIdentifier(p, NoneArguments) }
+  { SelectorIdentifier(p, NoneArguments) }
 | DOT p=identifier a=arguments
-	{ SelectorIdentifier(p, a) }
+  { SelectorIdentifier(p, a) }
 | DOT p=explicitGenericInvocation
-	{ SelectorInvocation p }
+  { SelectorInvocation p }
 | DOT THIS
-	{ SelectorThis }
+  { SelectorThis }
 | DOT SUPER p=superSuffix
-	{ SelectorSuper p }
+  { SelectorSuper p }
 | DOT NEW a=optNonQUESTION_MARKTypeArguments p=innerCreator
-	{ SelectorNew(p, a, NoneExpression) }
+  { SelectorNew(p, a, NoneExpression) }
 | DOT NEW a=optNonQUESTION_MARKTypeArguments p=innerCreator e=expression
-	{ SelectorNew(p, a, e) }
+  { SelectorNew(p, a, e) }
 *)
 %public arguments:
 | OPENING_PARENTHESIS p=separated_list(COMMA, expression) CLOSING_PARENTHESIS
-	{ Arguments(p) }
+  { Arguments(p) }
 
 %public argumentList:
 | p=separated_list(COMMA, expression)
@@ -586,81 +586,81 @@ selector:
 
 nonWildTypeArguments:
 | OPENING_CHEVRON p=separated_nonempty_list(COMMA, referenceType) CLOSING_CHEVRON
-	{ NonWildTypeArguments(p) }
+  { NonWildTypeArguments(p) }
 
 (*
 optNonQUESTION_MARKTypeArguments:
 |
-	{ [] }
+  { [] }
 | p=nonQUESTION_MARKTypeArguments
-	{ p }
+  { p }
 
 nonQUESTION_MARKTypeArguments:
 | OPENING_CHEVRON CLOSING_CHEVRON
-	{ [] }
+  { [] }
 | OPENING_CHEVRON p=typeList CLOSING_CHEVRON
-	{ p }
+  { p }
 
 creator:
 | a=optNonQUESTION_MARKTypeArguments p=createdName r=arrayCreatorRest
-	{ CreatorArray(p, a, r) }
+  { CreatorArray(p, a, r) }
 | a=optNonQUESTION_MARKTypeArguments p=createdName r=classCreatorRest
-	{ CreatorClass(p, a, r) }
+  { CreatorClass(p, a, r) }
 
 createdName:
 | p=identifier a=optNonQUESTION_MARKTypeArguments l=createdNameList
-	{ CreatedName(p, a, l) }
+  { CreatedName(p, a, l) }
 
 createdNameList:
 |
-	{ [] }
+  { [] }
 | e=createdNameList DOT p=identifier a=optNonQUESTION_MARKTypeArguments
-	{ IdentifierTypeArgs(p, a)::e }
+  { IdentifierTypeArgs(p, a)::e }
 
 innerCreator:
 | p=identifier r=classCreatorRest
-	{ InnerCreator(p, r) }
+  { InnerCreator(p, r) }
 
 classCreatorRest:
 | a=arguments
-	{ ClassCreatorRest(a, NoneClassBody) }
+  { ClassCreatorRest(a, NoneClassBody) }
 // TC classBody
 
 arrayCreatorRest:
 | BRACKETOPEN BRACKETCLOSE c=arrayCounter p=arrayInitializer
-	{ ArrayCreatorRestInit(p, c) }
+  { ArrayCreatorRestInit(p, c) }
 | BRACKETOPEN p=expression BRACKETCLOSE e=arrayCreatorRestList c=arrayCounter
-	{ ArrayCreatorRestExpression(p::e, c) }
+  { ArrayCreatorRestExpression(p::e, c) }
 
 arrayCreatorRestList:
 |
-	{ [] }
+  { [] }
 | e=arrayCreatorRestList BRACKETOPEN p=expression BRACKETCLOSE
-	{ p::e }
+  { p::e }
 
 arrayCounter:
 |
-	{ 0 }
+  { 0 }
 | p=arrayCounter BRACKETOPEN BRACKETCLOSE
-	{ p + 1 }
+  { p + 1 }
 
 arrayInitializer:
 | OPENING_BRACE l=variableInitList CLOSING_BRACE
-	{ ArrayInitializer l }
+  { ArrayInitializer l }
 | OPENING_BRACE l=variableInitList COMMA CLOSING_BRACE
-	{ ArrayInitializerTrailing l }
+  { ArrayInitializerTrailing l }
 
 variableInitList:
 |
-	{ [] }
+  { [] }
 | e=variableInitList COMMA p=variableInitializer
-	{ p::e }
+  { p::e }
 
 variableInitializer:
 | p=arrayInitializer
-	{ VariableInitializerArray p }
+  { VariableInitializerArray p }
 | p=expression
-	{ VariableInitializerExpression p }*)
+  { VariableInitializerExpression p }*)
 
 %%
 

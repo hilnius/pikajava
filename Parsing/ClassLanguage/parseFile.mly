@@ -5,39 +5,46 @@ open ExitManagement
 %}
 
 %start fileDeclaration
-%type <Types.fileTree> fileDeclaration
+%type <Types.compilationUnit> fileDeclaration
 %%
 
 (*TODO EOF?????*)
 
 (*TODO HANDLE SEVERAL CLASSES OR NONE*)
 fileDeclaration:
-| pack = package imp = importsListDecl classDecls=classDeclarationList? EOF {FileTree({pack=pack;imports=imp},classDecls)}
-| error {print_string "Error : Invalid Package Declaration\n"; print(symbol_loc $startpos $endpos); setExitCodeValue 1; Empty}
-package:
-|PACKAGE pack = packageName SEMICOLON {Some(pack)}
-| {None}
-packageName:
-|package = IDENTIFIER DOT childPackage = packageName {package^"."^childPackage}
-|package = IDENTIFIER {package}
-importsListDecl:
-|importsList = importsList {Some importsList}
-| {None}
-importsList:
-|import = imports importsList=importsList {import::importsList}
-|import = imports {[import]}
-imports:
-|IMPORT STATIC import = import {Import(Static,import)}
-|IMPORT import = import {Import(NonStatic,import)}
-import:
-|importName = IDENTIFIER childName=importNext SEMICOLON {importName^childName}
-importNext:
-|DOT importName = IDENTIFIER childName=importNext {"."^importName^childName}
-|DOT ASTERISK {".*"}
-| {""}
-classDeclarationList:
-|classDecl=objectDeclaration classDecls=classDeclarationList {classDecl::classDecls}
-|classDecl=objectDeclaration {[classDecl]}
+| c=compilationUnit EOF { c }
+
+compilationUnit:
+| pd=packageDeclaration? id=importDeclarations? td=typeDeclarations? { (pd,id,td) }
+importDeclarations:
+| id=importDeclaration { [id] }
+| ids=importDeclarations id=importDeclaration { ids @ [id] }
+typeDeclarations:
+| td=typeDeclaration { [td] }
+| tds=typeDeclarations td=typeDeclaration { tds @ [td] }
+
+packageDeclaration:
+| an=annotations? PACKAGE p=packageName { (an, p) }
+
+importDeclaration:
+| id=singleTypeImportDeclaration { SingleImportDeclaration id }
+| id=typeImportOnDemandDeclaration { TypeImportOnDemandDeclaration id }
+| id=singleStaticImportDeclaration { let (a,b) = id in SingleStaticImportDeclaration(a,b) }
+| id=staticImportOnDemandDeclaration { StaticImportOnDemandDeclaration id }
+singleTypeImportDeclaration:
+| IMPORT tn=typeName SEMICOLON { tn }
+typeImportOnDemandDeclaration:
+| IMPORT p=packageOrTypeName DOT ASTERISK SEMICOLON { p }
+singleStaticImportDeclaration:
+| IMPORT STATIC t=typeName DOT i=identifier SEMICOLON { (t,i) }
+staticImportOnDemandDeclaration:
+| IMPORT STATIC t=typeName DOT ASTERISK SEMICOLON { t }
+
+typeDeclaration:
+| c=classDeclaration { c }
+(*| i=interfaceDeclaration { i } *)
+| SEMICOLON { EmptyContent }
+
 %%
 
 

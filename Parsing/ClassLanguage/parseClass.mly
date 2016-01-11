@@ -15,7 +15,7 @@ objectDeclaration:
 (*| enum=enumDeclaration { enum } *)
 (*| error {print_string "\027[31mError: unable to parse "; print_token_full (symbol_loc $startpos $endpos); setExitCodeValue 2; print_string "\027[0m"; ErrorDecl ("Error : Invalid Declaration\n")}*)
 
-classDeclaration:
+%public classDeclaration:
 | cm=classModifiers? CLASS i=identifier tp=typeParameters? s=super? ifs=interfaces? cb=classBody { ClassDeclaration({objectType=Class;modif=cm;parameters=tp;super=s;interfaces=ifs;className=i;con=cb}) }
 
 classModifiers:
@@ -57,9 +57,6 @@ enumConstantsArguments:
 enumBodyDeclarations:
 | SEMICOLON cb=classContentDeclarations { cb }
 |  { None }
-annotations:
-| a=annotation { [a] }
-| annotations=annotations a=annotation { annotations @ [a] }
 
 modifiersList:
 | modifsList=modifiers {Some(modifsList)}

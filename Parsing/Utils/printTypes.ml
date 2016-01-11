@@ -1,5 +1,5 @@
 open Types
-
+(*)
 (*functions to print the different modifiers *)
 let printVisibility vis = match vis with
 |Public -> print_string "visibility:public\n"
@@ -460,7 +460,7 @@ and convert_relationalExpression e = match e with
 and printAST t =
   print_block 0 t
 ;;
-
+*)
 
 
 

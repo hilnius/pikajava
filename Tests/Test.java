@@ -1,15 +1,17 @@
 
+package java.lang.String;
+
 // class Yolo is a swaggy class !
 class Yolo {
 
   public <T extends C < ? > > void dsqqsd() {
     double v1, v2 = 5;
 
-    for ( int a : 5 ) {
+    /*for ( int a : 5 ) {
       thisIsACall();
 
       String a = new Cl();
-    }
+    }*/
   }
 
 }

@@ -157,7 +157,7 @@ statement:
 statementWithoutTrailingSubstatement:
 | b=block                                 { BlockStatement(b) }
 | s=emptyStatement                        { s }
-| s=expressionStatement                   { s }
+(*| s=expressionStatement                   { s } *)
 | s=assertStatement                       { s }
 | s=switchStatement                       { s }
 | s=doStatement                           { s }
