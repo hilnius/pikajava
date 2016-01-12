@@ -54,18 +54,18 @@ public class Yolo <T extends D>  {
 
     class SubClass {
       public void getInstance() {
-        if(1) {
+        if(pika.test()) {
           return;
         }
         assert 1 ;
         assert 1 : 1;
-        switch (1) {
+        switch (myVar) {
           case 1:
             return 1;
           case 1:
             return;
           case 1:
-            if(1) {
+            if(myVar == var2) {
               return dsqdsql;
             }
           case 1:
@@ -77,7 +77,7 @@ public class Yolo <T extends D>  {
           case 1:
             if(120) {
               do {
-                if(1 + 12)
+                if(myVar >= coucou)
                   for (;; ) {
                     return 3;
                     synchronized (1) {
