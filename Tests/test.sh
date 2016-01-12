@@ -7,7 +7,6 @@ regexEmptyLine="^[\s\S]*$"
 currentTime=$(date "+%Y.%m.%d-%H.%M.%S")
 file="tempTestFile".$currentTime."java"
 
-text=""
 actualDirectory=$(pwd)
 expectedResult=""
 
@@ -36,9 +35,6 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 			exit 1
 		fi
 
-		#Writing test content into temp file.
-		echo $text > $file
-		text=""
 		#Switching to project directory.
 		cd $2
 		#Executing test.
@@ -64,6 +60,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 			fi
 		fi
 		printf "\n"
+		> $file
 		cd $actualDirectory
 
 	elif [[ $line =~ $regexNewTest ]]; then
@@ -113,7 +110,8 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 			printf "ERROR unexpected test content line $lineNumber \n"
 			exit 1
 		fi
-    	text=$text$line
+		#Writing test content into temp file.
+    	echo $line >> $file
     fi
     #Increments the number of lines.
     ((lineNumber=lineNumber+1))

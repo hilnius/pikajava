@@ -103,32 +103,32 @@ interface Full T,U {}
 TEST ENUM
 
 ### TEST simple enum with one parameter ###
-@SHOULD_PASS
+@SHOULD_NOT_PASS
 enum Full<T> {}
 ### END ###
 
 ### TEST simple enum with two parameters ###
-@SHOULD_PASS
+@SHOULD_NOT_PASS
 enum Full<T,U> {}
 ### END ###
 
 ### TEST simple enum with one parameter with extends ###
-@SHOULD_PASS
+@SHOULD_NOT_PASS
 enum Full<T extends Object> {}
 ### END ###
 
 ### TEST simple enum with one parameter extends and parent parameter ###
-@SHOULD_PASS
+@SHOULD_NOT_PASS
 enum Full<T extends List<Object>> {}
 ### END ###
 
 ### TEST simple enum with one parameter extends and parent parameter with a wildcard and extends ###
-@SHOULD_PASS
+@SHOULD_NOT_PASS
 enum Full<T extends List<? super T>>{}
 ### END ###
 
 ### TEST simple enum with one parameter extends and parent parameter with a wildcard and super ###
-@SHOULD_PASS
+@SHOULD_NOT_PASS
 enum Full<T extends List<? extends T>> {}
 ### END ###
 
@@ -155,63 +155,63 @@ TEST METHOD
 ### TEST simple method with one parameter ###
 @SHOULD_PASS
 class A {
-void method Full<T> {}
+<T> void methodA() {}
 }
 ### END ###
 
 ### TEST simple method with two parameters ###
 @SHOULD_PASS
 class A {
-void method Full<T,U> {}
+<T,U> void methodA() {}
 }
 ### END ###
 
 ### TEST simple method with one parameter with extends ###
 @SHOULD_PASS
 class A {
-void method Full<T extends Object> {}
+<T extends Object> void methodA(){}
 }
 ### END ###
 
 ### TEST simple method with one parameter extends and parent parameter ###
 @SHOULD_PASS
 class A {
-void method Full<T extends List<Object>> {}
+<T extends List<Object>> void methodA(){}
 }
 ### END ###
 
 ### TEST simple method with one parameter extends and parent parameter with a wildcard and extends ###
 @SHOULD_PASS
 class A {
-void method Full<T extends List<? super T>>{}
+<T extends List<? super T> void methodA() {}
 }
 ### END ###
 
 ### TEST simple method with one parameter extends and parent parameter with a wildcard and super ###
 @SHOULD_PASS
 class A {
-void method Full<T extends List<? extends T>> {}
+<T extends List<? extends T>> void methodA() {}
 }
 ### END ###
 
 ### TEST simple method with one parameter super###
 @SHOULD_NOT_PASS
 class A {
-void method Full<T super Amethod> {}
+<T super AClass> void methodA(){}
 }
 ### END ###
 
 ### TEST simple method with two parameters separated by a semicolon###
 @SHOULD_NOT_PASS
 class A {
-void method Full<T;U> {}
+<T;U> void methodA(){}
 }
 ### END ###
 
 ### TEST simple method with a parameter without chevron###
 @SHOULD_NOT_PASS
 class A {
-void method Full T,U {}
+T,U void methodA() {}
 }
 ### END ###
 
