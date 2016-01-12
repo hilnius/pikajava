@@ -7,7 +7,7 @@ import java.lang.*;
 
   @test
 )
-public class Yolo  {
+public class Yolo <T extends D>  {
 
   @ interface ClassPreamble {
     abstract public void dsqqsd() {
@@ -43,6 +43,8 @@ public class Yolo  {
 
   static Dqlsqdl ( ) {
     a = 3 + 13210 + (dsqkljdsq * 1221);
+    // we parse super complex expressions !
+    if(pika.test.class + (int[][][][])4 + ((4 == 9) ? 1 % 9 : 4 << 9) + (temp.kel.class).pika + pika[4] + super.<Integer, lol>kt(4) + test.super.pika(4, 5)){}
   }
 
   public void dsqqsd(qsd a, qsdqsdl p, int b) {
