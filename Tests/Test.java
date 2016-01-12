@@ -42,13 +42,60 @@ public class Yolo  {
   }
 
   static Dqlsqdl ( ) {
-
+    a = 3 + 13210 + (dsqkljdsq * 1221);
   }
 
   public void dsqqsd(qsd a, qsdqsdl p, int b) {
     a.test();
-
   }
+
+
+    class SubClass {
+      public void getInstance() {
+        if(1) {
+          return;
+        }
+        assert 1 ;
+        assert 1 : 1;
+        switch (1) {
+          case 1:
+            return 1;
+          case 1:
+            return;
+          case 1:
+            if(1) {
+              return dsqdsql;
+            }
+          case 1:
+            break;
+          case 1:
+            continue;
+          case 1:
+            throw 1;
+          case 1:
+            if(120) {
+              do {
+                if(1 + 12)
+                  for (;; ) {
+                    return 3;
+                    synchronized (1) {
+                      return 3;
+                    }
+                  }
+              } while (1);
+            }
+        }
+        try {
+          return 3;
+        } catch(exception1 e1) {
+          return 3;
+        } catch(exception2 e2) {
+          return 3;
+        } finally {
+          break;
+        }
+      }
+    }
 
 }
 /*
@@ -60,56 +107,6 @@ class Yolo {
   }
 
   public void main() {
-    //class SubClass {
-      //public void getInstance() {
-        if(true) {
-          int
-        }
-        assert true ;
-        assert true : true;
-        switch (true) {
-          case true:
-            return true;
-          case true:
-            return;
-          case true:
-            if(true) {
-              int
-            }
-          case true:
-            break;
-          case true:
-            break true;
-          case true:
-            continue;
-          case true:
-            continue true;
-          case true:
-            throw true;
-          default:
-            if(true) {
-              do {
-                if(true)
-                  for (int ;true ; true) {
-                    int
-                    synchronized (true) {
-                      int
-                    }
-                  }
-              } while (true);
-            }
-        }
-        try {
-          int
-        } catch(true) {
-          int
-        } catch(true) {
-          int
-        } finally {
-          int
-        }
-      //}
-    //}
   }
 }*/
 
