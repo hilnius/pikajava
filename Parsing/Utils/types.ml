@@ -291,6 +291,9 @@ and wildcard =
   | WildcardExtends of referenceType
   | WildcardSuper of referenceType
 
+and dimExprs =
+    DimExprs of (expression list)
+
 and typeArgumentKind =
     NoneTypeArgument
   | TypeArgumentExtends
@@ -339,17 +342,18 @@ and primaryNoNewArray =
   | PrimaryArrayAccess of arrayAccess
 
 and arrayCreationExpression =
-    ArrayCreationExpression
+    ArrayCreationExpressionPrimitive of (primitiveType * dimExprs)
+  | ArrayCreationExpressionClass of (classOrInterfaceType * dimExprs)
 
 and classInstanceCreationExpression =
     ClassInstanceCreationExpression of (typeArguments option * classOrInterfaceType * arguments option * contentClass option)
 
 and methodInvocation =
-    MethodInvocationName of (methodName * arguments)
+    MethodInvocationName of (qualifiedName * arguments)
   | MethodInvocationPrimary of (primary * nonWildTypeArguments option * identifier * arguments)
   | MethodInvocationSuper of (nonWildTypeArguments option * identifier * arguments)
-  | MethodInvocationClassSuper of (className * nonWildTypeArguments option * identifier * arguments)
-  | MethodInvocationType of (typeName * nonWildTypeArguments * identifier * arguments)
+  | MethodInvocationClassSuper of (qualifiedName * nonWildTypeArguments option * identifier * arguments)
+  | MethodInvocationType of (qualifiedName * nonWildTypeArguments * identifier * arguments)
 
 and identifier =
     NoneIdentifier

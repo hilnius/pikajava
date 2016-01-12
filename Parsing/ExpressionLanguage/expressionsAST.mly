@@ -20,8 +20,8 @@ assignmentExpression:
 %public conditionalExpression:
 | p=conditionalOrExpression
   { ConditionalExpression p }
-(*| p=conditionalOrExpression QUESTION_MARK e=expression COLON c=conditionalExpression
-  { ConditionalExpressionTernary(p, e, c) }*)
+| p=conditionalOrExpression QUESTION_MARK e=expression COLON c=conditionalExpression
+  { ConditionalExpressionTernary(p, e, c) }
 
 conditionalOrExpression:
 | p=conditionalAndExpression
@@ -130,8 +130,8 @@ unaryExpressionNotPlusMinus:
   { UnaryExpressionNotPlusMinusBitnot p }
 | EXCLAMATION_MARK p=unaryExpression
   { UnaryExpressionNotPlusMinusNot p }
-(*| p=castExpression
-  { UnaryExpressionNotPlusMinusCast p }*)
+| p=castExpression
+  { UnaryExpressionNotPlusMinusCast p }
 
 castExpression:
 | OPENING_PARENTHESIS t=primitiveType c=dimsopt CLOSING_PARENTHESIS p=unaryExpression
@@ -163,7 +163,7 @@ postfixExpression:
 
 %inline leftHandSide:
 | p=qualifiedName
-  { print_string "leftHandSide" ; LeftHandSideExpressionName p }
+  { LeftHandSideExpressionName p }
 | p=fieldAccess
   { LeftHandSideFieldAccess p }
 | p=arrayAccess
@@ -186,8 +186,14 @@ arrayAccess:
 %public primary:
 | p=primaryNoNewArray
   { PrimaryNoNewArray p }
-//| p=arrayCreationExpression
-//  { PrimaryArrayCreation p }
+| p=arrayCreationExpression
+  { PrimaryArrayCreation p }
+
+arrayCreationExpression:
+| NEW p=primitiveType d=dimExprs
+  { ArrayCreationExpressionPrimitive(p, d) }
+| NEW p=classOrInterfaceType d=dimExprs
+  { ArrayCreationExpressionClass(p, d) }
 
 primaryNoNewArray:
 | p=literal
@@ -201,26 +207,32 @@ primaryNoNewArray:
 | p=qualifiedName DOT THIS
   { PrimaryClassThis p }
 | OPENING_PARENTHESIS p=expression CLOSING_PARENTHESIS
-  { PrimaryExpression p }
+  { print_string "parExpression " ; PrimaryExpression p }
 (*| p=classInstanceCreationExpression
   { PrimaryClassInstanceCreation p }*)
 | p=fieldAccess
   { PrimaryFieldAccess p }
-(*| p=methodInvocation
-  { PrimaryMethodInvocation p }*)
+| p=methodInvocation
+  { PrimaryMethodInvocation p }
 | p=arrayAccess
   { PrimaryArrayAccess p }
 
 %public methodInvocation:
-| p=methodName a=arguments
+| p=qualifiedName a=arguments
   { MethodInvocationName(p, a) }
-| p=primary DOT w=option(nonWildTypeArguments) i=identifier a=arguments
-  { MethodInvocationPrimary(p, w, i, a) }
-| SUPER DOT w=option(nonWildTypeArguments) i=identifier a=arguments
-  { MethodInvocationSuper(w, i, a) }
-| p=className DOT SUPER DOT w=option(nonWildTypeArguments) i=identifier a=arguments
-  { MethodInvocationClassSuper(p, w, i, a) }
-| p=typeName DOT w=nonWildTypeArguments i=identifier a=arguments
+| p=primary DOT i=identifier a=arguments
+  { MethodInvocationPrimary(p, None, i, a) }
+| p=primary DOT w=nonWildTypeArguments i=identifier a=arguments
+  { MethodInvocationPrimary(p, Some w, i, a) }
+| SUPER DOT i=identifier a=arguments
+  { MethodInvocationSuper(None, i, a) }
+| SUPER DOT w=nonWildTypeArguments i=identifier a=arguments
+  { MethodInvocationSuper(Some w, i, a) }
+| p=qualifiedName DOT SUPER DOT i=identifier a=arguments
+  { MethodInvocationClassSuper(p, None, i, a) }
+| p=qualifiedName DOT SUPER DOT w=nonWildTypeArguments i=identifier a=arguments
+  { MethodInvocationClassSuper(p, Some w, i, a) }
+| p=qualifiedName DOT w=nonWildTypeArguments i=identifier a=arguments
   { MethodInvocationType(p, w, i, a) }
 
 %public classInstanceCreationExpression:
@@ -228,6 +240,7 @@ primaryNoNewArray:
     ClassInstanceCreationExpression(ta,c,al,cb)
   }
 (*| primary. NEW typeArguments? tdentifier typeArguments? ( argumentList? ) classBody? { } *)
+
 dims:
 | BRACKETOPEN BRACKETCLOSE
   { 1 }
@@ -239,6 +252,18 @@ dimsopt:
   { 0 }
 | p=dims
   { p }
+
+arrayExpr:
+| BRACKETOPEN p=expression BRACKETCLOSE
+  { p }
+| BRACKETOPEN BRACKETCLOSE
+  { NoneExpression }
+
+dimExprs:
+| p=arrayExpr
+  { DimExprs [p] }
+| p=arrayExpr a=dimExprs
+  { let DimExprs(l) = a in DimExprs(p::l) }
 
 assignmentOperator:
 | EQUAL
