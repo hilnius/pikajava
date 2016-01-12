@@ -73,7 +73,7 @@ and annotationsList = annotation list option
 
 and annotationTypeDeclaration = identifier * classContentTree list option
 
-and formalParameter = { modifiers: variableModifiers; typed: typed option; declarator: variableDeclarator }
+and formalParameter = { modifiers: variableModifiers; typed: identifier option; declarator: variableDeclarator }
 
 and typeParameterList = typeParameter list
 and typeParameter = typeVariable * typeBound option
@@ -122,7 +122,7 @@ and initializerTreeMap = { iniType: staticity; con: block}
 
 (* types for blocks *)
 
-and localVariableDeclaration = (variableModifiers * typed * variableDeclarators)
+and localVariableDeclaration = (variableModifiers * identifier * variableDeclarators)
 and variableDeclarators = variableDeclarator list
 and variableDeclarator = (identifier * int * variableInitializer option)
 and super = Extends of classOrInterfaceType
@@ -358,6 +358,8 @@ and methodInvocation =
 and identifier =
     NoneIdentifier
   | Identifier of string
+  | IdentifierPrimitive of primitiveType
+  | IdentifierQualified of string
 
 and packageName =
     PackageName of (identifier list)

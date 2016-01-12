@@ -79,14 +79,15 @@ finally:
 | FINALLY b=block                         { b }
 %public formalParameter:
 | vdi=variableDeclaratorId                { let (a,b) = vdi in { modifiers=[]; typed=None; declarator=(a,b,None) } }
-| vm=variableModifiers t=typed vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=vm; typed=Some(t); declarator=(a,b,None) } }
+| (* vm=variableModifiers? *) t=identifier vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=[]; typed=Some(t); declarator=(a,b,None) } }
+| (* vm=variableModifiers? *) t=primitiveType vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=[]; typed=Some(IdentifierPrimitive(t)); declarator=(a,b,None) } }
 
 (* expressions *)
 localVariableDeclarationStatement:
 | lvd=localVariableDeclaration SEMICOLON  { LocalVariableDeclarationStatement(lvd) }
 
 localVariableDeclaration:
-| vm=variableModifiers? t=typed vd=variableDeclarators { match vm with None -> ([], t, vd) | Some(v) -> (v, t, vd)  }
+| vm=variableModifiers? t=identifier vd=variableDeclarators { match vm with None -> ([], t, vd) | Some(v) -> (v, t, vd)  }
 
 %public variableDeclarators:
 | vd=variableDeclarator                   { [vd] }

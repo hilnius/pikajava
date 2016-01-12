@@ -369,7 +369,7 @@ literal:
 | p=referenceType
   { TypeReference p }
 
-primitiveType:
+%public primitiveType:
 | p=numericType
   { p }
 | BOOLEAN

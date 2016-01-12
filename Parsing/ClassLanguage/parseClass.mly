@@ -136,7 +136,7 @@ methodBody:
 
 %public formalParameterList:
 | lfp=lastFormalParameter { [lfp] }
-| fp=formalParameters COMMA lfp=lastFormalParameter { fp @ [lfp] }
+| fp=formalParameterList COMMA lfp=lastFormalParameter { fp @ [lfp] }
 formalParameters:
 | fp=formalParameter { [fp] }
 | fps=formalParameters COMMA fp=formalParameter { fps @ [fp] }
@@ -147,7 +147,7 @@ variableModifier:
 | FINAL { Finality(Final) }
 | an=annotation { Annotation(an) }
 lastFormalParameter:
-| vm=variableModifiers tv=typedVariadic? vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=vm; typed=tv; declarator=(a,b,None) } }
+(* | vm=variableModifiers tv=identifier? vdi=variableDeclaratorId { let (a,b) = vdi in { modifiers=vm; typed=tv; declarator=(a,b,None) } } *)
 | fp=formalParameter { fp }
 typedVariadic:
 | t=typed VARIADIC { VariadicType(t) }

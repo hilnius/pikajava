@@ -32,7 +32,9 @@ public class Yolo  {
   }
 
   static {
-
+    if (121 +11298 * (12 << 32032)) {
+      qsdqsd.qsdqsd();
+    }
   }
 
   {
@@ -43,7 +45,8 @@ public class Yolo  {
 
   }
 
-  public void dsqqsd() {
+  public void dsqqsd(qsd a, qsdqsdl p, int b) {
+    a.test();
 
   }
 
