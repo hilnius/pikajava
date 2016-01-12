@@ -1,22 +1,27 @@
-The minijavac compiler.
+Hello M. Dagnat !
 
-A compilation project for Thrid year students of Telecom Bretagne.
+Tout est implémenté, mais nous n'avons pas eu le temps de résoudre les 
+conflits entre les déclarations de variables, de méthodes et les assignments.
 
-'ocamlbuild Main.byte' (or native) to build the compiler. The main file
-is Main/Main.ml, it should not be modified. It opens the given file,
-creates a lexing buffer, initializes the location and call the compile
-function of the module Main/compile.ml. It is this function that you
-should modify to call your parser.
+Nous avons
+- le package (100%)
+- les imports (100%)
+- les classes (100%)
+- les interfaces (100%)
+- les annotations (100%)
+- les enums (100%)
+- les types<T> (paramètres de classes / méthodes) (100%)
+- les constructeurs (100%)
+- les méthodes (75% : les paramètres peuvent être juste les integralType ou identifier (pas de types qq.qq))
+- les structures de controle (90%, les break, continue avec label ne marchent pas)
+- les expressions (100% dans if / for par exemple)
+- les commentaires (100%)
+- les sous-classes
 
-'ocamlbuild Main.byte -- <filename>' (or native) to build and then execute
-the compiler on the file given. By default, the program searches for
-file with the extension .java and append it to the given filename if
-it does not end with it.
+Nous n'avons pas eu le temps de résoudre certains conflits, ce qui empêche 
+certains fichiers valides de compiler
 
-If you want to reuse an existing ocaml library. Start by installing it
-with opam. For example, to use colored terminal output you
-use 'opam install ANSITerminal'.
-Then you must inform ocamlbuild to use the ocamlfind tool :
-'ocamlbuild -lib str -use-ocamlfind Main.byte -- tests/UnFichierDeTest.java'
-et vous devez ajouter au fichier _tags la librarie en question par exemple :
-true: package(ANSITerminal)
+
+Vous pouvez utiliser la commande
+'ocamlbuild -use-ocamlfind Main.byte -- Tests/Test.java'
+
