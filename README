@@ -1,27 +1,6 @@
-Hello M. Dagnat !
+How to start pikajava compiler ?
 
-Tout est implémenté, mais nous n'avons pas eu le temps de résoudre les 
-conflits entre les déclarations de variables, de méthodes et les assignments.
+simple :
 
-Nous avons
-- le package (100%)
-- les imports (100%)
-- les classes (100%)
-- les interfaces (100%)
-- les annotations (100%)
-- les enums (100%)
-- les types<T> (paramètres de classes / méthodes) (100%)
-- les constructeurs (100%)
-- les méthodes (75% : les paramètres peuvent être juste les integralType ou identifier (pas de types qq.qq))
-- les structures de controle (90%, les break, continue avec label ne marchent pas)
-- les expressions (100% dans if / for par exemple)
-- les commentaires (100%)
-- les sous-classes
-
-Nous n'avons pas eu le temps de résoudre certains conflits, ce qui empêche 
-certains fichiers valides de compiler
-
-
-Vous pouvez utiliser la commande
-'ocamlbuild -use-ocamlfind Main.byte -- Tests/Test.java'
+ocamlbuild Main.byte -- tests/TestsUnitairesParsing.java
 

@@ -26,6 +26,6 @@ abstract class B extends C {
 	return new A();
     }
 
-    Int matt4() { this.ab; }
+    Int matt4(Int a, String b) { this.ab; }
 }
 static private class C extends A {}
