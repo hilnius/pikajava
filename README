@@ -2,5 +2,5 @@ How to start pikajava compiler ?
 
 simple :
 
-ocamlbuild Main.byte -- tests/TestsUnitairesParsing.java
+ocamlbuild Main.byte -- tests/TestCompileTypes.java
 

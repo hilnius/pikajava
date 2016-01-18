@@ -6,7 +6,7 @@
 (**************
  * The tokens *
  **************)
-	  
+
   (* Operators *)
 %token OP_MUL OP_DIV OP_MOD OP_ADD OP_SUB
 %token OP_AND OP_OR OP_XOR //OP_NOT
@@ -22,7 +22,7 @@
 %token ASS_SHL ASS_SHR ASS_SHRR ASS_AND ASS_XOR ASS_OR
 
 (* Separators *)
-%token LPAREN RPAREN 
+%token LPAREN RPAREN
 
 (* Literal values *)
 %token <string> INT_LIT
@@ -45,7 +45,7 @@
 %right OP_COND COLON
 %right ASSIGN ASS_MUL ASS_DIV ASS_MOD ASS_ADD ASS_SUB ASS_SHL ASS_SHR ASS_SHRR ASS_AND ASS_XOR ASS_OR
 %right CAST
-%left OP_INC OP_DEC       
+%left OP_INC OP_DEC
 %left DOT
 
 %type <AST.statement list> block
@@ -104,19 +104,19 @@ blockStatement:
 
 expression1:
   | LPAREN e=expression RPAREN { `Exp e }
-  | e1=expression op=assign_op e2=expression { `Exp { edesc = AssignExp(e1,op,e2) } }
-  | e1=expression OP_COND e2=expression COLON e3=expression { `Exp { edesc = CondOp(e1,e2,e3) } }
-  | e1=expression op=infix_op e2=expression { `Exp { edesc = Op(e1,op,e2) } }
-  | e1=expression INSTANCEOF e2=expression { `Exp { edesc = Instanceof(e1,e2) } }
-  | LPAREN e1=expression RPAREN e2=expression { `Exp { edesc = Cast(e1,e2) } }
-  | m=name LPAREN params=separated_list(COMMA,expression) RPAREN { `Exp { edesc = Call({ edesc = Name("this") },m,params) } }
-  | o=expression DOT m=IDENTIFIER LPAREN params=separated_list(COMMA,expression) RPAREN { `Exp { edesc = Call(o,m,params) } }
-  | o=expression DOT n=name  { `Exp { edesc = Attr(o,n) } }
-  | NEW id=qualifiedName LPAREN params=separated_list(COMMA,expression) RPAREN  { `Exp { edesc = New(id,params) } }
-  | l=literal { `Exp { edesc = Val(l) } }
-  | id=name { `Exp { edesc = Name(id) } }
+  | e1=expression op=assign_op e2=expression { `Exp { edesc = AssignExp(e1,op,e2) ; etype = None } }
+  | e1=expression OP_COND e2=expression COLON e3=expression { `Exp { edesc = CondOp(e1,e2,e3) ; etype = None } }
+  | e1=expression op=infix_op e2=expression { `Exp { edesc = Op(e1,op,e2) ; etype = None } }
+  | e1=expression INSTANCEOF e2=expression { `Exp { edesc = Instanceof(e1,e2) ; etype = None } }
+  | LPAREN e1=expression RPAREN e2=expression { `Exp { edesc = Cast(e1,e2) ; etype = None } }
+  | m=name LPAREN params=separated_list(COMMA,expression) RPAREN { `Exp { edesc = Call({ edesc = Name("this") ; etype = None },m,params) ; etype = None } }
+  | o=expression DOT m=IDENTIFIER LPAREN params=separated_list(COMMA,expression) RPAREN { `Exp { edesc = Call(o,m,params) ; etype = None } }
+  | o=expression DOT n=name  { `Exp { edesc = Attr(o,n) ; etype = None } }
+  | NEW id=qualifiedName LPAREN params=separated_list(COMMA,expression) RPAREN  { `Exp { edesc = New(id,params) ; etype = None } }
+  | l=literal { `Exp { edesc = Val(l) ; etype = None } }
+  | id=name { `Exp { edesc = Name(id) ; etype = None } }
   | l0=separated_nonempty_list(DOT,IDENTIFIER) l = list(pair(LBRACKET,RBRACKET)) vdl=separated_nonempty_list(COMMA,variableDeclarator) {
-        let t = Type.mk_type l0 in	
+        let t = Type.mk_type l0 in
         let t = if List.length l > 0 then Array(Ref t,List.length l) else Ref t in
 	`Decl (VarDecl (List.map (fun (id,n,init) -> Type.mk_array n t, id, init) vdl))
     }
@@ -130,7 +130,7 @@ forInit:
 
 %inline variableModifier: FINAL { }
 
-	      
+
 %public %inline variableDeclarator:
   | id=IDENTIFIER l=list(pair(LBRACKET,RBRACKET)) init=option(preceded(ASSIGN,variableInitializer)) { id, List.length l, init }
 
@@ -139,35 +139,35 @@ variableInitializer:
   | e = arrayInitializer { e }
 
 arrayInitializer:
-  | l=body(separated_list(COMMA,variableInitializer)) { { edesc = ArrayInit l } }
+  | l=body(separated_list(COMMA,variableInitializer)) { { edesc = ArrayInit l; etype = None } }
 
 
 expression:
   | LPAREN e=expression RPAREN { e }
-  | e=expression op=postfix_op { { edesc = Post(e,op) } }
-  | e1=expression op=assign_op e2=expression { { edesc = AssignExp(e1,op,e2) } }
-  | e1=expression OP_COND e2=expression COLON e3=expression { { edesc = CondOp(e1,e2,e3) } }
-  | e1=expression op=infix_op e2=expression { { edesc = Op(e1,op,e2) } }
-  | e1=expression INSTANCEOF e2=expression { { edesc = Instanceof(e1,e2) } }
-  | LPAREN e1=expression RPAREN e2=expression %prec CAST { { edesc = Cast(e1,e2) } }
-  | m=name LPAREN params=separated_list(COMMA,expression) RPAREN { { edesc = Call({ edesc = Name("this") },m,params) } }
-  | o=expression DOT m=IDENTIFIER LPAREN params=separated_list(COMMA,expression) RPAREN { { edesc = Call(o,m,params) } }
-  | o=expression DOT n=name  { { edesc = Attr(o,n) } }
-  | NEW id=qualifiedName LPAREN params=separated_list(COMMA,expression) RPAREN  { { edesc = New(id,params) } }
-  | l=literal { { edesc = Val(l) } }
-  | id=name { { edesc = Name(id) } }
+  | e=expression op=postfix_op { { edesc = Post(e,op); etype = None } }
+  | e1=expression op=assign_op e2=expression { { edesc = AssignExp(e1,op,e2); etype = None } }
+  | e1=expression OP_COND e2=expression COLON e3=expression { { edesc = CondOp(e1,e2,e3) ; etype = None } }
+  | e1=expression op=infix_op e2=expression { { edesc = Op(e1,op,e2) ; etype = None } }
+  | e1=expression INSTANCEOF e2=expression { { edesc = Instanceof(e1,e2) ; etype = None } }
+  | LPAREN e1=expression RPAREN e2=expression %prec CAST { { edesc = Cast(e1,e2) ; etype = None } }
+  | m=name LPAREN params=separated_list(COMMA,expression) RPAREN { { edesc = Call({ edesc = Name("this") ; etype = None },m,params) ; etype = None } }
+  | o=expression DOT m=IDENTIFIER LPAREN params=separated_list(COMMA,expression) RPAREN { { edesc = Call(o,m,params) ; etype = None } }
+  | o=expression DOT n=name  { { edesc = Attr(o,n); etype = None } }
+  | NEW id=qualifiedName LPAREN params=separated_list(COMMA,expression) RPAREN  { { edesc = New(id,params) ; etype = None } }
+  | l=literal { { edesc = Val(l) ; etype = None } }
+  | id=name { { edesc = Name(id) ; etype = None } }
 
 %inline qualifiedName: l = separated_nonempty_list(DOT, name) { l }
 
 %inline postfix_op:
   | OP_INC { Incr }
   | OP_DEC { Decr }
-    
+
 %inline name:
   | THIS { "this" }
   | SUPER { "super" }
   | id=IDENTIFIER { id }
-						  
+
 %inline assign_op:
   | ASSIGN   { Assign   }
   | ASS_ADD  { Ass_add  }

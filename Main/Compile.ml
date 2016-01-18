@@ -2,9 +2,25 @@ open Parser
 
 let execute lexbuf verbose =
   try
+    print_endline "----------------------------[ \027[96mParsing\027[0m ]----------------------------";
     let ast = compilationUnit Lexer.token lexbuf in
-    print_endline "successfull parsing";
-    ClassRegistry.printPackage (ClassRegistry.buildPackageRegistry ast);
+    print_endline "\027[32mSuccessfull parsing\027[0m";
+    print_endline "";
+    print_endline "-----------------------[ \027[96mBuilding registry\027[0m ]-----------------------";
+    let registry = ClassRegistry.buildPackageRegistry ast in
+    print_endline "\027[32mRegistry successfuly built\027[0m";
+    print_endline "\027[33mRegistry is :\027[0m";
+    ClassRegistry.printPackage registry;
+    print_endline "";
+    print_endline "----------------------[ \027[96mBuilding typed AST\027[0m  ]----------------------";
+    let typedAST = TypeAST.typeAST ast registry in
+    print_endline "\027[32mAST successfuly typed\027[0m";
+    print_endline "";
+    print_endline "----------------------[ \027[96mChecking typed AST\027[0m  ]----------------------";
+    CheckAST.checkAST typedAST;
+    print_endline "\027[32mAST types checked\027[0m";
+    print_endline "";
+    print_endline "";
     if verbose then AST.print_program ast
   with
     | Error ->

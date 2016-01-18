@@ -4,8 +4,8 @@ type argument = {
     ptype : Type.t;
     pident : string;
   }
-    
-type value = 
+
+type value =
   | String of string
   | Int of string
   | Float of string
@@ -16,43 +16,43 @@ type value =
 type postfix_op =
   | Incr
   | Decr
-      
+
 type assign_op =
-  | Assign  
-  | Ass_add 
-  | Ass_sub 
-  | Ass_mul 
-  | Ass_div 
-  | Ass_mod 
-  | Ass_shl 
-  | Ass_shr 
+  | Assign
+  | Ass_add
+  | Ass_sub
+  | Ass_mul
+  | Ass_div
+  | Ass_mod
+  | Ass_shl
+  | Ass_shr
   | Ass_shrr
-  | Ass_and 
-  | Ass_xor 
-  | Ass_or  
+  | Ass_and
+  | Ass_xor
+  | Ass_or
 
 type infix_op =
-  | Op_cor  
-  | Op_cand 
-  | Op_or   
-  | Op_and  
-  | Op_xor  
-  | Op_eq   
-  | Op_ne   
-  | Op_gt   
-  | Op_lt   
-  | Op_ge   
-  | Op_le   
-  | Op_shl  
-  | Op_shr  
-  | Op_shrr 
-  | Op_add  
-  | Op_sub  
-  | Op_mul  
-  | Op_div  
-  | Op_mod  
+  | Op_cor
+  | Op_cand
+  | Op_or
+  | Op_and
+  | Op_xor
+  | Op_eq
+  | Op_ne
+  | Op_gt
+  | Op_lt
+  | Op_ge
+  | Op_le
+  | Op_shl
+  | Op_shr
+  | Op_shrr
+  | Op_add
+  | Op_sub
+  | Op_mul
+  | Op_div
+  | Op_mod
 
-type expression_desc = 
+type expression_desc =
   | New of string list * expression list
   | Call of expression * string * expression list
   | Attr of expression * string
@@ -67,25 +67,25 @@ type expression_desc =
   | Cast of expression * expression
   | Instanceof of expression * expression
 
-and expression = 
+and expression =
     {
       edesc : expression_desc;
-(*      eloc : Location.t;
-      mutable etype : Type.t option;*)
+(*)      eloc : Location.t; *)
+      mutable etype : Type.t option;
     }
 
 type modifier =
-  | Abstract 
-  | Public   
+  | Abstract
+  | Public
   | Protected
-  | Private  
-  | Static   
-  | Final    
+  | Private
+  | Static
+  | Final
   | Strictfp
-  | Transient 
-  | Volatile 
-  | Synchronized 
-  | Native 
+  | Transient
+  | Volatile
+  | Synchronized
+  | Native
 
 type astattribute = {
       mutable amodifiers : modifier list;
@@ -94,7 +94,7 @@ type astattribute = {
       adefault : expression option;
       (*      aloc : Location.t;*)
     }
-      
+
 
 
 
@@ -166,7 +166,7 @@ let string_of_value = function
   | Float f -> f
   | Char c -> String.make 1 c
   | Null -> "null"
-	      
+
 let string_of_assign_op = function
   | Assign  -> "="
   | Ass_add -> "+="
@@ -203,14 +203,14 @@ let string_of_infix_op = function
   | Op_mod   -> "%"
 
 let rec string_of_expression_desc = function
-  | New(n,al) -> 
+  | New(n,al) ->
       "new "^(String.concat "." n)^"("^
       (String.concat "," (List.map string_of_expression al))^
       ")"
-  | If(c,e1,e2) -> 
+  | If(c,e1,e2) ->
       "if "^(string_of_expression c)^" { "^
       (string_of_expression e1)^" } else { "^(string_of_expression e2)^" }"
-  | Call(r,m,al) -> 
+  | Call(r,m,al) ->
       (string_of_expression r)^
       "."^m^"("^
       (String.concat "," (List.map string_of_expression al))^
@@ -235,7 +235,7 @@ let rec string_of_expression_desc = function
   | Post(e,Incr) -> (string_of_expression e)^"++"
   | Post(e,Decr) -> (string_of_expression e)^"--"
 
-and string_of_expression e = 
+and string_of_expression e =
   let s = string_of_expression_desc e.edesc in
   s(*
     match e.etype with
@@ -257,17 +257,17 @@ let stringOf_arg a =
 	" "^a.pident
 
 let stringOf_modifier = function
-  | Abstract  -> "abstract" 
-  | Public    -> "public"   
+  | Abstract  -> "abstract"
+  | Public    -> "public"
   | Protected -> "protected"
-  | Private   -> "private"  
-  | Static    -> "static"   
-  | Final     -> "final"    
-  | Strictfp  -> "strictfp" 
-  | Transient    -> "transient"   
-  | Volatile     -> "volatile"    
+  | Private   -> "private"
+  | Static    -> "static"
+  | Final     -> "final"
+  | Strictfp  -> "strictfp"
+  | Transient    -> "transient"
+  | Volatile     -> "volatile"
   | Synchronized -> "synchronized"
-  | Native       -> "native"      
+  | Native       -> "native"
 
 let rec print_statement tab = function
   | VarDecl dl ->
@@ -317,11 +317,11 @@ let rec print_statement tab = function
      print_endline ") {";
      print_statement (tab^"  ") s;
      print_endline(tab^"}")
-(*  Manque le 
+(*  Manque le
   | Try of statement list * (argument * statement list) list * statement list
  *)
-     
-  
+
+
 and print_method m =
   print_string "  ";
   print_string((Type.stringOf m.mreturntype)^" "^m.mname^"(");
@@ -351,11 +351,11 @@ and print_type t =
   if t.modifiers != [] then
     print_string ((ListII.concat_map " " stringOf_modifier t.modifiers)^" ");
   print_string ("class "^t.id); print_class t.info
-  
+
 let print_package p =
   print_string "package ";
   print_endline (String.concat "." p)
-	       
+
 let print_program p =
   match p.package with
   | None -> ()
