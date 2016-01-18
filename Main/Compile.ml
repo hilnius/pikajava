@@ -21,7 +21,7 @@ let execute lexbuf verbose =
     print_endline "\027[32mAST types checked\027[0m";
     print_endline "";
     print_endline "";
-    if verbose then AST.print_program ast
+    if verbose then AST.print_program typedAST
   with
     | Error ->
       print_string "Syntax error: ";

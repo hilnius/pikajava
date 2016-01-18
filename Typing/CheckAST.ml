@@ -1,7 +1,5 @@
 open AST
-
-exception UntypedExpression;;
-exception TypeMismatch of (Type.t * Type.t);;
+open Exceptions
 
 let extractSome a = match a with
   | None -> raise UntypedExpression;
@@ -17,11 +15,14 @@ let checkExpression e = match e with
   (* | Name of string
   | ArrayInit of expression list
   | AssignExp of expression * assign_op * expression
-  | Post of expression * postfix_op
-  | Op of expression * infix_op * expression
-  | CondOp of expression * expression * expression
+  | Post of expression * postfix_op *)
+  | Op(e1, op, e2) -> begin match op with
+      | Op_eq -> if extractSome e1.etype <> extractSome e2.etype then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
+    end;
+  (*| CondOp of expression * expression * expression
   | Cast of expression * expression
   | Instanceof of expression * expression *)
+  | _ -> ()
 ;;
 
 let checkVarDecl v = match v with
@@ -34,17 +35,19 @@ let checkVarDecl v = match v with
     end
 ;;
 
-let checkStatement s = match s with
+let rec checkStatement s = match s with
   | VarDecl(l) -> List.iter checkVarDecl l
-  (*| Block of statement list
-  | Nop
+  | Block(sl) -> List.iter checkStatement sl
+  (*| Nop
   | While of expression * statement
-  | For of (Type.t * string * expression option) list * expression option * expression list * statement
-  | If of expression * statement * statement option
-  | Return of expression option
+  | For of (Type.t * string * expression option) list * expression option * expression list * statement *)
+  | If(e1, ifSt, None) -> checkExpression e1.edesc; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt;
+  | If(e1, ifSt, Some(elseSt)) -> checkExpression e1.edesc; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt; checkStatement elseSt
+  (*| Return of expression option
   | Throw of expression
   | Try of statement list * (argument * statement list) list * statement list
   | Expr of expression *)
+  | _ -> ()
 ;;
 
 let checkMethod meth = match meth with
@@ -62,6 +65,8 @@ let checkAST ast =
   try
     List.iter checkClass classList;
   with
-    | TypeMismatch(t1,t2) -> print_string ("\027[31mType mismatch exception : " ^ (Type.stringOf t1) ^ " " ^ (Type.stringOf t2) ^ "\027[0m\n");
+    | TypeMismatch(t1,t2) -> print_string ("\027[31mType mismatch exception between " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
+    | CannotCompareTypes(t1,t2) -> print_string ("\027[31mCannot compare types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
+    | ShouldBeBoolean(t1) -> print_string ("\027[31mExpected type boolean, found " ^ (Type.stringOf t1) ^ "\027[0m\n");
     | _ -> print_string ("\027[31mAn exception of unknown type occured.\027[0m\n");
 ;;

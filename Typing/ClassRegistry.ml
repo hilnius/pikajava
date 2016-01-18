@@ -1,4 +1,5 @@
 open AST
+open Exceptions
 
 type registry =
   | Registry of packageRegistry list
@@ -13,6 +14,10 @@ and attributeRegistry =
 and argumentRegistry =
   | Argument of Type.t
 ;;
+
+type methodOrAttributeSignature =
+  | MethodSignature of (Type.t * argumentRegistry list)
+  | AttributeSignature of Type.t
 
 (*
   Example code :
@@ -38,6 +43,31 @@ let exampleRegisty =
   ])
 ;;
 
+let rec findClass classes className = match classes with
+  | [] -> raise (ClassNameNotFound(className))
+  | (Class(n, _, _))::_ when n = className -> List.hd classes
+  | (Class(n, _, _))::t -> findClass t className
+;;
+
+let getClassMethod className member arguments registry =
+  let rec findMethod m = match m with
+    | [] -> raise (MemberNotFound(member))
+    | (Method(n, t1, args))::t when member = n -> t1
+    | h::t -> findMethod t
+  in
+  match registry with
+    | Package(_, classes) -> let Class(_,_,m) = (findClass classes className) in findMethod m
+;;
+
+let getClassAttribute className member registry =
+  let rec findAttribute a = match a with
+    | [] -> raise (MemberNotFound(member))
+    | (Attribute(n, t1))::t when member = n -> t1
+    | h::t -> findAttribute t
+  in
+  match registry with
+    | Package(_, classes) -> let Class(_,a,_) = (findClass classes className) in findAttribute a
+;;
 
 (* build registry functions *)
 

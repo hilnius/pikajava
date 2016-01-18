@@ -30,3 +30,5 @@ val mk_type : string list -> ref_type
 (* conversions between types and string *)
 val stringOf : t -> string
 val stringOf_ref : ref_type -> string
+
+val refOfStringList : string list -> ref_type
