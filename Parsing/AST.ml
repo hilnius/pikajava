@@ -316,9 +316,21 @@ let rec print_statement tab = function
      print_endline ") {";
      print_statement (tab^"  ") s;
      print_endline(tab^"}")
-(*  Manque le
-  | Try of statement list * (argument * statement list) list * statement list
- *)
+  | Try(sl, al, sl2) -> begin
+      let printCatch (arg,sl3) =
+        print_endline("catch ("^(Type.stringOf (arg.ptype))^" "^(arg.pident)^") {");
+        List.iter (print_statement (tab ^ "  ")) sl3;
+        print_string(tab^"} ");
+      in
+      print_endline(tab^"try {");
+      List.iter (print_statement (tab ^ "  ")) sl;
+      print_string(tab^"} ");
+      List.iter printCatch al;
+      print_endline("finally {");
+      List.iter (print_statement (tab ^ "  ")) sl2;
+      print_endline(tab^"}");
+    end
+
 
 
 and print_method m =
@@ -328,7 +340,7 @@ and print_method m =
   print_string(")");
   print_string(" "^ListII.concat_map "," Type.stringOf_ref m.mthrows);
   print_endline(" {");
-  List.iter (print_statement "  ") m.mbody;
+  List.iter (print_statement "    ") m.mbody;
   print_endline("  }")
 
 and print_const c =

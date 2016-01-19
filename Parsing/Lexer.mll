@@ -5,10 +5,10 @@ open Error
 
 let keyword_table = Hashtbl.create 53
 let _ =
-  List.iter (fun (k,d) -> Hashtbl.add keyword_table k d) 
+  List.iter (fun (k,d) -> Hashtbl.add keyword_table k d)
      KeywordLexer.kw_list
 
-		     
+
 let ident_or_keyword id =
   try Hashtbl.find keyword_table id
   with Not_found -> IDENTIFIER id
@@ -38,7 +38,7 @@ let signed_integer = ['+' '-'] integer
 let float_type = ['f' 'F' 'd' 'D']
 let int_type = ['l' 'L']
 let exp_char = ['e' 'E']
-  
+
 rule token = parse
   | newline                 { Location.incr_line lexbuf; token lexbuf }
   | blank +                 { token lexbuf }
@@ -105,12 +105,12 @@ rule token = parse
   | "\'\\" esc_char as c "\'" { CHAR_LIT(char_for_backslash c.[0])  }
   | "\'" _ as c "\'"          { CHAR_LIT c.[0] }
   | "\""
-      { 
+      {
 	Buffer.reset buff;
         let string_start = lexbuf.lex_start_p in
           string (Location.curr lexbuf) lexbuf;
           lexbuf.lex_start_p <- string_start;
-          STRING (Buffer.contents buff) 
+          STRING (Buffer.contents buff)
       }
   | _ as ch  { illegal_char ch (Location.curr lexbuf) }
 
