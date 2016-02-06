@@ -48,9 +48,6 @@ let printData data = match data with
 |{dcs= descriptorsClass ; tm = tableMethod ; dos= descriptorsObject  } -> printTableMethod tableMethod; printDescriptorClass descriptorsClass; printDescriptorObject descriptorsObject 
 (****************************************************)
 
-
-
-
 let classZone = []
 
 let tableMethods = []
@@ -60,9 +57,24 @@ let buildData dcs tm dos = {dcs=dcs; tm=tm; dos=dos}
 let rec searchTypeList className typeList = match typeList with 
 	| {modifiers = modifiers; id = id; info = info}::t -> print_string ("searching..."^className^"\n"); if className = id then {modifiers = modifiers; id = id; info = info}  else searchTypeList className t
 	| [] -> print_string "ERROR Class not found\n"; exit 1
-	
+
+let rec filterAttributes attributes matchedAttributes = match attributes with 
+|{
+      amodifiers = modifiers;
+      aname = name;
+      atype = atype;
+      adefault = expression;
+      (*      aloc : Location.t;*)
+    } ::t -> if List.mem AST.Private modifiers then filterAttributes t matchedAttributes else filterAttributes t ({
+      amodifiers = modifiers;
+      aname = name;
+      atype = atype;
+      adefault = expression;
+      (*      aloc : Location.t;*)
+    } ::matchedAttributes)
+|[] -> matchedAttributes	
 let rec searchForAttributes className dcs = match dcs with 
-	| {name=name; methods=methods; attributes=astattributes}::t -> print_string ("searching attributes..."^className^"\n"); if className = name then astattributes else searchForAttributes className t
+	| {name=name; methods=methods; attributes=astattributes}::t -> print_string ("searching attributes..."^className^"\n"); if className = name then filterAttributes astattributes [] else searchForAttributes className t
 	| [] -> print_string "ERROR Class not found\n"; exit 1
 
 let findClass ast className = match ast with 
@@ -72,15 +84,26 @@ let rec notCompiled className dcs = match dcs with
 | {name= name; methods= methods ;attributes=astattributes }::t -> if className = name then false else notCompiled className t
 | [] -> true
 
-let rec buildDescriptorClass tableMethod regexpId listMethodsClass = match tableMethod with
+let rec methodsForDescriptor tableMethod regexpId listMethodsClass = match tableMethod with
 | {mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}::t -> 
-	if Str.string_match regexpId mname 0 then mname::(buildDescriptorClass t regexpId listMethodsClass) else buildDescriptorClass t regexpId listMethodsClass
+	if Str.string_match regexpId mname 0 then mname::(methodsForDescriptor t regexpId listMethodsClass) else methodsForDescriptor t regexpId listMethodsClass
+| [] -> listMethodsClass
+
+let rec methodsParentsForDescriptor tableMethod regexpId listMethodsClass = match tableMethod with
+| {mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}::t -> 
+	print_string ("PASSING IN"^mname^"\n");
+	if Str.string_match regexpId mname 0 then 
+		begin
+			if List.mem AST.Private modifiers then begin print_string ("not taking"^mname^"\n"); methodsParentsForDescriptor t regexpId listMethodsClass end
+			else begin print_string ("ADDING"^mname^"\n"); mname::(methodsParentsForDescriptor t regexpId listMethodsClass)  end 
+		end	
+	else begin print_string ("NOT TAKING"^mname^"\n"); methodsParentsForDescriptor t regexpId listMethodsClass end
 | [] -> listMethodsClass
 
 let rec addMethods className methods tableMethods = match methods with 
 | {mmodifiers = modifiers;mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}::t -> 
-	print_string ("adding method "^mname^"\n"); 
-	let newTableMethod = {mmodifiers = modifiers;mname = className^"_"^mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}:: tableMethods in addMethods className t newTableMethod
+	print_string ("adding method "^mname^"\n");
+	let newTableMethod = {mmodifiers = modifiers;mname = className^"$"^mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}:: tableMethods in addMethods className t newTableMethod
 | [] -> tableMethods
 
 let rec addAttributes  listParentAttributes astattributeList = match listParentAttributes with 
@@ -94,9 +117,10 @@ let rec compile astTyped info id data= match info with
  	if notCompiled id data.dcs then
  		begin
 		let newTableMethod = addMethods id astmethodList data.tm in
-		let methods= buildDescriptorClass newTableMethod (Str.regexp_string (id^"_")) [] in
+		let methods= methodsForDescriptor newTableMethod (Str.regexp_string (id^"$")) [] in
+		let totalMethods = methodsParentsForDescriptor newTableMethod (Str.regexp_string (ref_type.tid^"$")) methods in
 		let newAttributeListClass = addAttributes (searchForAttributes ref_type.tid data.dcs) astattributeList in
-		let descriptorClass = {name=id; methods=methods; attributes = newAttributeListClass} in 
+		let descriptorClass = {name=id; methods=totalMethods; attributes = newAttributeListClass} in 
 		buildData (descriptorClass::data.dcs) newTableMethod data.dos
 		end
 	else
@@ -107,14 +131,20 @@ let rec compile astTyped info id data= match info with
 		begin
 		let newData = compile astTyped (findClass astTyped ref_type.tid).info ref_type.tid data in 
 		let newTableMethod = addMethods id astmethodList newData.tm in
+		let methods= methodsForDescriptor newTableMethod (Str.regexp_string (id^"$")) [] in
+		print_list methods;print_string "\n\n";
+		let totalMethods = methodsParentsForDescriptor newTableMethod (Str.regexp_string (ref_type.tid^"$")) methods in
+		print_list totalMethods;print_string "\n\n";
 		let newAttributeListClass = addAttributes (searchForAttributes ref_type.tid newData.dcs) astattributeList in
-		let descriptorClass = {name=id; methods=buildDescriptorClass newTableMethod (Str.regexp_string (id^"_")) []; attributes = newAttributeListClass} in
+		let descriptorClass = {name=id; methods=totalMethods; attributes = newAttributeListClass} in
 		buildData (descriptorClass::newData.dcs) newTableMethod newData.dos
 		end	
 	else
 		begin
 		let newTableMethod = addMethods id astmethodList data.tm in
-		let descriptorClass = {name=id; methods=buildDescriptorClass newTableMethod (Str.regexp_string (id^"_")) []; attributes = addAttributes (searchForAttributes ref_type.tid data.dcs) astattributeList} in
+		let methods= methodsForDescriptor newTableMethod (Str.regexp_string (id^"$")) [] in
+		let totalMethods = methodsParentsForDescriptor newTableMethod (Str.regexp_string (ref_type.tid^"$")) methods in
+		let descriptorClass = {name=id; methods=totalMethods; attributes = addAttributes (searchForAttributes ref_type.tid data.dcs) astattributeList} in
 		buildData (descriptorClass::data.dcs) newTableMethod data.dos
 		end
 let rec typeListWalk astTyped type_list data = match type_list with 
