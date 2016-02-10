@@ -2,38 +2,42 @@ open AST
 open Type
 open Lexing
 open Location 
-(* Something to help with matching*)
-type test = {name:string}
-
-let test lol str = match lol with
-|{name=var} when var = str  -> print_string str;
-|_ -> print_string "egzegzegze"
-
-(*------------------------------------------------*)
 
 type tableMethod = astmethod list
 
-and descriptorClass = {name: string; methods: string list ;attributes: astattribute list}
+and descriptorClass = {classType: Type.t; methods: string list ;attributes: astattribute list}
 
-and descriptorObject = {objectName:string; attributes: astattribute list}
+and descriptorObject = {objectName:string; attributes: descriptorObject list; objectValue: attributeValue; scope:int}
 
+and attributeValue =
+| Int of int
+| Bool of bool
+| String of string
+| Ref of string 
+| Null 
 and tableDescriptorClass= string*descriptorClass  
 
 and data = {dcs: descriptorClass list; tm : tableMethod ; dos: descriptorObject list  }
 
 (** PRINTING FUNCTIONS **)
 
-let rec printAttributes astAttributes = match astAttributes with 
-| a::t -> print_string (a.aname^" "); printAttributes t
-| [] -> print_string "End Attributes\n"
+let printValue attr = match attr with 
+| Int(i) -> print_string (string_of_int i)
+| Bool(b) -> print_string (string_of_bool b)
+| String(str) -> print_string str
+| Null -> print_string "null" 
+
+let rec printClassAttributes astAttributes = match astAttributes with 
+| a::t -> print_string a.aname; printClassAttributes t
+| [] -> print_string "	End Class Attributes\n"
 
 let rec print_list = function 
-[] -> ()
+[] -> print_string "\n"; ()
 | e::l -> print_string e ; print_string " " ; print_list l
 
 let rec printDescriptorClass descriptorClass = match descriptorClass with 
-| {name= name; methods= methods ;attributes= astattributes }::t -> 
-	print_string ("class :"^name^"\n"); print_list methods; print_string "End Methods \n"; printAttributes astattributes; print_string ("End Class :"^name^"\n"); printDescriptorClass t
+| {classType= aType; methods= methods ;attributes= astattributes }::t -> 
+	print_string ("class :"^stringOf(aType)^"\n"); print_string "	"; print_list methods; print_string "	End Methods \n"; printClassAttributes astattributes; print_string ("End class :"^stringOf(aType)^"\n"); printDescriptorClass t
 | [] -> print_string "End Descriptors Class\n"
 
 let rec printTableMethod tableMethod = match tableMethod with 
@@ -41,7 +45,7 @@ let rec printTableMethod tableMethod = match tableMethod with
 | [] -> print_string "End Table Methods\n"
 
 let rec printDescriptorObject descriptorsObject = match descriptorsObject with 
-| a::t -> print_string (a.objectName^" "); printAttributes a.attributes ;printDescriptorObject t
+| a::t -> print_string (a.objectName^" "); printValue a.objectValue;print_string " "; printDescriptorObject a.attributes ;printDescriptorObject t
 | [] -> print_string "End Objects\n"
 
 let printData data = match data with 
@@ -54,8 +58,13 @@ let tableMethods = []
 
 let buildData dcs tm dos = {dcs=dcs; tm=tm; dos=dos}
 
-let rec searchTypeList className typeList = match typeList with 
-	| {modifiers = modifiers; id = id; info = info}::t -> print_string ("searching..."^className^"\n"); if className = id then {modifiers = modifiers; id = id; info = info}  else searchTypeList className t
+let buildRefType pack id = Type.Ref({
+    tpath = pack ;
+    tid = id ;
+  })
+
+let rec searchTypeList pack classType typeList = match typeList with 
+	| {modifiers = modifiers; id = id; info = info}::t -> print_string ("searching :"^stringOf(classType)^"\n"); if classType = (buildRefType pack id) then {modifiers = modifiers; id = id; info = info}  else searchTypeList pack classType t
 	| [] -> print_string "ERROR Class not found\n"; exit 1
 
 let rec filterAttributes attributes matchedAttributes = match attributes with 
@@ -73,15 +82,16 @@ let rec filterAttributes attributes matchedAttributes = match attributes with
       (*      aloc : Location.t;*)
     } ::matchedAttributes)
 |[] -> matchedAttributes	
-let rec searchForAttributes className dcs = match dcs with 
-	| {name=name; methods=methods; attributes=astattributes}::t -> print_string ("searching attributes..."^className^"\n"); if className = name then filterAttributes astattributes [] else searchForAttributes className t
+let rec searchForAttributes classType dcs = match dcs with 
+	| {classType=aType; methods=methods; attributes=astattributes}::t -> print_string ("searching attributes :"^stringOf(aType)^"\n"); if classType = aType then filterAttributes astattributes [] else searchForAttributes classType t
 	| [] -> print_string "ERROR Class not found\n"; exit 1
 
-let findClass ast className = match ast with 
-| {package = pack;type_list = typeList} -> searchTypeList className typeList
+let findClass ast classType = match ast with 
+| {package = Some pack;type_list = typeList} -> searchTypeList pack classType typeList
+| {package = None ;type_list = typeList} -> searchTypeList [] classType typeList
 
-let rec notCompiled className dcs = match dcs with 
-| {name= name; methods= methods ;attributes=astattributes }::t -> if className = name then false else notCompiled className t
+let rec notCompiled classType dcs = match dcs with 
+| {classType= aType; methods= methods ;attributes=astattributes }::t -> if classType = aType then false else notCompiled classType t
 | [] -> true
 
 let rec methodsForDescriptor tableMethod regexpId listMethodsClass = match tableMethod with
@@ -112,31 +122,34 @@ let rec addAttributes  listParentAttributes astattributeList = match listParentA
 	addAttributes t newAstAttribute
 | [] -> astattributeList
 
-let rec compile astTyped info id data= match info with 
+let rec compile pack astTyped info id data= 
+let classType = (buildRefType pack id) in
+match info with 
 | {cparent=ref_type; cattributes=astattributeList; cinits=initialList; cconsts=astconstList; cmethods=astmethodList; cloc=location;} when ref_type=object_type ->
- 	if notCompiled id data.dcs then
+ 	if notCompiled classType data.dcs then
  		begin
 		let newTableMethod = addMethods id astmethodList data.tm in
 		let methods= methodsForDescriptor newTableMethod (Str.regexp_string (id^"$")) [] in
 		let totalMethods = methodsParentsForDescriptor newTableMethod (Str.regexp_string (ref_type.tid^"$")) methods in
-		let newAttributeListClass = addAttributes (searchForAttributes ref_type.tid data.dcs) astattributeList in
-		let descriptorClass = {name=id; methods=totalMethods; attributes = newAttributeListClass} in 
+		let newAttributeListClass = addAttributes (searchForAttributes (Type.Ref(ref_type)) data.dcs) astattributeList in
+		let descriptorClass = {classType=classType; methods=totalMethods; attributes = newAttributeListClass} in 
 		buildData (descriptorClass::data.dcs) newTableMethod data.dos
 		end
 	else
 		data
 	
-| {cparent = ref_type; cattributes = astattributeList;cinits = initialList; cconsts = astconstList; cmethods = astmethodList; cloc = location;} when ref_type!=object_type -> 
-	if notCompiled ref_type.tid data.dcs then 
+| {cparent = ref_type; cattributes = astattributeList;cinits = initialList; cconsts = astconstList; cmethods = astmethodList; cloc = location;} when ref_type!=object_type ->
+	let parentClassType = Type.Ref(ref_type) in
+	if notCompiled parentClassType data.dcs then 
 		begin
-		let newData = compile astTyped (findClass astTyped ref_type.tid).info ref_type.tid data in 
+		let newData = compile pack astTyped (findClass astTyped parentClassType).info ref_type.tid data in 
 		let newTableMethod = addMethods id astmethodList newData.tm in
 		let methods= methodsForDescriptor newTableMethod (Str.regexp_string (id^"$")) [] in
 		print_list methods;print_string "\n\n";
 		let totalMethods = methodsParentsForDescriptor newTableMethod (Str.regexp_string (ref_type.tid^"$")) methods in
 		print_list totalMethods;print_string "\n\n";
-		let newAttributeListClass = addAttributes (searchForAttributes ref_type.tid newData.dcs) astattributeList in
-		let descriptorClass = {name=id; methods=totalMethods; attributes = newAttributeListClass} in
+		let newAttributeListClass = addAttributes (searchForAttributes (Type.Ref(ref_type)) newData.dcs) astattributeList in
+		let descriptorClass = {classType=classType; methods=totalMethods; attributes = newAttributeListClass} in
 		buildData (descriptorClass::newData.dcs) newTableMethod newData.dos
 		end	
 	else
@@ -144,26 +157,29 @@ let rec compile astTyped info id data= match info with
 		let newTableMethod = addMethods id astmethodList data.tm in
 		let methods= methodsForDescriptor newTableMethod (Str.regexp_string (id^"$")) [] in
 		let totalMethods = methodsParentsForDescriptor newTableMethod (Str.regexp_string (ref_type.tid^"$")) methods in
-		let descriptorClass = {name=id; methods=totalMethods; attributes = addAttributes (searchForAttributes ref_type.tid data.dcs) astattributeList} in
+		let descriptorClass = {classType=classType; methods=totalMethods; attributes = addAttributes (searchForAttributes (Type.Ref(ref_type)) data.dcs) astattributeList} in
 		buildData (descriptorClass::data.dcs) newTableMethod data.dos
 		end
-let rec typeListWalk astTyped type_list data = match type_list with 
-| {modifiers = modifiers; id = id; info = info} :: t -> typeListWalk astTyped t (compile astTyped info id data)
-| [] -> printData data
+let rec typeListWalk pack astTyped type_list data = match type_list with 
+| {modifiers = modifiers; id = id; info = info} :: t -> typeListWalk pack astTyped t (compile pack astTyped info id data)
+| [] -> data
 
 
 (*Class Object from java.lang package*)
 
-let objectClass = {name="Object"; methods=["equals"];attributes= []}
+let objectClass = {classType=Type.Ref{tpath=[]; tid="Object"}; methods=["equals"];attributes= []}
 
 let object_equals obj1 obj2 = match obj1 with
 | obj1 when obj1==obj2 -> true
 | obj1 when obj1!=obj2 -> false
 
-let initData =  {dcs= [objectClass]; tm = [] ; dos= []  }
+let integerClass = {classType=Primitive(Int); methods=[];attributes= []}
+
+let initData =  {dcs= objectClass::[integerClass]; tm = [] ; dos= []  }
 
 let treeWalk astTyped = match astTyped with
-| {package = pack;type_list = typeList} -> typeListWalk astTyped typeList initData
+| {package = Some pack;type_list = typeList} -> typeListWalk pack astTyped typeList initData
+| {package = None;type_list = typeList} -> typeListWalk [] astTyped typeList initData
 
 
 
