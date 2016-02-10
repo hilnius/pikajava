@@ -45,7 +45,7 @@ let rec printTableMethod tableMethod = match tableMethod with
 | [] -> print_string "End Table Methods\n"
 
 let rec printDescriptorObject descriptorsObject = match descriptorsObject with 
-| a::t -> print_string (a.objectName^" "); printValue a.objectValue;print_string " "; printDescriptorObject a.attributes ;printDescriptorObject t
+| a::t -> print_string (a.objectName^" "); printValue a.objectValue;print_string " "; print_string ("OBJECT SCOPE :"^(string_of_int a.scope)); printDescriptorObject a.attributes ;printDescriptorObject t
 | [] -> print_string "End Objects\n"
 
 let printData data = match data with 

@@ -1,6 +1,6 @@
 open Compilation
 open AST
-
+open Type
 (* TO DO *)
 (*execReadyData = {dcs: evaluatedDescriptorClass list; tm : tableMethod ; dos: descriptorObject list}
 type scopedData = {data:execReadyData;currentScope:int}*)
@@ -23,12 +23,29 @@ else getMain t
 |[] -> print_string "No Main!\n"; exit 0
 
 (* Look for method prefixed *)
-let rec getMethod tableMethod methodName = match tableMethod with 
+let rec getConstructor tableMethod methodName = match tableMethod with 
 |{mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}::t->
 if (mname = methodName) then
 	{mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}
-else getMethod t methodName
-|[] -> print_string ("No such method : "^methodName^"\n"); exit 1
+else getConstructor t methodName
+|[] -> print_string ("No such constructor : "^methodName^"\n"); exit 1
+
+(* Look for method prefixed *)
+let rec getMethod callerType tableMethod methodName = let newRefType callerTypeT =  
+	match callerTypeT with 
+	(*| Void -> 
+  	| Array of t * int
+  	| Primitive of primitive*)
+  	| Ref (aRefType) -> aRefType
+	in
+	
+	let refType = newRefType callerType in 
+	match tableMethod with 
+	|{mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (* mloc : Location.t;*)}::t->
+		if (mname = (refType.tid^"$"^methodName)) then
+			{mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (* mloc : Location.t;*)}
+		else getMethod callerType t methodName
+	|[] -> print_string ("No such method : "^methodName^"\n"); exit 1
 
 
 let rec findMaxScope aListOfObject highestScope objectDescriptor= match aListOfObject with 
@@ -48,10 +65,6 @@ let setValue descriptorObject newValue = match descriptorObject with
 |{objectName=aName; attributes=aList; objectValue=aValue; scope=aScope} -> {objectName=aName; attributes=aList; objectValue=newValue; scope=aScope} 
 
 let rec notEquals anObject aSecondObject =
-print_string (anObject.objectName ^ (string_of_int anObject.scope));
-print_string (aSecondObject.objectName ^ (string_of_int aSecondObject.scope));
-
-print_string (string_of_bool((anObject.objectName != aSecondObject.objectName) ||  (anObject.scope != aSecondObject.scope)));
 (anObject.objectName != aSecondObject.objectName) ||  (anObject.scope != aSecondObject.scope)
 
 let filter f aList = 
@@ -65,12 +78,19 @@ let filter f aList =
 	
 
 let rec deleteObject objectToDelete scopedData = 
-	print_string (string_of_int (List.length scopedData.data.dos));
 	let newfunc = (notEquals objectToDelete) in
 	let newDos = filter newfunc scopedData.data.dos  in
-	print_string (string_of_int (List.length newDos));
 	{data=(buildData scopedData.data.dcs scopedData.data.tm newDos); currentScope = scopedData.currentScope; currentObject = scopedData.currentObject} 
 	
+let incrementScope scopedData = match scopedData with 
+{data=data;currentScope = currentScope;currentObject=currentObject} -> {data=data;currentScope = currentScope+1;currentObject=currentObject}
+
+let decrementScope scopedData = match scopedData with 
+{data=data;currentScope = currentScope;currentObject=currentObject} -> {data=data;currentScope = currentScope-1;currentObject=currentObject}
+
+
+let deconstructExpressionType expression = match expression with 
+{edesc = expression_desc;(* eloc : Location.t; *)etype = Some etype;} ->  etype
 
 let rec evaluateExpression expression scopedData = match expression with 
 |	{
@@ -82,14 +102,18 @@ let rec evaluateExpression expression scopedData = match expression with
     	| Val(Int(i)) -> changeCurrentObject scopedData {objectName=""; attributes=[]; objectValue=Int(int_of_string i); scope=1}
 		| New(className, expressions) ->
 			let finalClassName = List.nth className ((List.length className) - 1) in
-			executeMethod (getMethod scopedData.data.tm (finalClassName^"$"^finalClassName)) scopedData (changeListToOptionList expressions)
+			executeMethod (getConstructor scopedData.data.tm (finalClassName^"$"^finalClassName)) scopedData (changeListToOptionList expressions)
 		| Name (anObjectName) -> changeCurrentObject scopedData (findObjectInData scopedData.data.dos anObjectName [])
 		| Op(expression1,operator,expression2) ->
 			let evaluatedExpression1 = evaluateExpression expression1 scopedData in 
 			let evaluatedExpression2 = evaluateExpression expression2 evaluatedExpression1 in 
 			executeInfixOp evaluatedExpression1 operator evaluatedExpression2 evaluatedExpression2
 		| AssignExp (expression1,assignOperator,expression2) -> executeAssignExp expression1 assignOperator expression2 scopedData
-		(* 
+		| Call (callerExpression, methodName, arguments) -> 
+			let callerType = deconstructExpressionType callerExpression in
+			let callerScope = evaluateExpression callerExpression scopedData in 
+			executeMethod (getMethod callerType scopedData.data.tm methodName ) callerScope (changeListToOptionList arguments)
+				(* 
 		  | Call of expression * string * expression list
 		  | Attr of expression * string
 		  | If of expression * expression * expression
@@ -98,6 +122,12 @@ let rec evaluateExpression expression scopedData = match expression with
 		  | CondOp of expression * expression * expression
 		  | Cast of expression * expression
 		  | Instanceof of expression * expression*)
+and updateObject descriptorObject scopedData =
+	let objectName = descriptorObject.objectName in
+	let deletedScope = deleteObject descriptorObject scopedData in
+	addObject objectName deletedScope 
+	 	  
+		  
 and executeAssignExp expression1 assignOperator expression2 scopedData =
 	let evaluatedExpression1 = evaluateExpression expression1 scopedData in 
 	let evaluatedExpression2 = evaluateExpression expression2 evaluatedExpression1 in
@@ -169,7 +199,10 @@ end
 
 and executeMethod aMethod scopedData argumentsToEvaluate = match aMethod with 
 |{mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}->
-	executeStatements statements (evaluateAndAddToScopeArgs argumentsToEvaluate arguments scopedData)    
+	let incrementedScope = incrementScope scopedData in 
+	let updatedScope = addObject "this" incrementedScope in
+	let excutedMethodScope = executeStatements statements (evaluateAndAddToScopeArgs argumentsToEvaluate arguments updatedScope)  in
+	decrementScope excutedMethodScope  
 
 (*let rec initEvaluatedDescriptorClass descriptorsClass tableMethods evaluatedDescriptorsClass = match descriptorsClass with
 | {classType=aType; methods=methods; attributes=attributes}::t -> List.iter evaluateAttributes attributes tableMethods*)
