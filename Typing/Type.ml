@@ -56,10 +56,12 @@ let mk_array size t =
   | n1 , Array(t,n2) -> Array(t,n1+n2)
   | n  , _           -> Array(t,n)
 
-let mk_type l=
+let extract_type l =
   let id,p = ListII.extract_last l in
+  { tpath = p ; tid = id }
+
+let mk_type p id =
   { tpath = p ; tid = id }
 
 let refOfStringList l =
   { tid = List.hd l; tpath = List.tl l }
-
