@@ -1,9 +1,22 @@
+open Type
 open AST
 open Exceptions
 
 let extractSome a = match a with
   | None -> raise UntypedExpression;
   | Some(b) -> b;
+;;
+
+let comparablePrimitiveTypes p1 p2 = match p1, p2 with
+  | Type.Boolean, Type.Boolean -> true
+  | Type.Boolean, _ -> false
+  | _, Type.Boolean -> false
+  | _ -> true
+;;
+
+let comparableTypes t1 t2 = match t1, t2 with
+  | Type.Primitive(p1), Type.Primitive(p2) -> comparablePrimitiveTypes p1 p2
+  | _ -> t1 == t2
 ;;
 
 let checkExpression e = match e with
@@ -17,7 +30,7 @@ let checkExpression e = match e with
   | AssignExp of expression * assign_op * expression
   | Post of expression * postfix_op *)
   | Op(e1, op, e2) -> begin match op with
-      | Op_eq -> if extractSome e1.etype <> extractSome e2.etype then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
+      | Op_eq -> if not(comparableTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
     end;
   (*| CondOp of expression * expression * expression
   | Cast of expression * expression
