@@ -7,33 +7,60 @@ let extractSome a = match a with
   | Some(b) -> b;
 ;;
 
-let comparablePrimitiveTypes p1 p2 = match p1, p2 with
+let comparePrimitiveTypes p1 p2 = match p1, p2 with
   | Type.Boolean, Type.Boolean -> true
   | Type.Boolean, _ -> false
   | _, Type.Boolean -> false
   | _ -> true
 ;;
 
-let comparableTypes t1 t2 = match t1, t2 with
-  | Type.Primitive(p1), Type.Primitive(p2) -> comparablePrimitiveTypes p1 p2
+let compareTypes t1 t2 = match t1, t2 with
+  | Type.Primitive(p1), Type.Primitive(p2) -> comparePrimitiveTypes p1 p2
   | _ -> t1 == t2
 ;;
 
+let checkBoolean t1 = match t1 with
+  | Type.Primitive(Type.Boolean) -> true
+  | _ -> false
+;;
+
+let checkPrimitiveNotBoolean t1 = match t1 with
+  | Type.Primitive(Type.Boolean) -> false
+  | Type.Primitive(_) -> true
+  | _ -> false
+;;
+
+let checkIntegerKind t1 = match t1 with
+  | Type.Primitive(Type.Int) | Type.Primitive(Type.Long) |  Type.Primitive(Type.Short) -> true
+  | _ -> false
+;;
+
 let checkExpression e = match e with
-  (* | New of string list * expression list
+  (*| New(name, identifiers, arguments) ->
   | Call of expression * string * expression list
   | Attr of expression * string
   | If of expression * expression * expression *)
   | Val(value) -> ()
   (* | Name of string
-  | ArrayInit of expression list
-  | AssignExp of expression * assign_op * expression
-  | Post of expression * postfix_op *)
-  | Op(e1, op, e2) -> begin match op with
-      | Op_eq -> if not(comparableTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
+  | ArrayInit of expression list*)
+  | AssignExp(e1, aop, e2) -> begin match aop with
+      | Assign | Ass_add | Ass_sub | Ass_mul | Ass_div -> if not(compareTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
+      | Ass_mod -> if not(checkPrimitiveNotBoolean (extractSome e1.etype) && checkPrimitiveNotBoolean (extractSome e2.etype)) then raise (BadOperandTypes(extractSome e1.etype, extractSome e2.etype))
+      | Ass_shl | Ass_shr | Ass_shrr -> if not(checkIntegerKind (extractSome e1.etype) && checkIntegerKind (extractSome e2.etype)) then raise (BadOperandTypes(extractSome e1.etype, extractSome e2.etype))
     end;
-  (*| CondOp of expression * expression * expression
-  | Cast of expression * expression
+  (*| Post of expression * postfix_op *)
+  | Op(e1, op, e2) -> begin match op with
+      | Op_eq | Op_ne | Op_gt | Op_lt | Op_ge | Op_le -> if not(compareTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
+      | Op_cor | Op_cand -> begin
+         if not (checkBoolean (extractSome e1.etype)) then raise (ShouldBeBoolean(extractSome e1.etype));
+         if not (checkBoolean (extractSome e2.etype)) then raise (ShouldBeBoolean(extractSome e2.etype))
+      end;
+    end;
+  | CondOp(e1, e2, e3) -> begin
+      if not (checkBoolean (extractSome e1.etype)) then raise (ShouldBeBoolean(extractSome e1.etype));
+      if not (compareTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
+    end;
+  (*| Cast of expression * expression
   | Instanceof of expression * expression *)
   | _ -> ()
 ;;
@@ -80,6 +107,7 @@ let checkAST ast =
   with
     | TypeMismatch(t1,t2) -> print_string ("\027[31mType mismatch exception between " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | CannotCompareTypes(t1,t2) -> print_string ("\027[31mCannot compare types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
+    | BadOperandTypes(t1,t2) -> print_string ("\027[31mBad operand types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | ShouldBeBoolean(t1) -> print_string ("\027[31mExpected type boolean, found " ^ (Type.stringOf t1) ^ "\027[0m\n");
     | _ -> print_string ("\027[31mAn exception of unknown type occured.\027[0m\n");
 ;;
