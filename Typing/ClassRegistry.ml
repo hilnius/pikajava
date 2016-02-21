@@ -4,15 +4,15 @@ open Exceptions
 type registry =
   | Registry of packageRegistry list
 and packageRegistry =
-  | Package of AST.qualified_name * classRegistry list
+  | RPackage of AST.qualified_name * classRegistry list
 and classRegistry =
-  | Class of string * attributeRegistry list * methodRegistry list
+  | RClass of string * attributeRegistry list * methodRegistry list
 and methodRegistry =
-  | Method of string * Type.t * argumentRegistry list
+  | RMethod of string * Type.t * argumentRegistry list
 and attributeRegistry =
-  | Attribute of string * Type.t
+  | RAttribute of string * Type.t
 and argumentRegistry =
-  | Argument of Type.t
+  | RArgument of Type.t
 ;;
 
 type methodOrAttributeSignature =
@@ -34,66 +34,66 @@ type methodOrAttributeSignature =
 *)
 
 let exampleRegisty =
-  Package(["a"; "Test"], [
-    Class("A", [
-      Attribute("a", Primitive(Int))
+  RPackage(["a"; "Test"], [
+    RClass("A", [
+      RAttribute("a", Primitive(Int))
     ],[
-      Method("foo", Primitive(Boolean), [Argument(Ref({ tpath = []; tid = "String" }))])
+      RMethod("foo", Primitive(Boolean), [RArgument(Ref({ tpath = []; tid = "String" }))])
     ])
   ])
 ;;
 
 let rec findClass classes className = match classes with
   | [] -> raise (ClassNameNotFound(className))
-  | (Class(n, _, _))::_ when n = className -> List.hd classes
-  | (Class(n, _, _))::t -> findClass t className
+  | (RClass(n, _, _))::_ when n = className -> List.hd classes
+  | (RClass(n, _, _))::t -> findClass t className
 ;;
 
 let getClassMethod className member arguments registry =
   let rec findMethod m = match m with
     | [] -> raise (MemberNotFound(member))
-    | (Method(n, t1, args))::t when member = n -> t1
+    | (RMethod(n, t1, args))::t when member = n -> t1
     | h::t -> findMethod t
   in
   match registry with
-    | Package(_, classes) -> let Class(_,_,m) = (findClass classes className) in findMethod m
+    | RPackage(_, classes) -> let RClass(_,_,m) = (findClass classes className) in findMethod m
 ;;
 
 let getClassAttribute className member registry =
   let rec findAttribute a = match a with
     | [] -> raise (MemberNotFound(member))
-    | (Attribute(n, t1))::t when member = n -> t1
+    | (RAttribute(n, t1))::t when member = n -> t1
     | h::t -> findAttribute t
   in
   match registry with
-    | Package(_, classes) -> let Class(_,a,_) = (findClass classes className) in findAttribute a
+    | RPackage(_, classes) -> let RClass(_,a,_) = (findClass classes className) in findAttribute a
 ;;
 
 (* build registry functions *)
 
 let buildArgumentRegistry argument = match argument with
-  | { final = _; vararg = _; ptype = argType; pident = _ } -> Argument(argType)
+  | { final = _; vararg = _; ptype = argType; pident = _ } -> RArgument(argType)
 ;;
 
 let buildMethodRegistry meth = match meth with
   | { mmodifiers = _; mname = name; mreturntype = returnType; margstype = arguments; mthrows = _; mbody = _ } ->
-    Method(name, returnType, List.map buildArgumentRegistry arguments)
+    RMethod(name, returnType, List.map buildArgumentRegistry arguments)
 ;;
 
 let buildAttributeRegistry attribute = match attribute with
   | { amodifiers = _; aname = name; atype = argType; adefault = _ } ->
-    Attribute(name, argType)
+    RAttribute(name, argType)
 ;;
 
 let buildClassRegistry classes = match classes with
-  | { modifiers = _; id = className; info = { cparent = _; cattributes = attributes; cinits = _; cconsts = _; cmethods = methods; cloc = _ } } ->
-    Class(className, List.map buildAttributeRegistry attributes, List.map buildMethodRegistry methods)
+  | { modifiers = _; id = className; info = Class({ cparent = _; cattributes = attributes; cinits = _; cconsts = _; cmethods = methods; cloc = _ }) } ->
+    RClass(className, List.map buildAttributeRegistry attributes, List.map buildMethodRegistry methods)
 ;;
 
 let buildPackageRegistry ast =
   (* cf AST.ml *)
   let { package = packageDeclaration; type_list = classList; } = ast in
-  Package(["a";"Test"], List.map buildClassRegistry classList)
+  RPackage(["a";"Test"], List.map buildClassRegistry classList)
 ;;
 
 
@@ -131,26 +131,26 @@ let iterTabbed f l =
 ;;
 
 let stringOfArgument arg = match arg with
-  | Argument(argType) -> Type.stringOf argType
+  | RArgument(argType) -> Type.stringOf argType
 ;;
 
 let stringOfMethod attr = match attr with
-  | Method(name, returnType, arguments) ->
+  | RMethod(name, returnType, arguments) ->
     (getTabs ()) ^ (Type.stringOf returnType) ^ " " ^ name ^ "(" ^ (iterToString stringOfArgument arguments ", ") ^ ");\n"
 ;;
 
 let stringOfAttribute attr = match attr with
-  | Attribute(name, argType) ->
+  | RAttribute(name, argType) ->
     (getTabs ()) ^ (Type.stringOf argType) ^ " " ^ name ^ ";\n"
 ;;
 
 let stringOfClass c = match c with
-  | Class(className, attributes, methods) ->
+  | RClass(className, attributes, methods) ->
     (getTabs ()) ^ (className) ^ " {\n" ^ (iterTabbed stringOfAttribute attributes) ^ (iterTabbed stringOfMethod methods) ^ (getTabs ()) ^ ("}\n")
 ;;
 
 let stringOfPackageRegistry r = match r with
-  | Package(name, classes) ->
+  | RPackage(name, classes) ->
     (getTabs ()) ^ ("Package ") ^ (List.hd name) ^ " {\n" ^ (iterTabbed stringOfClass classes) ^ (getTabs ()) ^ ("}\n")
 ;;
 

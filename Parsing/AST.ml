@@ -9,13 +9,21 @@ type value =
   | String of string
   | Int of string
   | Float of string
-  | Char of char
+  | Char of char option
   | Null
   | Boolean of bool
 
 type postfix_op =
   | Incr
   | Decr
+
+type prefix_op =
+  | Op_not
+  | Op_neg
+  | Op_incr
+  | Op_decr
+  | Op_bnot
+  | Op_plus
 
 type assign_op =
   | Assign
@@ -53,26 +61,37 @@ type infix_op =
   | Op_mod
 
 type expression_desc =
-  | New of string list * expression list
-  | Call of expression * string * expression list
+  | New of string option * string list * expression list
+  | NewArray of Type.t * (expression option) list * expression option
+  | Call of expression option * string * expression list
   | Attr of expression * string
   | If of expression * expression * expression
   | Val of value
   | Name of string
   | ArrayInit of expression list
+  | Array of expression * (expression option) list
   | AssignExp of expression * assign_op * expression
   | Post of expression * postfix_op
+  | Pre of prefix_op * expression
   | Op of expression * infix_op * expression
   | CondOp of expression * expression * expression
-  | Cast of expression * expression
-  | Instanceof of expression * expression
+  | Cast of Type.t * expression
+  | Type of Type.t
+  | ClassOf of Type.t
+  | Instanceof of expression * Type.t
+  | VoidClass
+  | QN of string list
 
 and expression =
     {
       edesc : expression_desc;
-(*)      eloc : Location.t; *)
+(*      eloc : Location.t; *)
       mutable etype : Type.t option;
     }
+
+type switchLabel =
+  | CstExpr of expression
+  | Default
 
 type modifier =
   | Abstract
@@ -105,7 +124,7 @@ type statement =
   | Block of statement list
   | Nop
   | While of expression * statement
-  | For of (Type.t * string * expression option) list * expression option * expression list * statement
+  | For of (Type.t option * string * expression option) list * expression option * expression list * statement
   | If of expression * statement * statement option
   | Return of expression option
   | Throw of expression
@@ -136,8 +155,13 @@ and astclass = {
     cinits : initial list;
     cconsts : astconst list;
     cmethods : astmethod list;
+    ctypes : asttype list;
     cloc : Location.t;
   }
+
+and type_info =
+  | Class of astclass
+  | Inter
 
 and initial = {
     static : bool ;
@@ -146,9 +170,9 @@ and initial = {
 
 and asttype =
   {
-    modifiers : modifier list;
+    mutable modifiers : modifier list;
     id : string;
-    info : astclass;
+    info : type_info;
   }
 
 type t = {
@@ -157,14 +181,15 @@ type t = {
   }
 
 
-(* Printing functions *)
+
 
 let string_of_value = function
   | String s -> "\""^s^"\""
   | Boolean b -> string_of_bool b
   | Int s -> s
   | Float f -> f
-  | Char c -> String.make 1 c
+  | Char(Some c) -> String.make 1 c
+  | Char(None) -> "à"
   | Null -> "null"
 
 let string_of_assign_op = function
@@ -202,17 +227,32 @@ let string_of_infix_op = function
   | Op_div   -> "/"
   | Op_mod   -> "%"
 
+let string_of_prefix_op = function
+  | Op_not -> "!"
+  | Op_neg -> "-"
+  | Op_incr -> "++"
+  | Op_decr -> "--"
+  | Op_bnot -> "~"
+  | Op_plus -> "+"
+
+
 let rec string_of_expression_desc = function
-  | New(n,al) ->
+  | New(None,n,al) ->
       "new "^(String.concat "." n)^"("^
+      (String.concat "," (List.map string_of_expression al))^
+      ")"
+  | New(Some n1,n2,al) ->
+      n1^".new "^(String.concat "." n2)^"("^
       (String.concat "," (List.map string_of_expression al))^
       ")"
   | If(c,e1,e2) ->
       "if "^(string_of_expression c)^" { "^
       (string_of_expression e1)^" } else { "^(string_of_expression e2)^" }"
   | Call(r,m,al) ->
-      (string_of_expression r)^
-      "."^m^"("^
+     (match r with
+      | Some r -> (string_of_expression r)^"."
+      | None -> "")^
+       m^"("^
       (String.concat "," (List.map string_of_expression al))^
 	")"
   | Attr(r,a) ->
@@ -226,23 +266,36 @@ let rec string_of_expression_desc = function
       (string_of_expression e1)^(string_of_infix_op op)^(string_of_expression e2)
   | CondOp(e1,e2,e3) ->
      (string_of_expression e1)^"?"^(string_of_expression e2)^":"^(string_of_expression e3)
+  | Array(e,el) ->
+     (string_of_expression e)^(ListII.concat_map "" (function | None -> "[]" | Some e -> "["^(string_of_expression e)^"]") el)
   | ArrayInit el ->
      "{"^(ListII.concat_map "," string_of_expression el)^"}"
   | Cast(t,e) ->
-      "("^(string_of_expression t)^") "^(string_of_expression e)
-  | Instanceof(e,t) ->
-     (string_of_expression e)^" instanceof "^(string_of_expression t)
+      "("^(Type.stringOf t)^") "^(string_of_expression e)
+  | QN(sl) -> String.concat "." sl
   | Post(e,Incr) -> (string_of_expression e)^"++"
   | Post(e,Decr) -> (string_of_expression e)^"--"
+  | Pre(op,e) -> (string_of_prefix_op op)^(string_of_expression e)
+  | Type t -> Type.stringOf t
+  | ClassOf t -> Type.stringOf t
+  | Instanceof(e,t) -> (string_of_expression e)^" instanceof "^(Type.stringOf t)
+  | VoidClass -> "void.class"
+  | NewArray(t, args,target) ->
+     (match target with
+     | None -> ""
+     | Some e -> (string_of_expression e)^".")^
+     (Type.stringOf t)^
+       (ListII.concat_map "" (function None -> "[]" | Some e -> "["^(string_of_expression e)^"]") args)
 
 and string_of_expression e =
   let s = string_of_expression_desc e.edesc in
-  match e.etype with
-    | None -> s
-    | Some t -> "("^s^" : "^(Type.stringOf t)^")"
+  s(*
+    match e.etype with
+      | None -> s
+      | Some t -> "("^s^" : "^(Type.stringOf t)^")"*)
 
-let print_attribute a =
-  print_string "  ";
+let print_attribute tab a =
+  print_string tab;
   print_string ((Type.stringOf a.atype)^" "^a.aname);
   (match a.adefault with
     | None -> ()
@@ -268,7 +321,15 @@ let stringOf_modifier = function
   | Synchronized -> "synchronized"
   | Native       -> "native"
 
-let rec print_statement tab = function
+let stringOf_sl = function
+  | CstExpr e -> "case "^(string_of_expression e)
+  | Default -> "default"
+
+let rec print_switchBody tab switch_label_list stm_list =
+     List.iter (fun c -> print_endline(tab^(stringOf_sl c)^":")) switch_label_list;
+     List.iter (print_statement (tab^"\t")) stm_list
+
+and print_statement tab = function
   | VarDecl dl ->
      List.iter (fun (t,id,init) ->
 		print_string(tab^(Type.stringOf t)^" "^id);
@@ -303,7 +364,10 @@ let rec print_statement tab = function
   | For(fil,eo,el,s) ->
      print_string(tab^"for (");
      List.iter (fun (t,s,eo) ->
-		print_string((Type.stringOf t)^" "^s);
+		(match t with
+		 | None -> ()
+		 | Some t -> print_string ((Type.stringOf t)^" "));
+		print_string(s);
 		(match eo with
 		| None -> ()
 		| Some e -> print_string (" "^(string_of_expression e)))) fil;
@@ -316,52 +380,51 @@ let rec print_statement tab = function
      print_endline ") {";
      print_statement (tab^"  ") s;
      print_endline(tab^"}")
-  | Try(sl, al, sl2) -> begin
-      let printCatch (arg,sl3) =
-        print_endline("catch ("^(Type.stringOf (arg.ptype))^" "^(arg.pident)^") {");
-        List.iter (print_statement (tab ^ "  ")) sl3;
-        print_string(tab^"} ");
-      in
-      print_endline(tab^"try {");
-      List.iter (print_statement (tab ^ "  ")) sl;
-      print_string(tab^"} ");
-      List.iter printCatch al;
-      print_endline("finally {");
-      List.iter (print_statement (tab ^ "  ")) sl2;
-      print_endline(tab^"}");
-    end
+  | Try(body,catch,finally) ->
+     print_endline(tab^"try {");
+     List.iter (print_statement (tab^"  ")) body;
+     List.iter (fun (a,sl) ->
+		print_endline(tab^"} catch ("^(stringOf_arg a)^")");
+		List.iter (print_statement (tab^"  ")) sl) catch;
+     (if finally != [] then
+	begin
+	  print_endline(tab^"} finally {");
+	  List.iter (print_statement (tab^"  ")) finally
+	end);
+     print_endline(tab^"}");
 
-
-
-and print_method m =
-  print_string "  ";
+and print_method tab m =
+  print_string tab;
   print_string((Type.stringOf m.mreturntype)^" "^m.mname^"(");
   print_string(ListII.concat_map "," stringOf_arg m.margstype);
   print_string(")");
   print_string(" "^ListII.concat_map "," Type.stringOf_ref m.mthrows);
   print_endline(" {");
-  List.iter (print_statement "    ") m.mbody;
-  print_endline("  }")
+  List.iter (print_statement (tab^"  ")) m.mbody;
+  print_endline(tab^"}")
 
-and print_const c =
-  print_string ("  "^c.cname^"(");
+and print_const tab c =
+  print_string (tab^c.cname^"(");
   print_string(ListII.concat_map "," stringOf_arg c.cargstype);
   print_endline(") {");
-  List.iter (print_statement "  ") c.cbody;
-  print_endline("  }")
+  List.iter (print_statement (tab^"  ")) c.cbody;
+  print_endline(tab^"}")
 
-and print_class c =
+and print_class tab c =
   print_endline(" extends "^(Type.stringOf_ref c.cparent)^" {");
-  List.iter print_attribute c.cattributes;
-  List.iter print_const c.cconsts;
-  List.iter print_method c.cmethods;
-  print_endline "}";
-  print_newline()
+  List.iter (print_attribute (tab^"  ")) c.cattributes;
+  List.iter (print_const (tab^"  ")) c.cconsts;
+  List.iter (print_method (tab^"  ")) c.cmethods;
+  print_endline(tab^"}")
 
-and print_type t =
+and print_type tab t =
   if t.modifiers != [] then
-    print_string ((ListII.concat_map " " stringOf_modifier t.modifiers)^" ");
-  print_string ("class "^t.id); print_class t.info
+    print_string (tab^(ListII.concat_map " " stringOf_modifier t.modifiers)^" ");
+  print_string ("class "^t.id)
+(*(match t.info with
+   | Class c -> print_class tab c
+   | Inter -> ())
+*)
 
 let print_package p =
   print_string "package ";
@@ -371,4 +434,4 @@ let print_program p =
   match p.package with
   | None -> ()
   | Some pack -> print_package pack ;
-  List.iter print_type p.type_list
+  List.iter (fun t -> print_type "" t; print_newline()) p.type_list

@@ -25,7 +25,8 @@ val object_type: ref_type
 (* function that create an array of size, if t is already an array it just increase its size *)
 val mk_array : int -> t -> t
 
-val mk_type : string list -> ref_type
+val extract_type : string list -> ref_type
+val mk_type : string list -> string -> ref_type
 
 (* conversions between types and string *)
 val stringOf : t -> string

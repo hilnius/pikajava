@@ -1,9 +1,14 @@
 abstract
+assert
 boolean
+break
 byte
+case
 catch
 char
 class
+default
+do
 double
 else
 extends
@@ -13,9 +18,11 @@ finally
 float
 for
 if
+implements
 import
 instanceof
 int
+interface
 long
 native
 new
@@ -29,6 +36,7 @@ short
 static
 strictfp
 super
+switch
 synchronized
 this
 throw
