@@ -33,7 +33,7 @@ let execute lexbuf verbose =
       etype = Some(Primitive(Int));
     }
     in
-    let scopedData = Execute.executeMethod (Execute.getMain data.tm) {data=data; currentScope=0; currentObject={objectName=""; attributes=[]; objectValue=Compilation.Null; scope=0}} [Some(test9)] in 
+    let scopedData = Execute.executeMethod ((Execute.getMain data.tm),Ref({tpath=[];tid="identifier"})) {data=data; currentScope=0; currentObject={objectName=""; attributes=[]; objectValue=Compilation.Null; scope=0};stack=[]} [Some(test9)] in 
     printData scopedData.data;
     if verbose then AST.print_program typedAST
   with

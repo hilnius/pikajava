@@ -13,7 +13,6 @@ and attributeValue =
 | Int of int
 | Bool of bool
 | String of string
-| Ref of string 
 | Null 
 and tableDescriptorClass= string*descriptorClass  
 
@@ -47,6 +46,8 @@ let rec printTableMethod tableMethod = match tableMethod with
 let rec printDescriptorObject descriptorsObject = match descriptorsObject with 
 | a::t -> print_string (a.objectName^" "); printValue a.objectValue;print_string " "; print_string ("OBJECT SCOPE :"^(string_of_int a.scope)); printDescriptorObject a.attributes ;printDescriptorObject t
 | [] -> print_string "End Objects\n"
+
+and printOneDescriptorObject a = print_string ("\n XXXOBJECT DELETED"^a.objectName^" "); printValue a.objectValue;print_string " "; print_string ("OBJECT SCOPE :"^(string_of_int a.scope)); print_string "\t"; printDescriptorObject a.attributes; print_string "OBJECT DELETEDXXX\n"
 
 let printData data = match data with 
 |{dcs= descriptorsClass ; tm = tableMethod ; dos= descriptorsObject  } -> printTableMethod tableMethod; printDescriptorClass descriptorsClass; printDescriptorObject descriptorsObject 
@@ -116,6 +117,12 @@ let rec addMethods className methods tableMethods = match methods with
 	let newTableMethod = {mmodifiers = modifiers;mname = className^"$"^mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}:: tableMethods in addMethods className t newTableMethod
 | [] -> tableMethods
 
+let rec addConsts classType consts tableMethods = match consts,classType with 
+| {cmodifiers = modifiers;cname = mname;cargstype = arguments;cthrows = exceptions;cbody = statements; (*      mloc : Location.t;*)}::t, Ref({tpath=aPath;tid=id}) -> 
+	print_string ("adding const "^mname^"\n");
+	let newTableMethod = {mmodifiers = modifiers;mname = id^"$"^mname;mreturntype = classType;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}:: tableMethods in addConsts classType t newTableMethod
+| [],_ -> tableMethods
+
 let rec addAttributes  listParentAttributes astattributeList = match listParentAttributes with 
 | {amodifiers = modifiers;aname =aName;atype =aType ;adefault=expression;(*      aloc : Location.t;*)}::t ->
 	let newAstAttribute = {amodifiers=modifiers; aname=aName; atype=aType; adefault=expression; (*      aloc : Location.t;*)}::astattributeList in 
@@ -125,40 +132,43 @@ let rec addAttributes  listParentAttributes astattributeList = match listParentA
 let rec compile pack astTyped info id data= 
 let classType = (buildRefType pack id) in
 match info with 
-| {cparent=ref_type; cattributes=astattributeList; cinits=initialList; cconsts=astconstList; cmethods=astmethodList; cloc=location;} when ref_type=object_type ->
+| Class({cparent=ref_type; cattributes=astattributeList; cinits=initialList; cconsts=astconstList; cmethods=astmethodList; cloc=location;}) when ref_type=object_type ->
  	if notCompiled classType data.dcs then
  		begin
 		let newTableMethod = addMethods id astmethodList data.tm in
-		let methods= methodsForDescriptor newTableMethod (Str.regexp_string (id^"$")) [] in
-		let totalMethods = methodsParentsForDescriptor newTableMethod (Str.regexp_string (ref_type.tid^"$")) methods in
+		let newTableMethodWithConst = addConsts classType astconstList newTableMethod in 
+		let methods= methodsForDescriptor newTableMethodWithConst (Str.regexp_string (id^"$")) [] in
+		let totalMethods = methodsParentsForDescriptor newTableMethodWithConst (Str.regexp_string (ref_type.tid^"$")) methods in
 		let newAttributeListClass = addAttributes (searchForAttributes (Type.Ref(ref_type)) data.dcs) astattributeList in
 		let descriptorClass = {classType=classType; methods=totalMethods; attributes = newAttributeListClass} in 
-		buildData (descriptorClass::data.dcs) newTableMethod data.dos
+		buildData (descriptorClass::data.dcs) newTableMethodWithConst data.dos
 		end
 	else
 		data
 	
-| {cparent = ref_type; cattributes = astattributeList;cinits = initialList; cconsts = astconstList; cmethods = astmethodList; cloc = location;} when ref_type!=object_type ->
+| Class({cparent = ref_type; cattributes = astattributeList;cinits = initialList; cconsts = astconstList; cmethods = astmethodList; cloc = location;}) when ref_type!=object_type ->
 	let parentClassType = Type.Ref(ref_type) in
 	if notCompiled parentClassType data.dcs then 
 		begin
 		let newData = compile pack astTyped (findClass astTyped parentClassType).info ref_type.tid data in 
 		let newTableMethod = addMethods id astmethodList newData.tm in
-		let methods= methodsForDescriptor newTableMethod (Str.regexp_string (id^"$")) [] in
+		let newTableMethodWithConst = addConsts classType astconstList newTableMethod in 
+		let methods= methodsForDescriptor newTableMethodWithConst (Str.regexp_string (id^"$")) [] in
 		print_list methods;print_string "\n\n";
-		let totalMethods = methodsParentsForDescriptor newTableMethod (Str.regexp_string (ref_type.tid^"$")) methods in
+		let totalMethods = methodsParentsForDescriptor newTableMethodWithConst (Str.regexp_string (ref_type.tid^"$")) methods in
 		print_list totalMethods;print_string "\n\n";
 		let newAttributeListClass = addAttributes (searchForAttributes (Type.Ref(ref_type)) newData.dcs) astattributeList in
 		let descriptorClass = {classType=classType; methods=totalMethods; attributes = newAttributeListClass} in
-		buildData (descriptorClass::newData.dcs) newTableMethod newData.dos
+		buildData (descriptorClass::newData.dcs) newTableMethodWithConst newData.dos
 		end	
 	else
 		begin
 		let newTableMethod = addMethods id astmethodList data.tm in
-		let methods= methodsForDescriptor newTableMethod (Str.regexp_string (id^"$")) [] in
-		let totalMethods = methodsParentsForDescriptor newTableMethod (Str.regexp_string (ref_type.tid^"$")) methods in
+		let newTableMethodWithConst = addConsts classType astconstList newTableMethod in 
+		let methods= methodsForDescriptor newTableMethodWithConst (Str.regexp_string (id^"$")) [] in
+		let totalMethods = methodsParentsForDescriptor newTableMethodWithConst (Str.regexp_string (ref_type.tid^"$")) methods in
 		let descriptorClass = {classType=classType; methods=totalMethods; attributes = addAttributes (searchForAttributes (Type.Ref(ref_type)) data.dcs) astattributeList} in
-		buildData (descriptorClass::data.dcs) newTableMethod data.dos
+		buildData (descriptorClass::data.dcs) newTableMethodWithConst data.dos
 		end
 let rec typeListWalk pack astTyped type_list data = match type_list with 
 | {modifiers = modifiers; id = id; info = info} :: t -> typeListWalk pack astTyped t (compile pack astTyped info id data)

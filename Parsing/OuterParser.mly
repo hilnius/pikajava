@@ -121,7 +121,7 @@ classOrInterfaceType: l=separated_nonempty_list(DOT,IDENTIFIER)  { Type.extract_
 
 %public classContent:
   | s = boption(STATIC) b = block { `Initializer({ static = s ; block = b }) }
-  | l = modifier* decl = memberDecl {
+  | l = modifier* decl = memberDecl { 
 	match decl with
 	| `AttList al -> `AttList (List.map (fun d -> { d with amodifiers = l }) al)
 	| `Meth m -> `Meth { m with mmodifiers = l }
