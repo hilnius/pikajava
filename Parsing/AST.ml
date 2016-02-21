@@ -420,10 +420,11 @@ and print_class tab c =
 and print_type tab t =
   if t.modifiers != [] then
     print_string (tab^(ListII.concat_map " " stringOf_modifier t.modifiers)^" ");
-  print_string ("class "^t.id);
-  (match t.info with
+  print_string ("class "^t.id)
+(*(match t.info with
    | Class c -> print_class tab c
    | Inter -> ())
+*)
 
 let print_package p =
   print_string "package ";

@@ -74,8 +74,12 @@ let typeValue v = match v with
 ;;
 
 let rec typeExpression e r = match e.edesc with
-  | New(identifiers, arguments) -> { etype = Some(Ref(Type.refOfStringList identifiers)); edesc = New(identifiers, map2 typeExpression arguments r) }
-  | Call(e2, methodName, arguments) -> { etype = Some(getMethodType (typeExpression e2 r) methodName (map2 typeExpression arguments r) r); edesc = e.edesc }
+  | New(name, identifiers, arguments) -> { etype = Some(Ref(Type.refOfStringList identifiers)); edesc = New(name, identifiers, map2 typeExpression arguments r) }
+  | Call(e2, methodName, arguments) -> begin
+    match e2 with
+      | None -> { etype = None; edesc = e.edesc }
+      | Some(e2s) -> { etype = Some(getMethodType (typeExpression e2s r) methodName (map2 typeExpression arguments r) r); edesc = e.edesc }
+    end
   | Attr(e2, str) -> e.etype <- Some(getAttributeType (typeExpression e2 r) str r); e
   | If(e, ifSt, elseSt) -> e.etype <- Some(Void); e
   | Val(value) -> e.etype <- Some(typeValue value); e
@@ -109,13 +113,20 @@ let rec typeExpression e r = match e.edesc with
       | Op_mod -> { etype = Some(); edesc = Op(t1, op, t2) }*)
     end
   | CondOp(e1,e2,e3) -> let t2 = typeExpression e2 r in { etype = t2.etype; edesc = CondOp (typeExpression e1 r, t2, typeExpression e3 r) }
-  | Cast(e1, e2) -> let t1 = typeExpression e1 r in { etype = t1.etype; edesc = Cast(t1, typeExpression e2 r) }
-  | Instanceof(e1, e2) -> { etype = Some(Primitive(Boolean)); edesc = Instanceof(typeExpression e1 r, typeExpression e2 r) }
+  | Cast(t1, e1) -> { etype = Some(t1); edesc = Cast(t1, typeExpression e1 r) }
+  | Instanceof(e1, t1) -> { etype = Some(Primitive(Boolean)); edesc = Instanceof(typeExpression e1 r, t1) }
 ;;
 
 let typeVarDecl v r = match v with
   | (t, varName, None) -> declareVariable t varName; (t, varName, None)
   | (t, varName, Some(init)) -> declareVariable t varName; (t, varName, Some(typeExpression init r))
+;;
+
+let typeVarDeclOpt v r = match v with
+  | (Some(t), varName, None) -> declareVariable t varName; (Some(t), varName, None)
+  | (Some(t), varName, Some(init)) -> declareVariable t varName; (Some(t), varName, Some(typeExpression init r))
+  | (None, varName, None) -> (None, varName, None)
+  | (None, varName, Some(init)) -> (None, varName, Some(typeExpression init r))
 ;;
 
 let rec typeCatches c r = match c with
@@ -141,13 +152,13 @@ and typeStatement s r = match s with
       While(typeExpression e r, ws)
   | For(vdl, None, el, st) ->
       enterScope ();
-      let m1 = List.rev (map2 typeVarDecl (List.rev vdl) r) in
+      let m1 = List.rev (map2 typeVarDeclOpt (List.rev vdl) r) in
       let st2 = typeStatement st r in
       exitScope ();
       For(m1, None, List.rev (map2 typeExpression (List.rev el) r), st2)
   | For(vdl, Some(ec), el, st) ->
       enterScope ();
-      let vdl2 = List.rev (map2 typeVarDecl (List.rev vdl) r) in
+      let vdl2 = List.rev (map2 typeVarDeclOpt (List.rev vdl) r) in
       let st2 = typeStatement st r in
       exitScope ();
       For(vdl2, Some(typeExpression ec r), List.rev (map2 typeExpression (List.rev el) r), st2)
@@ -185,10 +196,10 @@ let typeMethod meth r = match meth with
 ;;
 
 let typeClass cl r = match cl with
-  | { modifiers = a; id = b; info = { cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; cloc = h } }->
+  | { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; ctypes = t; cloc = h }) }->
     enterScope ();
     declareVariable (Type.Ref({ tpath = []; tid = b})) "this";
-    let a = { modifiers = a; id = b; info = { cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = (map2 typeMethod g r); cloc = h } }
+    let a = { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = (map2 typeMethod g r); ctypes = t; cloc = h }) }
     in
     exitScope();
     a

@@ -86,7 +86,7 @@ let buildAttributeRegistry attribute = match attribute with
 ;;
 
 let buildClassRegistry classes = match classes with
-  | Class({ modifiers = _; id = className; info = { cparent = _; cattributes = attributes; cinits = _; cconsts = _; cmethods = methods; cloc = _ } }) ->
+  | { modifiers = _; id = className; info = Class({ cparent = _; cattributes = attributes; cinits = _; cconsts = _; cmethods = methods; cloc = _ }) } ->
     RClass(className, List.map buildAttributeRegistry attributes, List.map buildMethodRegistry methods)
 ;;
 

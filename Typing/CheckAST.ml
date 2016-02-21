@@ -56,7 +56,7 @@ let checkMethod meth = match meth with
 ;;
 
 let checkClass cl = match cl with
-  | { modifiers = a; id = b; info = { cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; cloc = h } }->
+  | { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; cloc = h }) }->
     List.iter checkMethod g
 ;;
 
