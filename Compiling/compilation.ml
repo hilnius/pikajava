@@ -14,6 +14,7 @@ and attributeValue =
 | Bool of bool
 | String of string
 | Null 
+| Instanciated
 and tableDescriptorClass= string*descriptorClass  
 
 and data = {dcs: descriptorClass list; tm : tableMethod ; dos: descriptorObject list  }
@@ -24,6 +25,7 @@ let printValue attr = match attr with
 | Int(i) -> print_string (string_of_int i)
 | Bool(b) -> print_string (string_of_bool b)
 | String(str) -> print_string str
+| Instanciated -> print_string "Instanciated" 
 | Null -> print_string "null" 
 
 let rec printClassAttributes astAttributes = match astAttributes with 
