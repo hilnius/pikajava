@@ -13,6 +13,7 @@ and attributeValue =
 | Int of int
 | Bool of bool
 | String of string
+| Reference of string * int 
 | Null 
 | Instanciated
 and tableDescriptorClass= string*descriptorClass  
@@ -26,6 +27,7 @@ let printValue attr = match attr with
 | Bool(b) -> print_string (string_of_bool b)
 | String(str) -> print_string str
 | Instanciated -> print_string "Instanciated" 
+| Reference (referenceName, scope) -> print_string (referenceName^" "); print_string (string_of_int scope) 
 | Null -> print_string "null" 
 
 let rec printClassAttributes astAttributes = match astAttributes with 
@@ -46,10 +48,10 @@ let rec printTableMethod tableMethod = match tableMethod with
 | [] -> print_string "End Table Methods\n"
 
 let rec printDescriptorObject descriptorsObject = match descriptorsObject with 
-| a::t -> print_string (a.objectName^" "); printValue a.objectValue;print_string " "; print_string ("OBJECT SCOPE :"^(string_of_int a.scope)); printDescriptorObject a.attributes ;printDescriptorObject t
+| a::t -> print_string (a.objectName^"\n");print_string ("OBJECT VALUE :"); printValue a.objectValue;print_string "\n"; print_string ("OBJECT SCOPE :"^(string_of_int a.scope)); print_string ("OBJECT ATTRIBUTES :"); printDescriptorObject a.attributes; print_string ("END ATTRIBUTES : "); printDescriptorObject t
 | [] -> print_string "End Objects\n"
 
-and printOneDescriptorObject a = print_string ("\n XXXOBJECT DELETED"^a.objectName^" "); printValue a.objectValue;print_string " "; print_string ("OBJECT SCOPE :"^(string_of_int a.scope)); print_string "\t"; printDescriptorObject a.attributes; print_string "OBJECT DELETEDXXX\n"
+and printOneDescriptorObject a = print_string ("\nOBJECT DELETED\n"^a.objectName^"\n"); print_string ("OBJECT VALUE :"); printValue a.objectValue;print_string "\n"; print_string ("OBJECT SCOPE :"^(string_of_int a.scope)^"\n"); print_string ("OBJECT ATTRIBUTES : "); printDescriptorObject a.attributes; print_string ("END ATTRIBUTES\n"); print_string "OBJECT DELETED\n"
 
 let printData data = match data with 
 |{dcs= descriptorsClass ; tm = tableMethod ; dos= descriptorsObject  } -> printTableMethod tableMethod; printDescriptorClass descriptorsClass; printDescriptorObject descriptorsObject 
@@ -104,13 +106,12 @@ let rec methodsForDescriptor tableMethod regexpId listMethodsClass = match table
 
 let rec methodsParentsForDescriptor tableMethod regexpId listMethodsClass = match tableMethod with
 | {mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}::t -> 
-	print_string ("PASSING IN"^mname^"\n");
 	if Str.string_match regexpId mname 0 then 
 		begin
-			if List.mem AST.Private modifiers then begin print_string ("not taking"^mname^"\n"); methodsParentsForDescriptor t regexpId listMethodsClass end
-			else begin print_string ("ADDING"^mname^"\n"); mname::(methodsParentsForDescriptor t regexpId listMethodsClass)  end 
+			if List.mem AST.Private modifiers then begin methodsParentsForDescriptor t regexpId listMethodsClass end
+			else begin mname::(methodsParentsForDescriptor t regexpId listMethodsClass)  end 
 		end	
-	else begin print_string ("NOT TAKING"^mname^"\n"); methodsParentsForDescriptor t regexpId listMethodsClass end
+	else begin methodsParentsForDescriptor t regexpId listMethodsClass end
 | [] -> listMethodsClass
 
 let rec addMethods className methods tableMethods = match methods with 
