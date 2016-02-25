@@ -20,10 +20,11 @@ let execute lexbuf verbose =
     let typedAST = TypeAST.typeAST ast registry in
     print_endline "\027[32mAST successfuly typed\027[0m";
     print_endline "";
+    print_program typedAST;
+    print_endline "";
     print_endline "----------------------[ \027[96mChecking typed AST\027[0m  ]----------------------";
     CheckAST.checkAST typedAST;
     print_endline "\027[32mAST types checked\027[0m";
-    print_endline "";
     print_endline "";
     print_endline "----------------------[ \027[96mCompiling typed AST\027[0m  ]----------------------";
     let data = Compilation.treeWalk typedAST in
@@ -33,7 +34,7 @@ let execute lexbuf verbose =
       etype = Some(Primitive(Int));
     }
     in
-    let scopedData = Execute.executeMethod ((Execute.getMain data.tm),Ref({tpath=[];tid="identifier"})) {data=data; currentScope=0; currentObject={objectName=""; attributes=[]; objectValue=Compilation.Null; scope=0};stack=[]} [Some(test9)] in 
+    let scopedData = Execute.executeMethod ((Execute.getMain data.tm),Ref({tpath=[];tid="identifier"})) {data=data; currentScope=0; currentObject={objectName=""; attributes=[]; objectValue=Compilation.Null; scope=0};stack=[]} [Some(test9)] in
     printData scopedData.data;
     if verbose then AST.print_program typedAST
   with

@@ -76,11 +76,9 @@ type expression_desc =
   | Op of expression * infix_op * expression
   | CondOp of expression * expression * expression
   | Cast of Type.t * expression
-  | Type of Type.t
   | ClassOf of Type.t
   | Instanceof of expression * Type.t
   | VoidClass
-  | QN of string list
 
 and expression =
     {
@@ -272,11 +270,9 @@ let rec string_of_expression_desc = function
      "{"^(ListII.concat_map "," string_of_expression el)^"}"
   | Cast(t,e) ->
       "("^(Type.stringOf t)^") "^(string_of_expression e)
-  | QN(sl) -> String.concat "." sl
   | Post(e,Incr) -> (string_of_expression e)^"++"
   | Post(e,Decr) -> (string_of_expression e)^"--"
   | Pre(op,e) -> (string_of_prefix_op op)^(string_of_expression e)
-  | Type t -> Type.stringOf t
   | ClassOf t -> Type.stringOf t
   | Instanceof(e,t) -> (string_of_expression e)^" instanceof "^(Type.stringOf t)
   | VoidClass -> "void.class"
@@ -289,10 +285,9 @@ let rec string_of_expression_desc = function
 
 and string_of_expression e =
   let s = string_of_expression_desc e.edesc in
-  s(*
-    match e.etype with
+  match e.etype with
       | None -> s
-      | Some t -> "("^s^" : "^(Type.stringOf t)^")"*)
+      | Some t -> "("^s^" : "^(Type.stringOf t)^")"
 
 let print_attribute tab a =
   print_string tab;
@@ -335,7 +330,7 @@ and print_statement tab = function
 		print_string(tab^(Type.stringOf t)^" "^id);
 		(match init with
 		| None -> ()
-		| Some e -> print_string (" "^(string_of_expression e)));
+		| Some e -> print_string (" = "^(string_of_expression e)));
 		print_endline ";"
 	       ) dl
   | Block b ->
@@ -420,11 +415,11 @@ and print_class tab c =
 and print_type tab t =
   if t.modifiers != [] then
     print_string (tab^(ListII.concat_map " " stringOf_modifier t.modifiers)^" ");
-  print_string ("class "^t.id)
-(*(match t.info with
+  print_string ("class "^t.id);
+  match t.info with
    | Class c -> print_class tab c
-   | Inter -> ())
-*)
+   | Inter -> ()
+
 
 let print_package p =
   print_string "package ";
