@@ -118,7 +118,7 @@ let rec typeExpression e r = match e.edesc with
   | NewArray(t1, eol, eo) -> { etype = Some(Type.mk_array (List.length eol) t1); edesc = NewArray(t1, map2 typeExpressionOption eol r, typeExpressionOption eo r) }
   | Call(e2, methodName, arguments) -> begin
     match e2 with
-      | None -> { etype = None; edesc = e.edesc }
+      | None -> { etype = Some(getMethodType (typeExpression { etype = None; edesc = (Name "this") } r) methodName (map2 typeExpression arguments r) r); edesc = e.edesc }
       | Some(e2s) -> { etype = Some(getMethodType (typeExpression e2s r) methodName (map2 typeExpression arguments r) r); edesc = e.edesc }
     end
   | Attr(e2, str) -> e.etype <- Some(getAttributeType (typeExpression e2 r) str r); e
