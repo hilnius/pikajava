@@ -29,7 +29,7 @@ class identifier {
     array = new int[] {1, 12.123};
 
     int c = 12 & 293;
-    int d = 12 & 293;
+    int d = 12 & 293 + 56;
     int e = 12.56 + 13.745 / 85.152 * (12 >> 2 & 89);
 
     if (d) {
@@ -56,7 +56,7 @@ class identifier {
       int testCast = (int)(123.45);
       if (test()) {
         String a = "Hello ";
-        a = (a + "world !");
+        a = a + "world !";
         return a;
       }
     }
