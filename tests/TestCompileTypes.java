@@ -63,7 +63,9 @@ class identifier {
 
     for (int i = 12, j = 18; i != 1289; i++) {
       a *= 12;
-
+      identifier myId = new identifier();
+      A castTest = (A)(myId);
+      ((A)(myId)).test();
       boolean test = (a instanceof identifier);
 
       int testCast = (int)(123.45);
