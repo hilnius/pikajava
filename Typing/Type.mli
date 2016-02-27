@@ -18,6 +18,7 @@ type t =
   | Array of t * int
   | Primitive of primitive
   | Ref of ref_type
+  | NullReference
 
 (* The type of Java Object *)
 val object_type: ref_type

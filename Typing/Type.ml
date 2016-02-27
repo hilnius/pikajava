@@ -18,6 +18,7 @@ type t =
   | Array of t * int
   | Primitive of primitive
   | Ref of ref_type
+  | NullReference
 
 let object_type = { tpath = [] ; tid = "Object" }
 
@@ -49,6 +50,7 @@ let rec stringOf = function
   | Array(typ,size) -> (stringOf typ)^(array_param size)
   | Primitive prim -> stringOf_prim prim
   | Ref rt -> stringOf_ref rt
+  | NullReference -> "Null"
 
 let mk_array size t =
   match size,t with

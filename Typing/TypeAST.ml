@@ -24,8 +24,22 @@ let exitScope () =
   | h::t -> scope := t
 ;;
 
+(* checks if a variable is already declared in the scope, in which case we should raise an exception *)
+let currentScopeVariableExists varName =
+  let rec innerScopeVariableExists l = match l with
+    | [] -> false
+    | (_, n)::q when n = varName -> true
+    | _::q -> innerScopeVariableExists q
+  in
+  match !scope with
+    | [] -> raise ScopeDoesNotExist
+    | t::_ -> innerScopeVariableExists t
+;;
+
 let declareVariable varType varName =
-  print_string (generateTabs (List.length !scope) ^ "Declaring variable " ^ varName ^ "\n");
+  print_string (generateTabs (List.length !scope) ^ "Declaring variable " ^ varName ^ " of type " ^ Type.stringOf varType ^ "\n");
+  if currentScopeVariableExists varName then
+    raise (VariableAlreadyDeclared varName);
   match !scope with
   | [] -> raise ScopeDoesNotExist
   | h::t -> scope := ((varType, varName)::h)::t
@@ -43,7 +57,6 @@ let getScopeType varName =
       match a with
         | None -> goDownScopes t
         | Some(t) -> t
-
   in
   goDownScopes (!scope);;
 
@@ -65,71 +78,112 @@ let getAttributeType e name r = match e.etype with
 ;;
 
 let typeValue v = match v with
-  | Int(string) -> Type.Primitive(Int)
-  | Float(string) -> Type.Primitive(Float)
-  | Char(char) -> Type.Primitive(Char)
-  | Boolean(bool) -> Type.Primitive(Boolean)
-  (*| String(string) ->
-  | Null *)
+  | Int(_) -> Type.Primitive(Int)
+  | Float(_) -> Type.Primitive(Float)
+  | Char(_) -> Type.Primitive(Char)
+  | Boolean(_) -> Type.Primitive(Boolean)
+  | String(_) -> Type.Ref({ tpath = []; tid = "String" })
+  | Null -> Type.NullReference
+;;
+
+let getConvertibleType t1 t2 = match t1, t2 with
+  | (Type.Primitive(Int), Type.Primitive(Int)) -> Type.Primitive(Int)
+  | (Type.Primitive(Char), Type.Primitive(Int)) -> Type.Primitive(Int)
+  | (Type.Primitive(Int), Type.Primitive(Char)) -> Type.Primitive(Int)
+  | (Type.Primitive(Char), Type.Primitive(Char)) -> Type.Primitive(Char)
+  | (Type.Primitive(Boolean), Type.Primitive(Boolean)) -> Type.Primitive(Boolean)
+  | _, _ -> raise (CannotConvertTypes (t1, t2))
+;;
+
+let getConvertibleNumericType t1 t2 = match t1, t2 with
+  | (Type.Primitive(Int),   Type.Primitive(Int)) -> Type.Primitive(Int)
+  | (Type.Primitive(Char),  Type.Primitive(Int)) -> Type.Primitive(Int)
+  | (Type.Primitive(Int),   Type.Primitive(Char)) -> Type.Primitive(Int)
+  | (Type.Primitive(Char),  Type.Primitive(Char)) -> Type.Primitive(Char)
+  | (Type.Primitive(Float), Type.Primitive(Float)) -> Type.Primitive(Float)
+  | (Type.Primitive(Int),   Type.Primitive(Float)) -> Type.Primitive(Float)
+  | (Type.Primitive(Float), Type.Primitive(Int)) -> Type.Primitive(Float)
+  | (Type.Primitive(Char),  Type.Primitive(Float)) -> Type.Primitive(Float)
+  | (Type.Primitive(Float), Type.Primitive(Char)) -> Type.Primitive(Float)
+  | _, _ -> raise (CannotConvertTypes (t1, t2))
+;;
+
+let getConvertibleNumericOrStringType t1 t2 = match t1, t2 with
+  | (Type.Ref({ tpath = []; tid = "String" }), Type.Ref({ tpath = []; tid = "String" })) -> Type.Ref({ tpath = []; tid = "String" })
+  | _, _ -> getConvertibleNumericType t1 t2
 ;;
 
 let rec typeExpression e r = match e.edesc with
   | New(name, identifiers, arguments) -> { etype = Some(Ref(Type.refOfStringList identifiers)); edesc = New(name, identifiers, map2 typeExpression arguments r) }
+  | NewArray(t1, eol, eo) -> { etype = Some(Type.mk_array (List.length eol) t1); edesc = NewArray(t1, map2 typeExpressionOption eol r, typeExpressionOption eo r) }
   | Call(e2, methodName, arguments) -> begin
     match e2 with
-      | None -> { etype = None; edesc = e.edesc }
+      | None -> { etype = Some(getMethodType (typeExpression { etype = None; edesc = (Name "this") } r) methodName (map2 typeExpression arguments r) r); edesc = e.edesc }
       | Some(e2s) -> { etype = Some(getMethodType (typeExpression e2s r) methodName (map2 typeExpression arguments r) r); edesc = e.edesc }
     end
   | Attr(e2, str) -> e.etype <- Some(getAttributeType (typeExpression e2 r) str r); e
-  | If(e, ifSt, elseSt) -> e.etype <- Some(Void); e
+  | If(e1, ifSt, elseSt) -> { etype = None; edesc = If(typeExpression e1 r, typeExpression ifSt r, typeExpression elseSt r) } (* wtf is this If ? *)
   | Val(value) -> e.etype <- Some(typeValue value); e
   | Name(varName) -> e.etype <- Some(getScopeType varName); e
-  (*| ArrayInit(el) -> print_string "typing array init\n"; { etype = None; edesc = ArrayInit(map2 typeExpression el r) }*)
+  | ArrayInit(el) -> { etype = None; edesc = ArrayInit(map2 typeExpression el r) }
+  | Array(e1, eol)-> let t1 = typeExpression e1 r in { etype = Some(Type.mk_array (List.length eol) (CheckAST.extractSome (t1.etype))); edesc = Array(t1, map2 typeExpressionOption eol r) }
   | AssignExp(e1, aop, e2) -> let te1 = typeExpression e1 r in { etype = te1.etype; edesc = AssignExp(te1, aop, typeExpression e2 r) }
-  | Post(e1, pfo) ->  begin match pfo with (* not working yet *)
-      | Incr -> let t = typeExpression e1 r in { etype = t.etype; edesc = Post(t, pfo) }
-      | Decr -> let t = typeExpression e1 r in { etype = t.etype; edesc = Post(t, pfo) }
-    end
+  | Post(e1, pfo) ->  let t = typeExpression e1 r in { etype = t.etype; edesc = Post(t, pfo) }
+  | Pre(pfo, e1) -> let t = typeExpression e1 r in { etype = t.etype; edesc = Pre(pfo, t) }
   | Op(e1, op, e2) -> let (t1,t2) = typeExpression e1 r, typeExpression e2 r in begin
     match op with
       | Op_cor -> { etype = Some(Primitive(Boolean)); edesc = Op(t1, op, t2) }
       | Op_cand -> { etype = Some(Primitive(Boolean)); edesc = Op(t1, op, t2) }
-      (*| Op_or -> { etype = Some(); edesc = Op(t1, op, t2) }
-      | Op_and -> { etype = Some(); edesc = Op(t1, op, t2) }
-      | Op_xor -> { etype = Some(); edesc = Op(t1, op, t2) }*)
+      | Op_or -> let ct = getConvertibleType (CheckAST.extractSome t1.etype) (CheckAST.extractSome t2.etype) in
+                  { etype = Some(ct); edesc = Op(t1, op, t2) }
+      | Op_and -> let ct = getConvertibleType (CheckAST.extractSome t1.etype) (CheckAST.extractSome t2.etype) in
+                  { etype = Some(ct); edesc = Op(t1, op, t2) }
+      | Op_xor -> let ct = getConvertibleType (CheckAST.extractSome t1.etype) (CheckAST.extractSome t2.etype) in
+                  { etype = Some(ct); edesc = Op(t1, op, t2) }
       | Op_eq -> { etype = Some(Primitive(Boolean)); edesc = Op(t1, op, t2) }
       | Op_ne -> { etype = Some(Primitive(Boolean)); edesc = Op(t1, op, t2) }
       | Op_gt -> { etype = Some(Primitive(Boolean)); edesc = Op(t1, op, t2) }
       | Op_lt -> { etype = Some(Primitive(Boolean)); edesc = Op(t1, op, t2) }
       | Op_ge -> { etype = Some(Primitive(Boolean)); edesc = Op(t1, op, t2) }
       | Op_le -> { etype = Some(Primitive(Boolean)); edesc = Op(t1, op, t2) }
-      (*| Op_shl -> { etype = Some(); edesc = Op(t1, op, t2) }
-      | Op_shr -> { etype = Some(); edesc = Op(t1, op, t2) }
-      | Op_shrr -> { etype = Some(); edesc = Op(t1, op, t2) }*)
-      (*| Op_add -> { etype = Some(); edesc = Op(t1, op, t2) }
-      | Op_sub -> { etype = Some(); edesc = Op(t1, op, t2) }
-      | Op_mul -> { etype = Some(); edesc = Op(t1, op, t2) }
-      | Op_div -> { etype = Some(); edesc = Op(t1, op, t2) }
-      | Op_mod -> { etype = Some(); edesc = Op(t1, op, t2) }*)
+      | Op_shl -> {  etype = Some(Primitive(Int)); edesc = Op(t1, op, t2) } (* those three shl shr shrr must convert to integral types *)
+      | Op_shr -> {  etype = Some(Primitive(Int)); edesc = Op(t1, op, t2) }
+      | Op_shrr -> { etype = Some(Primitive(Int)); edesc = Op(t1, op, t2) }
+      | Op_add -> let ct = getConvertibleNumericOrStringType (CheckAST.extractSome t1.etype) (CheckAST.extractSome t2.etype) in
+                    { etype = Some(ct); edesc = Op(t1, op, t2) }
+      | Op_sub -> let ct = getConvertibleNumericType (CheckAST.extractSome t1.etype) (CheckAST.extractSome t2.etype) in
+                    { etype = Some(ct); edesc = Op(t1, op, t2) }
+      | Op_mul -> let ct = getConvertibleNumericType (CheckAST.extractSome t1.etype) (CheckAST.extractSome t2.etype) in
+                    { etype = Some(ct); edesc = Op(t1, op, t2) }
+      | Op_div -> let ct = getConvertibleNumericType (CheckAST.extractSome t1.etype) (CheckAST.extractSome t2.etype) in
+                    { etype = Some(ct); edesc = Op(t1, op, t2) }
+      | Op_mod -> let ct = getConvertibleNumericType (CheckAST.extractSome t1.etype) (CheckAST.extractSome t2.etype) in
+                    { etype = Some(ct); edesc = Op(t1, op, t2) }
     end
   | CondOp(e1,e2,e3) -> let t2 = typeExpression e2 r in { etype = t2.etype; edesc = CondOp (typeExpression e1 r, t2, typeExpression e3 r) }
   | Cast(t1, e1) -> { etype = Some(t1); edesc = Cast(t1, typeExpression e1 r) }
   | Instanceof(e1, t1) -> { etype = Some(Primitive(Boolean)); edesc = Instanceof(typeExpression e1 r, t1) }
-;;
+  | ClassOf(t1) -> e.etype <- Some(t1); e
+  | VoidClass -> e
 
-let typeVarDecl v r = match v with
+and typeExpressionOption e r = match e with
+  | None -> None
+  | Some(e1) -> Some(typeExpression e1 r)
+
+
+and typeVarDecl v r = match v with
   | (t, varName, None) -> declareVariable t varName; (t, varName, None)
   | (t, varName, Some(init)) -> declareVariable t varName; (t, varName, Some(typeExpression init r))
-;;
 
-let typeVarDeclOpt v r = match v with
+
+and typeVarDeclOpt v r = match v with
   | (Some(t), varName, None) -> declareVariable t varName; (Some(t), varName, None)
   | (Some(t), varName, Some(init)) -> declareVariable t varName; (Some(t), varName, Some(typeExpression init r))
   | (None, varName, None) -> (None, varName, None)
   | (None, varName, Some(init)) -> (None, varName, Some(typeExpression init r))
-;;
 
-let rec typeCatches c r = match c with
+
+and typeCatches c r = match c with
   | [] -> []
   | (a,b)::q ->
       enterScope ();
@@ -151,14 +205,14 @@ and typeStatement s r = match s with
       exitScope();
       While(typeExpression e r, ws)
   | For(vdl, None, el, st) ->
-      enterScope ();
       let m1 = List.rev (map2 typeVarDeclOpt (List.rev vdl) r) in
+      enterScope ();
       let st2 = typeStatement st r in
       exitScope ();
       For(m1, None, List.rev (map2 typeExpression (List.rev el) r), st2)
   | For(vdl, Some(ec), el, st) ->
-      enterScope ();
       let vdl2 = List.rev (map2 typeVarDeclOpt (List.rev vdl) r) in
+      enterScope ();
       let st2 = typeStatement st r in
       exitScope ();
       For(vdl2, Some(typeExpression ec r), List.rev (map2 typeExpression (List.rev el) r), st2)
