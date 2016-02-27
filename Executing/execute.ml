@@ -4,10 +4,10 @@ open Type
 (* TO DO *)
 (*execReadyData = {dcs: evaluatedDescriptorClass list; tm : tableMethod ; dos: descriptorObject list}
 type scopedData = {data:execReadyData;currentScope:int}*)  
-
+(* -2 => n'est pas utilisé par la suite. *)
 type tempAttr = {isAttr:bool;expr:expression option;attributeName:string option}
 
-type this = {thisName:string;thisType:Type.t;thisScope:int}
+type this = {thisId:int;thisType:Type.t;thisScope:int}
 type scopedData = {data:data;currentScope:int;currentObject:descriptorObject;stack:this list}
 
 type astMethodWithType = astmethod * Type.t 
@@ -20,7 +20,7 @@ let changeElementToNotOption element = match element with
 let changeElementToOption element = Some element
 let changeListToOptionList listToModify = List.map changeElementToOption listToModify
 
-let constructNull currentScope name = {objectName=name; attributes=[]; objectValue=Compilation.Null; scope=currentScope}
+let constructNull currentScope name = {objectId = 0; objectName=name; attributes=[]; objectValue=Compilation.Null; scope=currentScope}
 
 let rec getMain tableMethod = match tableMethod with 
 |{mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}::t->
@@ -70,12 +70,26 @@ let getIntValue descriptorObject = match descriptorObject.objectValue with
 | Int(a) -> a
 | Null -> 0
 
+let isRef descriptorObject = match descriptorObject.objectValue with 
+| Reference(id) -> true
+| _ -> false
+
+let rec getRef descriptorObject scopedData = 
+	match descriptorObject.objectValue with 
+	| Reference(refId) -> getRef (findRefInData scopedData.data.dos refId) scopedData
+	| _ -> descriptorObject
+	
+and findRefInData dos refId = 
+	match dos with
+	|a::t->if a.objectId= refId then a else findRefInData t refId
+	|[] -> print_string ("Could not find descriptor with id "^(string_of_int refId)); exit 1
+
 
 let setValue descriptorObject newValue = match descriptorObject with 
-|{objectName=aName; attributes=aList; objectValue=aValue; scope=aScope} -> {objectName=aName; attributes=aList; objectValue=newValue; scope=aScope} 
+|{objectId=id;objectName=aName; attributes=aList; objectValue=aValue; scope=aScope} -> {objectId=id;objectName=aName; attributes=aList; objectValue=newValue; scope=aScope} 
 
 let rec notEquals anObject aSecondObject =
-(anObject.objectName != aSecondObject.objectName) ||  (anObject.scope != aSecondObject.scope)
+anObject.objectId != aSecondObject.objectId
 
 let filter f aList = 
 	let rec newListFilter inputFunc inputList listToReturn = 
@@ -87,11 +101,12 @@ let filter f aList =
 	newListFilter f aList []
 	
 let changeName newName objectDescriptor = match objectDescriptor with
-{objectName = oldName; attributes = attributes; objectValue = value; scope = scope} -> {objectName = newName; attributes = attributes; objectValue = value; scope=scope}
+{objectId=id;objectName = oldName; attributes = attributes; objectValue = value; scope = scope} -> {objectId=id;objectName = newName; attributes = attributes; objectValue = value; scope=scope}
 
 let changeScope newScope objectDescriptor = match objectDescriptor with
-{objectName = oldName; attributes = attributes; objectValue = value; scope = scope} -> {objectName = oldName; attributes = attributes; objectValue = value; scope=newScope}
+{objectId=id;objectName = oldName; attributes = attributes; objectValue = value; scope = scope} -> {objectId=id;objectName = oldName; attributes = attributes; objectValue = value; scope=newScope}
 
+(*Delete object from dos*)
 let rec deleteObject objectToDelete scopedData = 
 	let newfunc = (notEquals objectToDelete) in
 	let newDos = filter newfunc scopedData.data.dos  in
@@ -104,7 +119,7 @@ let deleteVariablesInScope descriptorsObject scopeToErase =
 	let rec deleteTargetedScope objectList scopeTargeted listUpdated = 
 		match objectList with
 		| a::t ->
-			if a.scope = scopeTargeted then  begin Compilation.printOneDescriptorObject a; deleteTargetedScope t scopeTargeted listUpdated end
+			if a.scope = scopeTargeted then  begin (*Compilation.printOneDescriptorObject a;*) deleteTargetedScope ((changeScope (-2) a)::t) scopeTargeted listUpdated end
 			else deleteTargetedScope t scopeTargeted (a::listUpdated)
 		|[] -> listUpdated
 	in	
@@ -126,7 +141,7 @@ let evaluateNameString anObjectName scopedData = match anObjectName with
 			exit 1
 		end
 	else
-		changeCurrentObject scopedData (findObjectInData scopedData.data.dos (List.hd scopedData.stack).thisName [])
+		changeCurrentObject scopedData (findRefInData scopedData.data.dos (List.hd scopedData.stack).thisId )
 | _ -> changeCurrentObject scopedData (findObjectInData scopedData.data.dos anObjectName [])
 
 
@@ -141,7 +156,6 @@ let deconstructExpressionType expression = match expression with
 
 let rec findClassDescriptor className descriptorsClass = match descriptorsClass with 
 | {classType= aType; methods= methods ;attributes= astattributes }::t ->
-	print_string className;
 	let result =  match aType with 
  	(*| Array of t * int*)
 	(*| Primitive(primitive) -> match primitive with *)
@@ -156,7 +170,7 @@ let rec findClassDescriptor className descriptorsClass = match descriptorsClass 
 
 let rec initializeAttributes className scopedData = 
 	let classDescriptor = findClassDescriptor className scopedData.data.dcs in
-	let objectToCreate = {objectName=""; attributes= []; objectValue = Compilation.Instanciated; scope=scopedData.currentScope} in
+	let objectToCreate = {objectId=incrementId scopedData.data.dos; objectName=""; attributes= []; objectValue = Compilation.Instanciated; scope=scopedData.currentScope} in
 	let rec evaluateAttributes scope attributes objectToFill = 
 		match attributes,objectToFill with 
 		|	{
@@ -167,13 +181,14 @@ let rec initializeAttributes className scopedData =
 				  (*      aloc = Location.t;*)
 			}::t,
 			{
+				objectId=objectId;
 				objectName = ""; 
 				attributes = oldAttributes;
 				objectValue = Compilation.Instanciated;
 				scope = scopeValue;
 			} ->
 				let newScope = evaluateExpression expression scopedData	in
-				let newObjectToFill = {objectName=""; attributes = oldAttributes@[(changeName aName (changeScope (-1) newScope.currentObject))]; objectValue = Compilation.Instanciated; scope=scope.currentScope} in	
+				let newObjectToFill = {objectId=objectToFill.objectId;objectName=""; attributes = oldAttributes@[(changeName aName (changeScope (-1) newScope.currentObject))]; objectValue = Compilation.Instanciated; scope=scope.currentScope} in	
 				evaluateAttributes newScope t newObjectToFill
 		|	{
 				amodifiers = modifiers ;
@@ -183,12 +198,13 @@ let rec initializeAttributes className scopedData =
 				  (*      aloc = Location.t;*)
 			}::t,
 			{
+				objectId=objectId;
 				objectName = ""; 
 				attributes = oldAttributes;
 				objectValue = Compilation.Instanciated;
 				scope = scopeValue
 			} ->
-				let newObjectToFill = {objectName=""; attributes= oldAttributes@[constructNull (-1) aName]; objectValue = Compilation.Instanciated; scope = scope.currentScope} in	
+				let newObjectToFill = {objectId=objectToFill.objectId;objectName=""; attributes= oldAttributes@[constructNull (-1) aName]; objectValue = Compilation.Instanciated; scope = scope.currentScope} in	
 				evaluateAttributes scope t newObjectToFill
 		| [], _ -> changeCurrentObject scope objectToFill
 	in	
@@ -205,19 +221,20 @@ and dealWithAssignAttr expressionToCheck = match expressionToCheck with
 and changeAllRef scopedRefToChange anObject = 
 	 let objectList = scopedRefToChange.data.dos in 
 	 let rec changeRef listObjects objectDes firstScope = match listObjects with 
-	 |{objectName=objName; attributes=attributes; objectValue=Reference(refName,refScope); scope=scope}::t -> 
-	 	if (refName = objectDes.objectName) && (refScope = objectDes.scope) then
+	 |{objectId=objectId; objectName=objName; attributes=attributes; objectValue=Reference(refId); scope=scope}::t -> 
+	 	if refId = objectDes.objectId then
 	 		begin 
-	 			let scopeWithDelete = deleteObject {objectName=objName; attributes=attributes; objectValue=Reference(refName,scope); scope=scope} scopedRefToChange in
-	 			let scopeAfterAssign = assignObject {objectName=objName; attributes=attributes; objectValue=Reference(refName,scope); scope=scope} objectDes scopeWithDelete in
+	 			let scopeWithDelete = deleteObject {objectId=objectId;objectName=objName; attributes=attributes; objectValue=Reference(refId); scope=scope} scopedRefToChange in
+	 			let scopeAfterAssign = assignObject {objectId=objectId;objectName=objName; attributes=attributes; objectValue=Reference(refId); scope=scope} objectDes scopeWithDelete in
 	 			changeRef t objectDes scopeAfterAssign
 	 		end	
 		else 
 			changeRef t objectDes firstScope
-	|{objectName=objName; attributes=attributes; objectValue=_; scope=scope}::t	-> changeRef t objectDes firstScope	
+	|{objectId=objectId; objectName=objName; attributes=attributes; objectValue=_; scope=scope}::t -> changeRef t objectDes firstScope	
 	|[] -> firstScope
 	in
-	changeRef objectList anObject scopedRefToChange	
+	changeRef objectList anObject scopedRefToChange
+	
 and evaluateExpression expression scopedData = match expression with 
 |	{
       	edesc = expression_desc;
@@ -225,10 +242,10 @@ and evaluateExpression expression scopedData = match expression with
       etype = eType;
     } -> 
     	match expression_desc with
-    	| Val(Int(i)) -> print_string ("i : "^i);changeCurrentObject scopedData {objectName=""; attributes=[]; objectValue=Int(int_of_string i); scope=scopedData.currentScope}
-    	| Val(Boolean(b)) ->  changeCurrentObject scopedData {objectName=""; attributes=[]; objectValue=Bool(b); scope=scopedData.currentScope}
+    	| Val(Int(i)) -> changeCurrentObject scopedData {objectId=(-2); objectName=""; attributes=[]; objectValue=Int(int_of_string i); scope=scopedData.currentScope}
+    	| Val(Boolean(b)) ->  changeCurrentObject scopedData {objectId=(-2); objectName=""; attributes=[]; objectValue=Bool(b); scope=scopedData.currentScope}
     	| Val(Null) -> changeCurrentObject scopedData (constructNull scopedData.currentScope "")
-    	| Val(String(s)) -> changeCurrentObject scopedData {objectName=""; attributes=[]; objectValue=String(s); scope=scopedData.currentScope}
+    	| Val(String(s)) -> changeCurrentObject scopedData {objectId=(-2); objectName=""; attributes=[]; objectValue=String(s); scope=scopedData.currentScope}
 		| New(None,className, expressions) ->
 			let finalClassName = List.nth className ((List.length className) - 1) in
 			let scopedWithInitialized = initializeAttributes finalClassName scopedData  in
@@ -245,23 +262,21 @@ and evaluateExpression expression scopedData = match expression with
 		| AssignExp (expression1,assignOperator,expression2) -> 
 			let attributeWithOwner = dealWithAssignAttr expression1 in
 			if attributeWithOwner.isAttr then
-			begin
-				let objectWithAttribute = evaluateExpression (changeElementToNotOption attributeWithOwner.expr) scopedData in
-				let scopeWithAttribute = changeCurrentObject objectWithAttribute (findAttribute objectWithAttribute.currentObject.attributes (changeElementToNotOption attributeWithOwner.attributeName))  in
-				let changedScope = changeCurrentObject scopeWithAttribute (changeScope (-1) scopeWithAttribute.currentObject) in
-				let newAttributeScope = executeAssignExp changedScope assignOperator (evaluateExpression expression2 objectWithAttribute) in
-				let scopedToRef = changeAttribute objectWithAttribute.currentObject (changeElementToNotOption attributeWithOwner.attributeName) newAttributeScope in
-				changeAllRef scopedToRef scopedToRef.currentObject 
-
-			end
+				begin
+					let objectWithAttributeScope = evaluateExpression (changeElementToNotOption attributeWithOwner.expr) scopedData in
+					let referencedObject = getRef objectWithAttributeScope.currentObject objectWithAttributeScope in
+					let scopeWithAttribute = changeCurrentObject objectWithAttributeScope (findAttribute referencedObject.attributes (changeElementToNotOption attributeWithOwner.attributeName)) in
+					let changedScope = changeCurrentObject scopeWithAttribute (changeScope (-1) scopeWithAttribute.currentObject) in
+					let newAttributeScope = executeAssignExp changedScope assignOperator (evaluateExpression expression2 objectWithAttributeScope) in
+					let scopedToRef = changeAttribute referencedObject (changeElementToNotOption attributeWithOwner.attributeName) newAttributeScope in
+					scopedToRef
+				end
 			else
 				begin
 					let evaluatedExpression1 = evaluateExpression expression1 scopedData in 
 					let evaluatedExpression2 = evaluateExpression expression2 evaluatedExpression1 in
-					printOneDescriptorObject evaluatedExpression1.currentObject;
-					printOneDescriptorObject evaluatedExpression2.currentObject;
 					let scopedToRef = executeAssignExp evaluatedExpression1 assignOperator evaluatedExpression2 in
-					changeAllRef scopedToRef evaluatedExpression1.currentObject 
+					scopedToRef
 				end	
 		| Call (Some callerExpression, methodName, arguments) -> 				
 			if methodName = "println" then
@@ -276,14 +291,13 @@ and evaluateExpression expression scopedData = match expression with
 						| a::[] -> evaluateExpression a scopedData 
 						in
 						let printArg arg = match arg with 
-						| {objectName=aName; attributes=attributes; objectValue=Int(i); scope=currentScope} -> print_string ((string_of_int i)^"\n")
-						| {objectName=aName; attributes=attributes; objectValue=Bool(b); scope=currentScope} -> print_string ((string_of_bool b)^"\n")
-						| {objectName=aName; attributes=attributes; objectValue=String(s); scope=currentScope} ->  print_string (s^"\n")
-						| {objectName=aName; attributes=attributes; objectValue=Null; scope=currentScope} ->  print_string ("null\n")
+						| {objectId=aId; objectName=aName; attributes=attributes; objectValue=Int(i); scope=currentScope} -> print_string ((string_of_int i)^"\n")
+						| {objectId=aId; objectName=aName; attributes=attributes; objectValue=Bool(b); scope=currentScope} -> print_string ((string_of_bool b)^"\n")
+						| {objectId=aId; objectName=aName; attributes=attributes; objectValue=String(s); scope=currentScope} ->  print_string (s^"\n")
+						| {objectId=aId; objectName=aName; attributes=attributes; objectValue=Null; scope=currentScope} ->  print_string ("null\n")
 						in
 						let argument=evaluateArgument arguments	in 
 						printArg argument.currentObject;
-						printOneDescriptorObject argument.currentObject;
 						argument
 					end	
 			else 
@@ -297,25 +311,28 @@ and evaluateExpression expression scopedData = match expression with
 			executeMethod (getMethod callerType scopedData.data.tm methodName ) scopedData (changeListToOptionList arguments)
 		| Attr (expression, attributeName) ->
 			let objectExpression = evaluateExpression expression scopedData in
-			changeCurrentObject objectExpression (findAttribute objectExpression.currentObject.attributes attributeName)
+			if isRef objectExpression.currentObject then
+				begin
+					let objectDesToChange = getRef objectExpression.currentObject objectExpression in
+					changeCurrentObject objectExpression (findAttribute objectDesToChange.attributes attributeName)
+				end
+			else
+				changeCurrentObject objectExpression (findAttribute objectExpression.currentObject.attributes attributeName)
 			
 		(* THE CONDIONNAL EXPRESSION CONTAINS THE ASSIGNS WTF*)
-		(*| CondOp ( conditionnalExpression, trueExpression,  falseExpression) -> 
+		| CondOp ( conditionnalExpression, trueExpression,  falseExpression) -> 
 			let resultExpression = evaluateExpression conditionnalExpression scopedData in
 
-			printOneDescriptorObject resultExpression.currentObject;
 			if (resultExpression).currentObject.objectValue= Bool(true) then
 				begin
 					let a = evaluateExpression trueExpression resultExpression in 
-					printOneDescriptorObject a.currentObject;
 					a
 				end
 			else
 				begin
 				let falseExp =  evaluateExpression falseExpression resultExpression in
-				printOneDescriptorObject falseExp.currentObject;
 				falseExp
-				end*)
+				end
 				(* 
 		
 		
@@ -326,7 +343,6 @@ and evaluateExpression expression scopedData = match expression with
 		  | Instanceof of expression * expression*)
 		  
 and changeAttribute objectWithAttribute attributeName newAttributeScope = 
-let deletedScope = deleteObject objectWithAttribute newAttributeScope in
 let rec newAttributesList objectToUpdateAttributes attributeToUpdate attributeScope newListOfAttributes = 
 	match objectToUpdateAttributes with 
 	| a::t -> 
@@ -334,61 +350,132 @@ let rec newAttributesList objectToUpdateAttributes attributeToUpdate attributeSc
 		else newAttributesList t attributeToUpdate attributeScope (a::newListOfAttributes)
 	| [] -> newListOfAttributes
 in
-let attributesList = newAttributesList objectWithAttribute.attributes attributeName deletedScope [] in
-let objectToAdd = {objectName=objectWithAttribute.objectName; attributes=attributesList; objectValue=objectWithAttribute.objectValue; scope=objectWithAttribute.scope}
+let attributesList = newAttributesList objectWithAttribute.attributes attributeName newAttributeScope [] in
+let objectToAdd = {objectId=(-2); objectName=objectWithAttribute.objectName; attributes=attributesList; objectValue=objectWithAttribute.objectValue; scope=objectWithAttribute.scope}
 in
-let scoped = addObject objectWithAttribute.scope objectWithAttribute.objectName (changeCurrentObject deletedScope objectToAdd ) in
-scoped
-
-
-and updateObject descriptorObject scopedData =
-	let objectName = descriptorObject.objectName in
-	let deletedScope = deleteObject descriptorObject scopedData in
-	addObject descriptorObject.scope objectName deletedScope 
+changeObjectDes objectWithAttribute objectToAdd newAttributeScope
 
 and assignObject descriptorObject1 descriptorObject2 scopedData = match descriptorObject2.objectValue with
-| Int(i) -> addObject descriptorObject1.scope descriptorObject1.objectName scopedData 
-| Bool(b) ->addObject descriptorObject1.scope descriptorObject1.objectName scopedData 
-| String(str) -> addObject descriptorObject1.scope descriptorObject1.objectName scopedData 
+| Int(i) -> changeObjectDes descriptorObject1 descriptorObject2 scopedData 
+| Bool(b) -> changeObjectDes descriptorObject1 descriptorObject2 scopedData
+| String(str) -> changeObjectDes descriptorObject1 descriptorObject2 scopedData 
 | Instanciated ->
-	addObject descriptorObject1.scope descriptorObject1.objectName (changeCurrentObject scopedData (setValue descriptorObject2 (Reference(descriptorObject2.objectName, descriptorObject2.scope)))) 
-| Reference (referenceName, scope) -> addObject descriptorObject1.scope descriptorObject1.objectName (changeCurrentObject scopedData (setValue descriptorObject2 (Reference(descriptorObject2.objectName, descriptorObject2.scope)))) 
-| Null -> addObject descriptorObject1.scope descriptorObject1.objectName scopedData 
+	let reassignedScope = reassignObject descriptorObject1.scope descriptorObject1.objectName (changeCurrentObject scopedData (setValue descriptorObject2 (Reference(descriptorObject2.objectId)))) in
+	reassignedScope
+	
+| Reference (idRef) ->
+	reassignObject descriptorObject1.scope descriptorObject1.objectName (changeCurrentObject scopedData (setValue descriptorObject2 (Reference(descriptorObject2.objectId)))) 
+| Null -> reassignObject descriptorObject1.scope descriptorObject1.objectName scopedData
 	 	  
 		  
 and executeAssignExp evaluatedExpression1 assignOperator evaluatedExpression2 = 
-let currentObjectScope = evaluatedExpression1.currentObject.scope in
-let newScope = deleteObject evaluatedExpression1.currentObject evaluatedExpression2 in
+(*let newScope = deleteObject evaluatedExpression1.currentObject evaluatedExpression2 in*)
 match assignOperator with 
-|Assign -> let scope = assignObject evaluatedExpression1.currentObject evaluatedExpression2.currentObject newScope in scope
-|Ass_add -> addObject currentObjectScope evaluatedExpression1.currentObject.objectName (executeInfixOp evaluatedExpression1 Op_add evaluatedExpression2 newScope)
+|Assign -> let scope = assignObject evaluatedExpression1.currentObject evaluatedExpression2.currentObject evaluatedExpression2 in scope
+|Ass_add -> 
+	let rightScope = (executeInfixOp evaluatedExpression1 Op_add evaluatedExpression2 evaluatedExpression2) in
+	changeObjectDes evaluatedExpression1.currentObject rightScope.currentObject rightScope
   
 and executeInfixOp evaluatedExpression1 operator evaluatedExpression2 scopedData =
-	let returnObject = {objectName=""; attributes=[]; objectValue=Compilation.Null; scope=scopedData.currentScope}in 
+	let returnObject = {objectId=(-1); objectName=""; attributes=[]; objectValue=Compilation.Null; scope=scopedData.currentScope}in 
 	match operator with
 	|Op_add -> changeCurrentObject scopedData (setValue returnObject (Int((getIntValue evaluatedExpression1.currentObject)  + (getIntValue evaluatedExpression2.currentObject)))) 
-    |Op_eq -> changeCurrentObject scopedData (setValue returnObject (Bool((getIntValue evaluatedExpression1.currentObject) = (getIntValue evaluatedExpression2.currentObject)))) 
-
-and addObject currentObjectScope name scopedData = match scopedData with 
+    |Op_eq -> changeCurrentObject scopedData (setValue returnObject (Bool((getIntValue evaluatedExpression1.currentObject) = (getIntValue evaluatedExpression2.currentObject))))
+   
+and changeScopeInDos objectScope objectName dos = 
+	let rec findObjectInDosAndUpdateScope scope name objectsDescriptors newObjectDescriptors = match objectsDescriptors with 
+	| a::t -> if a.objectName= name && a.scope = scope then [(changeScope (-2) a)]@ newObjectDescriptors@t else findObjectInDosAndUpdateScope scope name t (a::newObjectDescriptors)
+	|[] -> print_string ("Unbound object "^(name)); exit 1     
+    in
+    let newDos = findObjectInDosAndUpdateScope objectScope objectName dos [] in 
+    newDos
+    
+(* Add new object *)
+and addObject objectName scopedData = match scopedData with 
 | {data={dcs= descriptorsClass ; tm = tableMethod ; dos= descriptorObject  };currentScope=currentScope; currentObject=currentObject; stack=thisList} ->
-	let objectNamed = {objectName=name; attributes=currentObject.attributes; objectValue=currentObject.objectValue; scope=currentObjectScope} in 
+	let objectNamed = {objectId=(incrementId descriptorObject); objectName=objectName; attributes=currentObject.attributes; objectValue=currentObject.objectValue; scope=currentScope} in 
 	{data={dcs= descriptorsClass ; tm = tableMethod ; dos= (objectNamed::descriptorObject)};currentScope=currentScope; currentObject=objectNamed; stack=thisList}
+	
+(* Reassign object *)
+and reassignObject objectScope objectName scopedData = match scopedData with 
+| {data={dcs= descriptorsClass ; tm = tableMethod ; dos= descriptorObject  };currentScope=currentScope; currentObject=currentObject; stack=thisList} ->
+	let objectNamed = {objectId=(incrementId descriptorObject); objectName=objectName; attributes=currentObject.attributes; objectValue=currentObject.objectValue; scope=objectScope} in
+	let newDos = changeScopeInDos objectScope objectName descriptorObject in 
+	{data={dcs= descriptorsClass ; tm = tableMethod ; dos= (objectNamed::newDos)};currentScope=currentScope; currentObject=objectNamed; stack=thisList}
+
+(* Change only value of object*)
+and changeObjectDes oldObjectTargetedDes finalObjectDes scopedDataToUpdate =
+	let scopeWithDelete = deleteObject oldObjectTargetedDes scopedDataToUpdate in
+	
+	let updateTheRightDesObject oldObjectDes newObjectDes scopedData =		
+		match scopedData with 
+		| {data={dcs= descriptorsClass ; tm = tableMethod ; dos= descriptorObject  };currentScope=currentScope; currentObject=currentObject; stack=thisList} ->
+			let finalObject = 
+				{
+					objectId=oldObjectDes.objectId;
+					objectName=oldObjectDes.objectName;
+					attributes=newObjectDes.attributes;
+					objectValue=newObjectDes.objectValue;
+					scope=oldObjectDes.scope
+				} 
+			in 
+			{data={dcs= descriptorsClass ; tm = tableMethod ; dos= (finalObject::descriptorObject)};currentScope=currentScope; currentObject=finalObject; stack=thisList}
+	in
+	
+	if isRef oldObjectTargetedDes then 
+		begin
+			let objectRefDes = getRef oldObjectTargetedDes scopedDataToUpdate in
+			updateTheRightDesObject objectRefDes finalObjectDes scopeWithDelete
+		end
+	else
+		updateTheRightDesObject oldObjectTargetedDes finalObjectDes scopeWithDelete
+
+(* Deprecated*)
+(*and addObjectAndRef currentObjectScope name scopedData = match scopedData with 
+| {data={dcs= descriptorsClass ; tm = tableMethod ; dos= descriptorObject  };currentScope=currentScope; currentObject=currentObject; stack=thisList} ->
+	match currentObject.objectValue with
+	| Reference(refName, refScope) ->
+		let objectNamed = {objectName=name; attributes=currentObject.attributes; objectValue=Reference(currentObject.id;currentObject.objectName, currentObject.scope); scope=currentObjectScope} in
+		{data={dcs= descriptorsClass ; tm = tableMethod ; dos= (objectNamed::descriptorObject)};currentScope=currentScope; currentObject=objectNamed; stack=thisList}
+	| Instanciated ->
+		let objectNamed = {objectName=name; attributes=currentObject.attributes; objectValue=Reference(currentObject.id;currentObject.objectName, currentObject.scope); scope=currentObjectScope} in 
+		{data={dcs= descriptorsClass ; tm = tableMethod ; dos= (objectNamed::descriptorObject)};currentScope=currentScope; currentObject=objectNamed; stack=thisList}
+	| _ ->
+		let objectNamed = {objectId=incrementId descriptorObject;objectName=name; attributes=currentObject.attributes; objectValue=currentObject.objectValue; scope=currentObjectScope} in 
+		{data={dcs= descriptorsClass ; tm = tableMethod ; dos= (objectNamed::descriptorObject)};currentScope=currentScope; currentObject=objectNamed; stack=thisList}
+*)
+
+and incrementId objectsDescriptors = 
+	let rec getMaxId dos maxId = match dos with
+	| a::t ->
+		if a.objectId > maxId then getMaxId t a.objectId
+	 	else getMaxId t maxId
+	| [] -> maxId
+	in
+	(getMaxId objectsDescriptors 0) + 1
+
+ (*(List.length objectsDescriptors) + 1*)
 
 and executeStatement statement scopedData = match statement with 
 | VarDecl ((aType, name, Some(expression))::t) -> 
 	let resultExpression = (evaluateExpression expression scopedData) in
-	let scopeWithAddedObject = addObject scopedData.currentScope name resultExpression in 
-	executeStatement (VarDecl(t)) scopeWithAddedObject
+	(*What is this? let scopeWithAddedObject = addObjectAndRef scopedData.currentScope name resultExpression in *)
+	let scopeWithNewObject = addObject name resultExpression in
+	executeStatement (VarDecl(t)) scopeWithNewObject
 | VarDecl ([]) -> (scopedData,false)	
 | VarDecl ((aType, name, None)::t) -> 
 	if aType = Primitive(Int) then
 		begin
-		let scopeWithAddedObject = addObject scopedData.currentScope name (changeCurrentObject scopedData {objectName=""; attributes=[]; objectValue=Int(0); scope=scopedData.currentScope}) in
-		executeStatement (VarDecl(t)) scopeWithAddedObject
+			(* let scopeWithAddedObject = addObjectAndRef scopedData.currentScope name (changeCurrentObject scopedData {objectName=""; attributes=[]; objectValue=Int(0); scope=scopedData.currentScope}) in*)
+			let scopeWithNewObject = addObject name (changeCurrentObject scopedData {objectId=(-2); objectName=""; attributes=[]; objectValue=Int(0); scope=scopedData.currentScope}) in
+			executeStatement (VarDecl(t)) scopeWithNewObject
 		end
 	else
-		let scopeWithAddedObject = addObject scopedData.currentScope name (changeCurrentObject scopedData (constructNull scopedData.currentScope "")) in
-		executeStatement (VarDecl(t)) scopeWithAddedObject
+		begin
+			(*let scopeWithAddedObject = addObjectAndRef scopedData.currentScope name (changeCurrentObject scopedData (constructNull scopedData.currentScope "")) in*)
+			let scopeWithNewObject = addObject name (changeCurrentObject scopedData (constructNull scopedData.currentScope "")) in
+			executeStatement (VarDecl(t)) scopeWithNewObject
+		end
 | Return ( Some expression) -> ((evaluateExpression expression scopedData ), true)
 | Return ( None ) -> (scopedData, true)
 | If (ifExpression, thenStatement, Some elseStatement ) ->
@@ -469,7 +556,10 @@ and evaluateAndAddToScopeArgs argumentsToEvaluate methodArgumentsProt scopedData
 	if List.length argumentsToEvaluate = List.length methodArgumentsProt then
 	begin
 		match argumentsToEvaluate, methodArgumentsProt with
-		| argExpr::t, argProt::m -> evaluateAndAddToScopeArgs t m (fst (executeStatement (VarDecl([argProt.ptype, argProt.pident, argExpr])) scopedData))
+		| argExpr::t, argProt::m -> 
+			let callerScope = evaluateExpression (changeElementToNotOption argExpr) scopedData in
+			let newScope = changeCurrentObject callerScope (setValue callerScope.currentObject (Reference(callerScope.currentObject.objectId))) in 
+		evaluateAndAddToScopeArgs t m (addObject argProt.pident newScope) 
 		| [], _ -> scopedData
 	end
 	else 
@@ -479,7 +569,7 @@ and evaluateAndAddToScopeArgs argumentsToEvaluate methodArgumentsProt scopedData
 	end
 
 and addNewThis aType scopedData = match scopedData with 
-{data=data;currentScope = currentScope;currentObject=currentObject; stack=thisList}-> {data=data;currentScope = currentScope;currentObject=currentObject; stack={thisName=currentObject.objectName;thisType=aType;thisScope=scopedData.currentScope}::thisList}
+{data=data;currentScope = currentScope;currentObject=currentObject; stack=thisList}-> {data=data;currentScope = currentScope;currentObject=currentObject; stack={thisId=currentObject.objectId;thisType=aType;thisScope=scopedData.currentScope}::thisList}
 
 and executeMethod aMethod scopedData argumentsToEvaluate = match aMethod with 
 |({mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)},callerType)->

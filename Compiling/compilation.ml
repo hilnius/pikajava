@@ -7,15 +7,17 @@ type tableMethod = astmethod list
 
 and descriptorClass = {classType: Type.t; methods: string list ;attributes: astattribute list}
 
-and descriptorObject = {objectName:string; attributes: descriptorObject list; objectValue: attributeValue; scope:int}
+and descriptorObject = {objectId:int;objectName:string; attributes: descriptorObject list; objectValue: attributeValue; scope:int}
 
 and attributeValue =
 | Int of int
 | Bool of bool
 | String of string
-| Reference of string * int 
+(* id, nameof the ref, scope of the ref*)
+| Reference of int
 | Null 
 | Instanciated
+| Unreferenced
 and tableDescriptorClass= string*descriptorClass  
 
 and data = {dcs: descriptorClass list; tm : tableMethod ; dos: descriptorObject list  }
@@ -27,7 +29,7 @@ let printValue attr = match attr with
 | Bool(b) -> print_string (string_of_bool b)
 | String(str) -> print_string str
 | Instanciated -> print_string "Instanciated" 
-| Reference (referenceName, scope) -> print_string (referenceName^" "); print_string (string_of_int scope) 
+| Reference (id) -> print_string ("Ref on: "^(string_of_int id)^" ")
 | Null -> print_string "null" 
 
 let rec printClassAttributes astAttributes = match astAttributes with 
@@ -51,7 +53,7 @@ let rec printDescriptorObject descriptorsObject = match descriptorsObject with
 | a::t -> print_string (a.objectName^"\n");print_string ("OBJECT VALUE :"); printValue a.objectValue;print_string "\n"; print_string ("OBJECT SCOPE :"^(string_of_int a.scope)); print_string ("OBJECT ATTRIBUTES :"); printDescriptorObject a.attributes; print_string ("END ATTRIBUTES : "); printDescriptorObject t
 | [] -> print_string "End Objects\n"
 
-and printOneDescriptorObject a = print_string ("\nOBJECT DELETED\n"^a.objectName^"\n"); print_string ("OBJECT VALUE :"); printValue a.objectValue;print_string "\n"; print_string ("OBJECT SCOPE :"^(string_of_int a.scope)^"\n"); print_string ("OBJECT ATTRIBUTES : "); printDescriptorObject a.attributes; print_string ("END ATTRIBUTES\n"); print_string "OBJECT DELETED\n"
+and printOneDescriptorObject a = print_string ("\nOBJECT ID\n"^string_of_int(a.objectId)^"\n");print_string ("OBJECT NAME\n"^a.objectName^"\n"); print_string ("OBJECT VALUE :"); printValue a.objectValue;print_string "\n"; print_string ("OBJECT SCOPE :"^(string_of_int a.scope)^"\n"); print_string ("OBJECT ATTRIBUTES : "); printDescriptorObject a.attributes; print_string ("END ATTRIBUTES\n"); print_string "OBJECT DELETED\n"
 
 let printData data = match data with 
 |{dcs= descriptorsClass ; tm = tableMethod ; dos= descriptorsObject  } -> printTableMethod tableMethod; printDescriptorClass descriptorsClass; printDescriptorObject descriptorsObject 
