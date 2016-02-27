@@ -20,11 +20,18 @@ let changeElementToNotOption element = match element with
 let changeElementToOption element = Some element
 let changeListToOptionList listToModify = List.map changeElementToOption listToModify
 
-let constructNull currentScope name = {objectId = 0; objectName=name; attributes=[]; objectValue=Compilation.Null; scope=currentScope}
+let constructNull currentScope name = {objectId = (-3); objectName=name; attributes=[]; objectValue=Compilation.Null; scope=currentScope}
 
-let rec getMain tableMethod = match tableMethod with 
+let constructTrue currentScope name = {objectId = (-4); objectName=name; attributes=[]; objectValue=Bool(true); scope=currentScope}
+
+let constructFalse currentScope name = {objectId = (-5); objectName=name; attributes=[]; objectValue=Bool(false); scope=currentScope}
+
+let rec getMain tableMethod =      
+let id_char = "[a-z A-Z 0-9 _]+\$main$"  in
+let regexpMain = Str.regexp id_char in
+match tableMethod with 
 |{mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}::t->
-if (( List.mem AST.Public modifiers) && (List.mem AST.Static modifiers) && (List.length modifiers = 2) ) && (mname = "identifier$main") && (mreturntype = Type.Void) (* TEST ARGUMENT *) then
+if (( List.mem AST.Public modifiers) && (List.mem AST.Static modifiers) && (List.length modifiers = 2) ) && (Str.string_match regexpMain mname 0) && (mreturntype = Type.Void) (* TEST ARGUMENT *) then
 	{mmodifiers = modifiers; mname = mname;mreturntype = mreturntype;margstype = arguments;mthrows = exceptions;mbody = statements; (*      mloc : Location.t;*)}
 else getMain t
 |[] -> print_string "No Main!\n"; exit 0
@@ -155,12 +162,12 @@ let deconstructExpressionType expression = match expression with
 
 
 let rec findClassDescriptor className descriptorsClass = match descriptorsClass with 
-| {classType= aType; methods= methods ;attributes= astattributes }::t ->
+| {parentType=parentType; classType= aType; methods= methods ;attributes= astattributes }::t ->
 	let result =  match aType with 
  	(*| Array of t * int*)
 	(*| Primitive(primitive) -> match primitive with *)
 	| Ref(refType) ->
-		if refType.tid=className then {classType= aType; methods= methods ;attributes= astattributes }
+		if refType.tid=className then {parentType=parentType; classType= aType; methods= methods ;attributes= astattributes }
 		else findClassDescriptor className t
 	in 
 	result
@@ -333,14 +340,52 @@ and evaluateExpression expression scopedData = match expression with
 				let falseExp =  evaluateExpression falseExpression resultExpression in
 				falseExp
 				end
+		| Post (expression , postfixOp) -> 
+			let objectToIncrementScope = (evaluateExpression expression scopedData) in
+			let modifiedObjectScope =  evaluatePostExpression objectToIncrementScope postfixOp in
+			changeObjectDes objectToIncrementScope.currentObject modifiedObjectScope.currentObject modifiedObjectScope		
+		| Pre(prefixOp , expression) -> 
+			let objectToIncrementScope = (evaluateExpression expression scopedData) in
+			let modifiedObjectScope =  evaluatePreExpression objectToIncrementScope prefixOp in
+			changeObjectDes objectToIncrementScope.currentObject modifiedObjectScope.currentObject modifiedObjectScope
+		| Instanceof (leftObject , aType)-> 
+			if (instanceOf leftObject.etype aType scopedData) then 
+				changeCurrentObject scopedData (constructTrue scopedData.currentScope "") 
+			else 
+				changeCurrentObject scopedData (constructFalse scopedData.currentScope "") 
+
+		(*| Cast of expression * expression				  		*)
 				(* 
-		
-		
-		  | ArrayInit of expression list
-		  | Post of expression * postfix_op
-		  | If of expression * expression * expression
-		  | Cast of expression * expression
-		  | Instanceof of expression * expression*)
+		| ClassOf (aType) -> 
+		| ArrayInit of expression list
+		| Array of expression * (expression option) list
+
+		  *)
+and instanceOf leftObjectType classExpressionType scopedData = 
+	let notOptionobjectType = changeElementToNotOption leftObjectType in
+		let rec instanceOfNotOption type1 type2 dcs = match type1  with
+		(*| Array of t * int*)
+		(*| Primitive (Int)->*)
+		| Ref (refType) -> 
+			if Ref(refType) = type2 then true 
+			else 
+				let parentType = (findClassDescriptor refType.tid dcs).parentType in
+				if parentType = object_type then 
+					if type2 != Ref(object_type) then false 
+					else true 
+				else instanceOfNotOption (Ref(parentType)) type2 dcs
+		| NullReference -> false
+	in		
+	instanceOfNotOption notOptionobjectType classExpressionType scopedData.data.dcs
+
+and evaluatePreExpression expressionScoped prefixOp = match prefixOp with 
+|Op_incr -> changeCurrentObject expressionScoped (setValue expressionScoped.currentObject (Int((getIntValue expressionScoped.currentObject)  + 1))) 
+|Op_decr -> changeCurrentObject expressionScoped (setValue expressionScoped.currentObject (Int((getIntValue expressionScoped.currentObject)  - 1))) 
+
+
+and evaluatePostExpression expressionScoped postfixOp = match postfixOp with 
+|Incr -> changeCurrentObject expressionScoped (setValue expressionScoped.currentObject (Int((getIntValue expressionScoped.currentObject)  + 1))) 
+|Decr -> changeCurrentObject expressionScoped (setValue expressionScoped.currentObject (Int((getIntValue expressionScoped.currentObject)  - 1))) 
 		  
 and changeAttribute objectWithAttribute attributeName newAttributeScope = 
 let rec newAttributesList objectToUpdateAttributes attributeToUpdate attributeScope newListOfAttributes = 
@@ -381,7 +426,10 @@ and executeInfixOp evaluatedExpression1 operator evaluatedExpression2 scopedData
 	match operator with
 	|Op_add -> changeCurrentObject scopedData (setValue returnObject (Int((getIntValue evaluatedExpression1.currentObject)  + (getIntValue evaluatedExpression2.currentObject)))) 
     |Op_eq -> changeCurrentObject scopedData (setValue returnObject (Bool((getIntValue evaluatedExpression1.currentObject) = (getIntValue evaluatedExpression2.currentObject))))
-   
+	|Op_lt -> changeCurrentObject scopedData (setValue returnObject (Bool((getIntValue evaluatedExpression1.currentObject) < (getIntValue evaluatedExpression2.currentObject))))
+	|Op_gt -> changeCurrentObject scopedData (setValue returnObject (Bool((getIntValue evaluatedExpression1.currentObject) > (getIntValue evaluatedExpression2.currentObject))))
+	|Op_le -> changeCurrentObject scopedData (setValue returnObject (Bool((getIntValue evaluatedExpression1.currentObject) <= (getIntValue evaluatedExpression2.currentObject))))
+	|Op_ge -> changeCurrentObject scopedData (setValue returnObject (Bool((getIntValue evaluatedExpression1.currentObject) >= (getIntValue evaluatedExpression2.currentObject))))	
 and changeScopeInDos objectScope objectName dos = 
 	let rec findObjectInDosAndUpdateScope scope name objectsDescriptors newObjectDescriptors = match objectsDescriptors with 
 	| a::t -> if a.objectName= name && a.scope = scope then [(changeScope (-2) a)]@ newObjectDescriptors@t else findObjectInDosAndUpdateScope scope name t (a::newObjectDescriptors)
@@ -514,23 +562,31 @@ and executeStatement statement scopedData = match statement with
 | For (initialExpressions ,conditionnalExpression, incrementExpression, statement) ->  
 	let scopeWithVarDecl = initializeLoop initialExpressions scopedData in
 	executeLoop scopeWithVarDecl (changeElementToNotOption conditionnalExpression) incrementExpression statement
-	
+
+
 (* 
 
-
-| For ((Type.t , string,expression option) list ,expression option , expression list, statement) ->
+| Try (statement list, (argument * statement list) list, statement list)	
 
 | Throw ( expression) ->
-| Try (statement list, (argument * statement list) list, statement list)
+
 *)
 | Expr (expression) -> ((evaluateExpression expression scopedData), false)
 
 and executeLoop scopeWithVarDecl conditionnalExpression incrementExpressions statement = 
-let conditionnalEvaluatedScope = evaluateExpression conditionnalExpression scopeWithVarDecl in
+
+	let rec filterIncrementExpression incrementExpressionsList newPreIncrementList newPostIncrementList= match incrementExpressionsList with 
+			| {edesc=Pre(prefixOp,expression);etype=eType}::t -> filterIncrementExpression t ({edesc=Pre(prefixOp,expression);etype=eType}::newPreIncrementList) newPostIncrementList
+			| a::t -> filterIncrementExpression t newPreIncrementList (a::newPostIncrementList)
+			| [] -> (newPreIncrementList,newPostIncrementList)
+	in
+	let postPreExpressions = filterIncrementExpression incrementExpressions [] [] in 
+	let preIncrementedScope = incrementLoop (fst postPreExpressions) scopeWithVarDecl in
+	let conditionnalEvaluatedScope = evaluateExpression conditionnalExpression preIncrementedScope in
 	if conditionnalEvaluatedScope.currentObject.objectValue = Bool(true) then
 		begin
 			let afterStatementScope = executeStatement statement conditionnalEvaluatedScope in 
-			let incrementedScope = incrementLoop incrementExpressions (fst afterStatementScope) in
+			let incrementedScope = incrementLoop (snd postPreExpressions ) (fst afterStatementScope) in
 			executeLoop incrementedScope conditionnalExpression incrementExpressions statement
 		end
 	else

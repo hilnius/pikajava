@@ -5,9 +5,10 @@ open Location
 
 type tableMethod = astmethod list
 
-and descriptorClass = {classType: Type.t; methods: string list ;attributes: astattribute list}
+and descriptorClass = {parentType:Type.ref_type; classType: Type.t; methods: string list ;attributes: astattribute list}
 
 and descriptorObject = {objectId:int;objectName:string; attributes: descriptorObject list; objectValue: attributeValue; scope:int}
+
 
 and attributeValue =
 | Int of int
@@ -41,8 +42,8 @@ let rec print_list = function
 | e::l -> print_string e ; print_string " " ; print_list l
 
 let rec printDescriptorClass descriptorClass = match descriptorClass with 
-| {classType= aType; methods= methods ;attributes= astattributes }::t -> 
-	print_string ("class :"^stringOf(aType)^"\n"); print_string "	"; print_list methods; print_string "	End Methods \n"; printClassAttributes astattributes; print_string ("End class :"^stringOf(aType)^"\n"); printDescriptorClass t
+| {parentType = parentType; classType= aType; methods= methods ;attributes= astattributes }::t -> 
+	print_string ("Parent class"^parentType.tid^"\n");print_string ("class :"^stringOf(aType)^"\n"); print_string "	"; print_list methods; print_string "	End Methods \n"; printClassAttributes astattributes; print_string ("End class :"^stringOf(aType)^"\n"); printDescriptorClass t
 | [] -> print_string "End Descriptors Class\n"
 
 let rec printTableMethod tableMethod = match tableMethod with 
@@ -90,7 +91,7 @@ let rec filterAttributes attributes matchedAttributes = match attributes with
     } ::matchedAttributes)
 |[] -> matchedAttributes	
 let rec searchForAttributes classType dcs = match dcs with 
-	| {classType=aType; methods=methods; attributes=astattributes}::t -> print_string ("searching attributes :"^stringOf(aType)^"\n"); if classType = aType then filterAttributes astattributes [] else searchForAttributes classType t
+	| {parentType=parentType; classType=aType; methods=methods; attributes=astattributes}::t -> print_string ("searching attributes :"^stringOf(aType)^"\n"); if classType = aType then filterAttributes astattributes [] else searchForAttributes classType t
 	| [] -> print_string "ERROR Class not found\n"; exit 1
 
 let findClass ast classType = match ast with 
@@ -98,7 +99,7 @@ let findClass ast classType = match ast with
 | {package = None ;type_list = typeList} -> searchTypeList [] classType typeList
 
 let rec notCompiled classType dcs = match dcs with 
-| {classType= aType; methods= methods ;attributes=astattributes }::t -> if classType = aType then false else notCompiled classType t
+| {parentType=parentType; classType= aType; methods= methods ;attributes=astattributes }::t -> if classType = aType then false else notCompiled classType t
 | [] -> true
 
 let rec methodsForDescriptor tableMethod regexpId listMethodsClass = match tableMethod with
@@ -145,7 +146,7 @@ match info with
 		let methods= methodsForDescriptor newTableMethodWithConst (Str.regexp_string (id^"$")) [] in
 		let totalMethods = methodsParentsForDescriptor newTableMethodWithConst (Str.regexp_string (ref_type.tid^"$")) methods in
 		let newAttributeListClass = addAttributes (searchForAttributes (Type.Ref(ref_type)) data.dcs) astattributeList in
-		let descriptorClass = {classType=classType; methods=totalMethods; attributes = newAttributeListClass} in 
+		let descriptorClass = {parentType=ref_type; classType=classType; methods=totalMethods; attributes = newAttributeListClass} in 
 		buildData (descriptorClass::data.dcs) newTableMethodWithConst data.dos
 		end
 	else
@@ -163,7 +164,7 @@ match info with
 		let totalMethods = methodsParentsForDescriptor newTableMethodWithConst (Str.regexp_string (ref_type.tid^"$")) methods in
 		print_list totalMethods;print_string "\n\n";
 		let newAttributeListClass = addAttributes (searchForAttributes (Type.Ref(ref_type)) newData.dcs) astattributeList in
-		let descriptorClass = {classType=classType; methods=totalMethods; attributes = newAttributeListClass} in
+		let descriptorClass = {parentType=ref_type; classType=classType; methods=totalMethods; attributes = newAttributeListClass} in
 		buildData (descriptorClass::newData.dcs) newTableMethodWithConst newData.dos
 		end	
 	else
@@ -172,7 +173,7 @@ match info with
 		let newTableMethodWithConst = addConsts classType astconstList newTableMethod in 
 		let methods= methodsForDescriptor newTableMethodWithConst (Str.regexp_string (id^"$")) [] in
 		let totalMethods = methodsParentsForDescriptor newTableMethodWithConst (Str.regexp_string (ref_type.tid^"$")) methods in
-		let descriptorClass = {classType=classType; methods=totalMethods; attributes = addAttributes (searchForAttributes (Type.Ref(ref_type)) data.dcs) astattributeList} in
+		let descriptorClass = {parentType=ref_type; classType=classType; methods=totalMethods; attributes = addAttributes (searchForAttributes (Type.Ref(ref_type)) data.dcs) astattributeList} in
 		buildData (descriptorClass::data.dcs) newTableMethodWithConst data.dos
 		end
 let rec typeListWalk pack astTyped type_list data = match type_list with 
@@ -182,13 +183,13 @@ let rec typeListWalk pack astTyped type_list data = match type_list with
 
 (*Class Object from java.lang package*)
 
-let objectClass = {classType=Type.Ref{tpath=[]; tid="Object"}; methods=["equals"];attributes= []}
+let objectClass = {parentType={tpath=[];tid="Object"}; classType=Type.Ref{tpath=[]; tid="Object"}; methods=["equals"];attributes= []}
 
 let object_equals obj1 obj2 = match obj1 with
 | obj1 when obj1==obj2 -> true
 | obj1 when obj1!=obj2 -> false
 
-let integerClass = {classType=Primitive(Int); methods=[];attributes= []}
+let integerClass = {parentType={tpath=[];tid="Object"};classType=Primitive(Int); methods=[];attributes= []}
 
 let initData =  {dcs= objectClass::[integerClass]; tm = [] ; dos= []  }
 
