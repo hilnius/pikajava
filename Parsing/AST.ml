@@ -405,10 +405,16 @@ and print_const tab c =
   List.iter (print_statement (tab^"  ")) c.cbody;
   print_endline(tab^"}")
 
+and print_inits tab c =
+  print_endline (tab^(if c.static then "static " else "")^"{");
+  List.iter (print_statement (tab^"  ")) c.block;
+  print_endline (tab^"}");
+
 and print_class tab c =
   print_endline(" extends "^(Type.stringOf_ref c.cparent)^" {");
   List.iter (print_attribute (tab^"  ")) c.cattributes;
   List.iter (print_const (tab^"  ")) c.cconsts;
+  List.iter (print_inits (tab^"  ")) c.cinits;
   List.iter (print_method (tab^"  ")) c.cmethods;
   print_endline(tab^"}")
 
