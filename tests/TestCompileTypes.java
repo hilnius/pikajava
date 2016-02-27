@@ -18,8 +18,19 @@ class identifier {
 
   int a;
 
-  boolean test() {
+  private static final int st;
 
+  static {
+    st = 5;
+  }
+
+  {
+    a = 123;
+  }
+
+  boolean test(float a, double st) {
+    st = 12;
+    return a + 14;
   }
 
   public static void main(int argc) {
@@ -27,6 +38,8 @@ class identifier {
     int[] array = {1, 12.123};
 
     array = new int[] {1, 12.123};
+
+    st += "coucou";
 
     int c = 12 & 293;
     int d = 12 & 293 + 56;

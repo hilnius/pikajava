@@ -13,12 +13,12 @@ type scopeVariable = Type.t * string
 let scope : scopeVariable list list ref = ref [];;
 
 let enterScope () =
-  print_string (generateTabs (List.length !scope) ^ "{\n");
+  (* print_string (generateTabs (List.length !scope) ^ "{\n"); *)
   scope := []::(!scope)
 ;;
 
 let exitScope () =
-  print_string (generateTabs ((List.length !scope) - 1)  ^ "}\n");
+  (* print_string (generateTabs ((List.length !scope) - 1)  ^ "}\n"); *)
   match !scope with
   | [] -> raise ScopeDoesNotExist
   | h::t -> scope := t
@@ -37,7 +37,7 @@ let currentScopeVariableExists varName =
 ;;
 
 let declareVariable varType varName =
-  print_string (generateTabs (List.length !scope) ^ "Declaring variable " ^ varName ^ " of type " ^ Type.stringOf varType ^ "\n");
+  (* print_string (generateTabs (List.length !scope) ^ "Declaring variable " ^ varName ^ " of type " ^ Type.stringOf varType ^ "\n"); *)
   if currentScopeVariableExists varName then
     raise (VariableAlreadyDeclared varName);
   match !scope with
@@ -45,36 +45,33 @@ let declareVariable varType varName =
   | h::t -> scope := ((varType, varName)::h)::t
 ;;
 
-let getScopeType varName =
-  let rec innerGetScope l = match l with
-    | [] -> None
-    | (vt, vn)::q when vn = varName -> Some(vt)
-    | _::t -> innerGetScope t
-  in
-  let rec goDownScopes l = match l with
-    | [] -> raise (VariableDoesNotExist(varName))
-    | h::t -> let a = innerGetScope h in
-      match a with
-        | None -> goDownScopes t
-        | Some(t) -> t
-  in
-  goDownScopes (!scope);;
-
-(*let rec getPathType l r = match l with
-  | [] -> raise EmptyList
-  | [a] -> getScopeType a
-  | h::t -> let t1 = getPathType t r in
-    match t1 with
-      | AttributeSignature(t2) -> getClassType (Type.stringOf t2) h r
-      | MethodSignature(t2, _) -> getClassType (Type.stringOf t2) h r
-;;*)
-
-let getMethodType e methodName arguments r = match e.etype with
+let getMethodType etype methodName arguments r = match etype with
   | Some(Type.Ref(refType)) -> getClassMethod refType.tid methodName arguments r
 ;;
 
-let getAttributeType e name r = match e.etype with
+let getAttributeType etype name r = match etype with
   | Some(Type.Ref(refType)) -> getClassAttribute refType.tid name r
+;;
+
+let getScopeType varName r =
+  let rec innerGetScope l name = match l with
+    | [] -> None
+    | (vt, vn)::q when vn = name -> Some(vt)
+    | _::t -> innerGetScope t name
+  in
+  let rec goDownScopes l name = match l with
+    | [] -> raise (VariableDoesNotExist(name))
+    | h::t ->
+      (match innerGetScope h name with
+        | None -> begin
+            (* if we're looking for 'hello' variable, check if 'this.hello' is defined before going down scopes *)
+            match innerGetScope h "this" with
+              | None -> goDownScopes t name
+              | Some(t1) -> getAttributeType (Some t1) name r
+          end;
+        | Some(t2) -> t2)
+  in
+  goDownScopes (!scope) varName
 ;;
 
 let typeValue v = match v with
@@ -118,13 +115,13 @@ let rec typeExpression e r = match e.edesc with
   | NewArray(t1, eol, eo) -> { etype = Some(Type.mk_array (List.length eol) t1); edesc = NewArray(t1, map2 typeExpressionOption eol r, typeExpressionOption eo r) }
   | Call(e2, methodName, arguments) -> begin
     match e2 with
-      | None -> { etype = Some(getMethodType (typeExpression { etype = None; edesc = (Name "this") } r) methodName (map2 typeExpression arguments r) r); edesc = e.edesc }
-      | Some(e2s) -> { etype = Some(getMethodType (typeExpression e2s r) methodName (map2 typeExpression arguments r) r); edesc = e.edesc }
+      | None -> { etype = Some(getMethodType (typeExpression { etype = None; edesc = (Name "this") } r).etype methodName (map2 typeExpression arguments r) r); edesc = e.edesc }
+      | Some(e2s) -> { etype = Some(getMethodType (typeExpression e2s r).etype methodName (map2 typeExpression arguments r) r); edesc = e.edesc }
     end
-  | Attr(e2, str) -> e.etype <- Some(getAttributeType (typeExpression e2 r) str r); e
+  | Attr(e2, str) -> e.etype <- Some(getAttributeType (typeExpression e2 r).etype str r); e
   | If(e1, ifSt, elseSt) -> { etype = None; edesc = If(typeExpression e1 r, typeExpression ifSt r, typeExpression elseSt r) } (* wtf is this If ? *)
   | Val(value) -> e.etype <- Some(typeValue value); e
-  | Name(varName) -> e.etype <- Some(getScopeType varName); e
+  | Name(varName) -> e.etype <- Some(getScopeType varName r); e
   | ArrayInit(el) -> { etype = None; edesc = ArrayInit(map2 typeExpression el r) }
   | Array(e1, eol)-> let t1 = typeExpression e1 r in { etype = Some(Type.mk_array (List.length eol) (CheckAST.extractSome (t1.etype))); edesc = Array(t1, map2 typeExpressionOption eol r) }
   | AssignExp(e1, aop, e2) -> let te1 = typeExpression e1 r in { etype = te1.etype; edesc = AssignExp(te1, aop, typeExpression e2 r) }
@@ -244,19 +241,35 @@ and typeStatement s r = match s with
   | Expr(e) -> Expr(typeExpression e r)
 ;;
 
+let declareArgument argument = match argument with
+  | { final = _; vararg = _; ptype = t1; pident = id; } -> declareVariable t1 id; argument
+;;
+
 let typeMethod meth r = match meth with
   | { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = f } ->
-    { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = List.rev (map2 typeStatement (List.rev f) r) }
+    enterScope ();
+    List.map declareArgument d;
+    let methodBody = List.rev (map2 typeStatement (List.rev f) r) in
+    exitScope ();
+    { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = methodBody }
+;;
+
+let typeInitial i r = match i with
+  | { static = b; block = statements } ->
+      enterScope ();
+      let typedInits = List.rev (map2 typeStatement (List.rev statements) r) in
+      exitScope ();
+      { static = b; block = typedInits }
 ;;
 
 let typeClass cl r = match cl with
-  | { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; ctypes = t; cloc = h }) }->
+  | { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; ctypes = t; cloc = h }) } ->
     enterScope ();
     declareVariable (Type.Ref({ tpath = []; tid = b})) "this";
-    let a = { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = (map2 typeMethod g r); ctypes = t; cloc = h }) }
-    in
+    let typedInits = List.rev (map2 typeInitial (List.rev e) r) in
+    let typedMethods = map2 typeMethod g r in
     exitScope();
-    a
+    { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = typedInits; cconsts = f; cmethods = typedMethods; ctypes = t; cloc = h }) }
 ;;
 
 let typeAST ast registry =
