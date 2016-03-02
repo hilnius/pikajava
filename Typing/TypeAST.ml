@@ -2,29 +2,31 @@ open AST
 open Exceptions
 open ClassRegistry
 
+(* map function when f expects another parameter than the list elements *)
 let rec map2 f l parameter = match l with
   | [] -> []
   | h::t -> (f h parameter) :: (map2 f t parameter)
 ;;
 
+(* a scope variable, its type and its name *)
 type scopeVariable = Type.t * string
 
-
+(* scopes are nested lists of scope variables. Each scope is a list containing a list of scopeVariables *)
 let scope : scopeVariable list list ref = ref [];;
 
+(* cann this when entering a scope (while typing), to create a new scope in the stack *)
 let enterScope () =
-  (* print_string (generateTabs (List.length !scope) ^ "{\n"); *)
   scope := []::(!scope)
 ;;
 
+(* exist the current scope (remove it from the stack). Variables defined in the scope won't be accessible anymore *)
 let exitScope () =
-  (* print_string (generateTabs ((List.length !scope) - 1)  ^ "}\n"); *)
   match !scope with
   | [] -> raise ScopeDoesNotExist
   | h::t -> scope := t
 ;;
 
-(* checks if a variable is already declared in the scope, in which case we should raise an exception *)
+(* checks if a variable is already declared in the scope, returns true if it exists, false otherwise *)
 let currentScopeVariableExists varName =
   let rec innerScopeVariableExists l = match l with
     | [] -> false
@@ -36,30 +38,33 @@ let currentScopeVariableExists varName =
     | t::_ -> innerScopeVariableExists t
 ;;
 
+(* declare a variable in the current scope, specify the type and name *)
 let declareVariable varType varName =
-  (* print_string (generateTabs (List.length !scope) ^ "Declaring variable " ^ varName ^ " of type " ^ Type.stringOf varType ^ "\n"); *)
-  if currentScopeVariableExists varName then
+  if currentScopeVariableExists varName then (* first check that is doesn't exist yet *)
     raise (VariableAlreadyDeclared varName);
   match !scope with
   | [] -> raise ScopeDoesNotExist
   | h::t -> scope := ((varType, varName)::h)::t
 ;;
 
+(* get the return type of a method depending on the class name, the method name, and the arguments *)
 let getMethodType etype methodName arguments r = match etype with
   | Some(Type.Ref(refType)) -> getClassMethod refType.tid methodName arguments r
 ;;
 
+(* get the type of an attribute depending on the class name and the attribute name *)
 let getAttributeType etype name r = match etype with
   | Some(Type.Ref(refType)) -> getClassAttribute refType.tid name r
 ;;
 
+(* get the type of a scope variable, if it exists *)
 let getScopeType varName r =
-  let rec innerGetScope l name = match l with
+  let rec innerGetScope l name = match l with (* find in a scope *)
     | [] -> None
     | (vt, vn)::q when vn = name -> Some(vt)
     | _::t -> innerGetScope t name
   in
-  let rec goDownScopes l name = match l with
+  let rec goDownScopes l name = match l with (* check the topmost scope first, then go down *)
     | [] -> raise (VariableDoesNotExist(name))
     | h::t ->
       (match innerGetScope h name with
@@ -74,6 +79,7 @@ let getScopeType varName r =
   goDownScopes (!scope) varName
 ;;
 
+(* type a value expression *)
 let typeValue v = match v with
   | Int(_) -> Type.Primitive(Int)
   | Float(_) -> Type.Primitive(Float)
@@ -83,6 +89,8 @@ let typeValue v = match v with
   | Null -> Type.NullReference
 ;;
 
+(* when trying to use integral types operations, check if types are compatible, and return the return type
+  if types are not compatible, raise an exception *)
 let getConvertibleType t1 t2 = match t1, t2 with
   | (Type.Primitive(Int), Type.Primitive(Int)) -> Type.Primitive(Int)
   | (Type.Primitive(Char), Type.Primitive(Int)) -> Type.Primitive(Int)
@@ -92,6 +100,8 @@ let getConvertibleType t1 t2 = match t1, t2 with
   | _, _ -> raise (CannotConvertTypes (t1, t2))
 ;;
 
+(* when doing numeric operations, check if types are compatible and give the return type
+  raises an exception if the types are not compatible *)
 let getConvertibleNumericType t1 t2 = match t1, t2 with
   | (Type.Primitive(Int),   Type.Primitive(Int)) -> Type.Primitive(Int)
   | (Type.Primitive(Char),  Type.Primitive(Int)) -> Type.Primitive(Int)
@@ -105,11 +115,13 @@ let getConvertibleNumericType t1 t2 = match t1, t2 with
   | _, _ -> raise (CannotConvertTypes (t1, t2))
 ;;
 
+(* just for additions, check if types are both strings, or if they are numeric and are compatible *)
 let getConvertibleNumericOrStringType t1 t2 = match t1, t2 with
   | (Type.Ref({ tpath = []; tid = "String" }), Type.Ref({ tpath = []; tid = "String" })) -> Type.Ref({ tpath = []; tid = "String" })
   | _, _ -> getConvertibleNumericType t1 t2
 ;;
 
+(* recursive function to type expressions *)
 let rec typeExpression e r = match e.edesc with
   | New(name, identifiers, arguments) -> { etype = Some(Ref(Type.refOfStringList identifiers)); edesc = New(name, identifiers, map2 typeExpression arguments r) }
   | NewArray(t1, eol, eo) -> { etype = Some(Type.mk_array (List.length eol) t1); edesc = NewArray(t1, map2 typeExpressionOption eol r, typeExpressionOption eo r) }
@@ -163,23 +175,24 @@ let rec typeExpression e r = match e.edesc with
   | ClassOf(t1) -> e.etype <- Some(t1); e
   | VoidClass -> e
 
+(* type an optional expression *)
 and typeExpressionOption e r = match e with
   | None -> None
   | Some(e1) -> Some(typeExpression e1 r)
 
-
+(* type a variable declaration. this declares a variable in the current scope *)
 and typeVarDecl v r = match v with
   | (t, varName, None) -> declareVariable t varName; (t, varName, None)
   | (t, varName, Some(init)) -> declareVariable t varName; (t, varName, Some(typeExpression init r))
 
-
+(* type an optional variable declaration (for for loops). this declares a variable in the current scope *)
 and typeVarDeclOpt v r = match v with
   | (Some(t), varName, None) -> declareVariable t varName; (Some(t), varName, None)
   | (Some(t), varName, Some(init)) -> declareVariable t varName; (Some(t), varName, Some(typeExpression init r))
   | (None, varName, None) -> (None, varName, None)
   | (None, varName, Some(init)) -> (None, varName, Some(typeExpression init r))
 
-
+(* type multiple catch statements, creating a scope for each and typing its content *)
 and typeCatches c r = match c with
   | [] -> []
   | (a,b)::q ->
@@ -188,6 +201,7 @@ and typeCatches c r = match c with
       exitScope();
       (a, b2) :: typeCatches q r
 
+(* type a statement *)
 and typeStatement s r = match s with
   | VarDecl(l) -> VarDecl(map2 typeVarDecl l r)
   | Block(sl) ->
@@ -241,10 +255,12 @@ and typeStatement s r = match s with
   | Expr(e) -> Expr(typeExpression e r)
 ;;
 
+(* declare a method argument. This creates a local variable in the method scope *)
 let declareArgument argument = match argument with
   | { final = _; vararg = _; ptype = t1; pident = id; } -> declareVariable t1 id; argument
 ;;
 
+(* type a method. this creates a scope before typing the method body *)
 let typeMethod meth r = match meth with
   | { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = f } ->
     enterScope ();
@@ -254,6 +270,7 @@ let typeMethod meth r = match meth with
     { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = methodBody }
 ;;
 
+(* type an initial (static/non-static initialization block). this creates a scope before typing statements *)
 let typeInitial i r = match i with
   | { static = b; block = statements } ->
       enterScope ();
@@ -262,6 +279,7 @@ let typeInitial i r = match i with
       { static = b; block = typedInits }
 ;;
 
+(* type a class content. this creates a scope in which "this" is defined, so that "this" calls refer to the current class *)
 let typeClass cl r = match cl with
   | { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; ctypes = t; cloc = h }) } ->
     enterScope ();
@@ -272,6 +290,7 @@ let typeClass cl r = match cl with
     { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = typedInits; cconsts = f; cmethods = typedMethods; ctypes = t; cloc = h }) }
 ;;
 
+(* type an ast *)
 let typeAST ast registry =
   let { package = p; type_list = classList; } = ast in
     { package = p; type_list = (map2 typeClass classList registry); }

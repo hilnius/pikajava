@@ -1,6 +1,21 @@
 open AST
 open Exceptions
 
+(*
+A registry is an object that contains the packages, classes with their attributes, methods and argments.
+This is build before typing statements. It basically contains the return types of methods, types of
+attributes and types of arguments.
+
+This can also be used to read all files necessary for compiling, and create a registry of all possible
+classes and their methods and attributes.
+
+That way, the typer will query the registry everytime it encounters an attribute / method call, and
+the registry will be able to tell the typer what is the return type of what he's using.
+
+getClassMethod and getClassAttribute are functions that do exactly that (take a class and a method or
+attribute name, and return the type of this method / attribute).
+*)
+
 type registry =
   | Registry of packageRegistry list
 and packageRegistry =
