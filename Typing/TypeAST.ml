@@ -282,6 +282,7 @@ let typeInitial i r = match i with
 (* type a class content. this creates a scope in which "this" is defined, so that "this" calls refer to the current class *)
 let typeClass cl r = match cl with
   | { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; ctypes = t; cloc = h }) } ->
+    registerClassParent b c.tid;
     enterScope ();
     declareVariable (Type.Ref({ tpath = []; tid = b})) "this";
     let typedInits = List.rev (map2 typeInitial (List.rev e) r) in
