@@ -109,8 +109,8 @@ let rec checkStatement s = match s with
   | If(e1, ifSt, Some(elseSt)) -> checkExpression e1.edesc; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt; checkStatement elseSt
   (*| Return of expression option
   | Throw of expression
-  | Try of statement list * (argument * statement list) list * statement list
-  | Expr of expression *)
+  | Try of statement list * (argument * statement list) list * statement list*)
+  | Expr(e) -> checkExpression e.edesc
   | _ -> ()
 ;;
 

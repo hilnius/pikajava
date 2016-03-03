@@ -168,8 +168,8 @@ let rec stringOfClassTree tree = match tree with
 let checkClassInstanceOf name parent = match findNode !classTree parent with
   | NoneClassHierarchy -> false
   | node -> match findNode [node] name with
-    | NoneClassHierarchy -> print_string(name ^ " is not an child of " ^ parent); false
-    | _ -> print_string(name ^ " IS an child of " ^ parent); true
+    | NoneClassHierarchy -> false
+    | _ -> true
 ;;
 
 (* stringOf functions *)

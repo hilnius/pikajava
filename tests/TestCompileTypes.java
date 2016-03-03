@@ -16,6 +16,10 @@ class A {
   }
 }
 
+class B extends A {
+
+}
+
 class identifier extends A {
 
   int a;
@@ -32,6 +36,13 @@ class identifier extends A {
 
   boolean test(float a, double st) {
     st = 12;
+
+    A ao;
+    B bo;
+
+    ao = bo;
+    bo = ao;
+
     return a + 14;
   }
 
