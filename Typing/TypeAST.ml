@@ -48,13 +48,23 @@ let declareVariable varType varName =
 ;;
 
 (* get the return type of a method depending on the class name, the method name, and the arguments *)
-let getMethodType etype methodName arguments r = match etype with
-  | Some(Type.Ref(refType)) -> getClassMethod refType.tid methodName arguments r
+let rec getMethodType etype methodName arguments r = match etype with
+  | None -> raise (MemberNotFound(methodName))
+  | Some(Type.Ref(refType)) ->
+    try
+      getClassMethod refType.tid methodName arguments r
+    with
+      | _ -> getMethodType (Some (Type.Ref(CheckAST.extractSome (getClassParent refType.tid r)))) methodName arguments r
 ;;
 
 (* get the type of an attribute depending on the class name and the attribute name *)
-let getAttributeType etype name r = match etype with
-  | Some(Type.Ref(refType)) -> getClassAttribute refType.tid name r
+let rec getAttributeType etype memberName r = match etype with
+  | None -> raise (MemberNotFound(memberName))
+  | Some(Type.Ref(refType)) ->
+    try
+      getClassAttribute refType.tid memberName r
+    with
+      | _ -> getAttributeType (Some (Type.Ref(CheckAST.extractSome (getClassParent refType.tid r)))) memberName r
 ;;
 
 (* get the type of a scope variable, if it exists *)

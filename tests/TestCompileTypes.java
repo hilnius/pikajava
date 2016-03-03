@@ -1,6 +1,8 @@
 package A;
 
 class A {
+  int aMember;
+
   public int test() {
     return 12;
   }
@@ -14,7 +16,7 @@ class A {
   }
 }
 
-class identifier {
+class identifier extends A {
 
   int a;
 
@@ -34,6 +36,10 @@ class identifier {
   }
 
   public static void main(int argc) {
+    aMember = 155;
+    self();
+    self().aMember = 12;
+
     int a = null;
     int[] array = {1, 12.123};
 

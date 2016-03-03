@@ -20,8 +20,8 @@ type registry =
   | Registry of packageRegistry list
 and packageRegistry =
   | RPackage of AST.qualified_name * classRegistry list
-and classRegistry =
-  | RClass of string * attributeRegistry list * methodRegistry list
+and classRegistry = (* name, parent, attributes, methods *)
+  | RClass of string * Type.ref_type option * attributeRegistry list * methodRegistry list
 and methodRegistry =
   | RMethod of string * Type.t * argumentRegistry list
 and attributeRegistry =
@@ -48,20 +48,13 @@ type methodOrAttributeSignature =
   Corresponding registry : (after the comment)
 *)
 
-let exampleRegisty =
-  RPackage(["a"; "Test"], [
-    RClass("A", [
-      RAttribute("a", Primitive(Int))
-    ],[
-      RMethod("foo", Primitive(Boolean), [RArgument(Ref({ tpath = []; tid = "String" }))])
-    ])
-  ])
+let objectClassRegistry = RClass("Object", None, [],[])
 ;;
 
 let rec findClass classes className = match classes with
   | [] -> raise (ClassNameNotFound(className))
-  | (RClass(n, _, _))::_ when n = className -> List.hd classes
-  | (RClass(n, _, _))::t -> findClass t className
+  | (RClass(n, _, _, _))::_ when n = className -> List.hd classes
+  | (RClass(n, _, _, _))::t -> findClass t className
 ;;
 
 let getClassMethod className member arguments registry =
@@ -71,7 +64,7 @@ let getClassMethod className member arguments registry =
     | h::t -> findMethod t
   in
   match registry with
-    | RPackage(_, classes) -> let RClass(_,_,m) = (findClass classes className) in findMethod m
+    | RPackage(_, classes) -> let RClass(_,_,_,m) = (findClass classes className) in findMethod m
 ;;
 
 let getClassAttribute className member registry =
@@ -81,7 +74,17 @@ let getClassAttribute className member registry =
     | h::t -> findAttribute t
   in
   match registry with
-    | RPackage(_, classes) -> let RClass(_,a,_) = (findClass classes className) in findAttribute a
+    | RPackage(_, classes) -> let RClass(_,_,a,_) = (findClass classes className) in findAttribute a
+;;
+
+let getClassParent className registry =
+  let rec findParent a = match a with
+    | [] -> None
+    | (RClass(n, parent, _, _))::_ when n = className -> parent
+    | h::t -> findParent t
+  in
+  match registry with
+    | RPackage(_, classes) -> findParent classes
 ;;
 
 (* build registry functions *)
@@ -101,14 +104,14 @@ let buildAttributeRegistry attribute = match attribute with
 ;;
 
 let buildClassRegistry classes = match classes with
-  | { modifiers = _; id = className; info = Class({ cparent = _; cattributes = attributes; cinits = _; cconsts = _; cmethods = methods; cloc = _ }) } ->
-    RClass(className, List.map buildAttributeRegistry attributes, List.map buildMethodRegistry methods)
+  | { modifiers = _; id = className; info = Class({ cparent = parent; cattributes = attributes; cinits = _; cconsts = _; cmethods = methods; cloc = _ }) } ->
+    RClass(className, Some(parent), List.map buildAttributeRegistry attributes, List.map buildMethodRegistry methods)
 ;;
 
 let buildPackageRegistry ast =
   (* cf AST.ml *)
   let { package = packageDeclaration; type_list = classList; } = ast in
-  RPackage(["a";"Test"], List.map buildClassRegistry classList)
+  RPackage(["root"], objectClassRegistry::(List.map buildClassRegistry classList))
 ;;
 
 
@@ -160,7 +163,7 @@ let stringOfAttribute attr = match attr with
 ;;
 
 let stringOfClass c = match c with
-  | RClass(className, attributes, methods) ->
+  | RClass(className, _, attributes, methods) ->
     (getTabs ()) ^ (className) ^ " {\n" ^ (iterTabbed stringOfAttribute attributes) ^ (iterTabbed stringOfMethod methods) ^ (getTabs ()) ^ ("}\n")
 ;;
 
