@@ -114,6 +114,63 @@ let buildPackageRegistry ast =
   RPackage(["root"], objectClassRegistry::(List.map buildClassRegistry classList))
 ;;
 
+(* Class Hierarchy *)
+
+type classHierarchy =
+  | ClassHierarchy of string * classHierarchy list
+  | NoneClassHierarchy
+
+type delayedClassHierarchy =
+  | DelayedClassHierarchy of string * string
+
+let classTree : classHierarchy list ref = ref [ ClassHierarchy("Object", []) ];;
+
+let delayedList : delayedClassHierarchy list ref = ref [];;
+
+let rec insertClassNode tree name parent = match tree with
+  | [] -> []
+  | ClassHierarchy(cname, clist)::t when cname = parent -> ClassHierarchy(parent, ClassHierarchy(name, [])::clist)::t
+  | ClassHierarchy(cname, clist)::t -> ClassHierarchy(cname, insertClassNode clist name parent)::(insertClassNode t name parent)
+;;
+
+let rec findNode tree name = match tree with
+  | [] -> NoneClassHierarchy
+  | h::t -> match h with
+    | ClassHierarchy(cname, clist) when cname = name -> h
+    | ClassHierarchy(cname, clist) -> findNode (t @ clist) name
+;;
+
+let rec registerDelayedClasses d = match d with
+  | [] -> []
+  | DelayedClassHierarchy(name, parent)::t -> match findNode !classTree parent with
+    | NoneClassHierarchy -> DelayedClassHierarchy(name, parent)::registerDelayedClasses t
+    | _ -> begin
+    classTree := insertClassNode !classTree name parent;
+    registerDelayedClasses t
+  end
+
+let registerClassParent name parent = match findNode !classTree parent with
+  | NoneClassHierarchy -> begin
+    delayedList := DelayedClassHierarchy(name, parent)::!delayedList
+  end
+  | _ -> begin
+    classTree := insertClassNode !classTree name parent;
+    (* adding delayed classes *)
+    delayedList := registerDelayedClasses !delayedList
+  end
+;;
+
+let rec stringOfClassTree tree = match tree with
+  | [] -> ""
+  | ClassHierarchy(cname, clist)::t -> cname ^ "[ " ^ stringOfClassTree clist ^ " ] " ^ stringOfClassTree t
+;;
+
+let checkClassInstanceOf name parent = match findNode !classTree parent with
+  | NoneClassHierarchy -> false
+  | node -> match findNode [node] name with
+    | NoneClassHierarchy -> print_string(name ^ " is not an child of " ^ parent); false
+    | _ -> print_string(name ^ " IS an child of " ^ parent); true
+;;
 
 (* stringOf functions *)
 let currentTabs = ref 0;;

@@ -1,6 +1,7 @@
 open Type
 open AST
 open Exceptions
+open ClassRegistry
 
 let extractSome a = match a with
   | None -> raise UntypedExpression;
@@ -16,7 +17,15 @@ let comparePrimitiveTypes p1 p2 = match p1, p2 with
 
 let compareTypes t1 t2 = match t1, t2 with
   | Type.Primitive(p1), Type.Primitive(p2) -> comparePrimitiveTypes p1 p2
+  | Type.Ref(r1), Type.Ref(r2) -> (checkClassInstanceOf r1.tid r2.tid || checkClassInstanceOf r2.tid r1.tid)
+  | Type.NullReference, Type.Ref(_) -> true
+  | Type.Ref(_), Type.NullReference -> true
   | _ -> t1 == t2
+;;
+
+let compareAssignTypes t1 t2 = match t1, t2 with
+  | Type.Ref(r1), Type.Ref(r2) -> checkClassInstanceOf r2.tid r1.tid
+  | _ -> compareTypes t1 t2
 ;;
 
 let checkBoolean t1 = match t1 with
@@ -40,11 +49,11 @@ let checkExpression e = match e with
   | Call of expression * string * expression list
   | Attr of expression * string
   | If of expression * expression * expression *)
-  | Val(value) -> ()
+  (*| Val(value) -> ()*)
   (* | Name of string
   | ArrayInit of expression list*)
   | AssignExp(e1, aop, e2) -> begin match aop with
-      | Assign | Ass_add | Ass_sub | Ass_mul | Ass_div -> if not(compareTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
+      | Assign | Ass_add | Ass_sub | Ass_mul | Ass_div -> if not(compareAssignTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
       | Ass_mod -> if not(checkPrimitiveNotBoolean (extractSome e1.etype) && checkPrimitiveNotBoolean (extractSome e2.etype)) then raise (BadOperandTypes(extractSome e1.etype, extractSome e2.etype))
       | Ass_shl | Ass_shr | Ass_shrr -> if not(checkIntegerKind (extractSome e1.etype) && checkIntegerKind (extractSome e2.etype)) then raise (BadOperandTypes(extractSome e1.etype, extractSome e2.etype))
     end;
@@ -60,8 +69,23 @@ let checkExpression e = match e with
       if not (checkBoolean (extractSome e1.etype)) then raise (ShouldBeBoolean(extractSome e1.etype));
       if not (compareTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
     end;
-  (*| Cast of expression * expression
-  | Instanceof of expression * expression *)
+  (*| Cast(t1, e1) -> print_string "hello"*)
+  (*| Instanceof of expression * expression *)
+  (*| Cast(t1, e1) -> print_string("Attr1")
+  | Instanceof(e1, t1) -> print_string("Attr2")
+  | VoidClass -> print_string("Attr3")
+  | ClassOf(t1) -> print_string("Attr4")
+  | New(name, identifiers, arguments) -> print_string("Attr5")
+  | NewArray(t1, eol, eo) -> print_string("Attr6")
+  | Call(e2, methodName, arguments) -> print_string("Attr7")
+  | Attr(e2, str) ->print_string("Attr8")
+  | If(e1, ifSt, elseSt) -> print_string("Attr9")
+  | Val(value) -> print_string("Attr10")
+  | Name(varName) ->print_string("Attr11")
+  | ArrayInit(el) ->print_string("Attr12")
+  | Array(e1, eol)->print_string("Attr13")
+  | Post(e1, pfo) -> print_string("Attr")
+  | Pre(pfo, e1) -> print_string("Attr")*)
   | _ -> ()
 ;;
 
