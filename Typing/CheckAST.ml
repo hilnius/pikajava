@@ -40,14 +40,21 @@ let checkPrimitiveNotBoolean t1 = match t1 with
 ;;
 
 let checkIntegerKind t1 = match t1 with
-  | Type.Primitive(Type.Int) | Type.Primitive(Type.Long) |  Type.Primitive(Type.Short) -> true
+  | Type.Primitive(Type.Int) | Type.Primitive(Type.Long) | Type.Primitive(Type.Short) -> true
   | _ -> false
 ;;
 
-let checkExpression e = match e with
-  (*| New(name, identifiers, arguments) ->
-  | Call of expression * string * expression list
-  | Attr of expression * string
+let checkCall e methodName arguments reg = match e with
+  | None -> print_string "None"
+  | Some(exp) -> match extractSome exp.etype with
+    | Type.Ref(r) -> match getClassMethod r.tid methodName arguments reg with
+      | _ -> print_string "Hello"
+    | _ -> raise (NotDeferencable(extractSome exp.etype))
+
+let checkExpression e reg = match e.edesc with
+  (*| New(name, identifiers, arguments) ->*)
+  | Call(e2, methodName, arguments) -> checkCall e2 methodName arguments reg
+  (*| Attr of expression * string
   | If of expression * expression * expression *)
   (*| Val(value) -> ()*)
   (* | Name of string
@@ -89,46 +96,50 @@ let checkExpression e = match e with
   | _ -> ()
 ;;
 
-let checkVarDecl v = match v with
+let checkVarDecl v reg = match v with
   | (t, varName, None) -> ()
   | (t, varName, Some(init)) ->
-    checkExpression (init.edesc);
+    checkExpression init;
     let t2 = extractSome init.etype in
-    if (t <> t2) then begin
+    if not (compareAssignTypes t t2) then begin
       raise (TypeMismatch(t, t2))
     end
 ;;
 
-let rec checkStatement s = match s with
-  | VarDecl(l) -> List.iter checkVarDecl l
-  | Block(sl) -> List.iter checkStatement sl
+let rec checkStatement s reg = match s with
+  | VarDecl(l) -> let checkVarDeclReg v = checkVarDecl v reg in List.iter checkVarDeclReg l;
+  | Block(sl) -> let checkStatementReg sd = checkStatement sd reg in List.iter checkStatementReg sl;
   (*| Nop
   | While of expression * statement
   | For of (Type.t * string * expression option) list * expression option * expression list * statement *)
-  | If(e1, ifSt, None) -> checkExpression e1.edesc; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt;
-  | If(e1, ifSt, Some(elseSt)) -> checkExpression e1.edesc; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt; checkStatement elseSt
+  | If(e1, ifSt, None) -> checkExpression e1 reg; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt reg;
+  | If(e1, ifSt, Some(elseSt)) -> checkExpression e1 reg; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt reg; checkStatement elseSt reg
   (*| Return of expression option
   | Throw of expression
   | Try of statement list * (argument * statement list) list * statement list*)
-  | Expr(e) -> checkExpression e.edesc
+  | Expr(e) -> checkExpression e reg
   | _ -> ()
 ;;
 
-let checkMethod meth = match meth with
-  | { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = f } ->
-    List.iter checkStatement f
+let checkMethod meth reg = match meth with
+  | { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = f } -> let checkStatementReg s = checkStatement s reg in
+    List.iter checkStatementReg f;
 ;;
 
-let checkClass cl = match cl with
-  | { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; cloc = h }) }->
-    List.iter checkMethod g
+let checkClass cl reg = match cl with
+  | { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; cloc = h }) }-> let checkMethodReg meth = checkMethod meth reg in
+    List.iter checkMethodReg g;
 ;;
 
-let checkAST ast =
+let checkAST ast registry =
   let { package = p; type_list = classList; } = ast in
   try
-    List.iter checkClass classList;
+    let checkClassReg cl = checkClass cl registry in
+      List.iter checkClassReg classList;
+    ;
   with
+    | MemberNotFound(m) -> print_string ("\027[31mMember not found : " ^ m ^ "\027[0m\n");
+    | NotDeferencable(t) -> print_string ("\027[31mType cannot be deferenced : " ^ (Type.stringOf t) ^ "\027[0m\n");
     | TypeMismatch(t1,t2) -> print_string ("\027[31mType mismatch exception between " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | CannotCompareTypes(t1,t2) -> print_string ("\027[31mCannot compare types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | BadOperandTypes(t1,t2) -> print_string ("\027[31mBad operand types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");

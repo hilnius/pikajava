@@ -4,6 +4,7 @@ exception MemberNotFound of string
 exception VariableDoesNotExist of string
 exception VariableAlreadyDeclared of string
 exception UntypedExpression
+exception NotDeferencable of Type.t
 exception TypeMismatch of (Type.t * Type.t)
 exception EmptyList
 exception CannotCompareTypes of (Type.t * Type.t)
