@@ -23,9 +23,9 @@ and packageRegistry =
 and classRegistry = (* name, parent, attributes, methods *)
   | RClass of string * Type.ref_type option * attributeRegistry list * methodRegistry list
 and methodRegistry =
-  | RMethod of string * Type.t * argumentRegistry list
+  | RMethod of string * Type.t * argumentRegistry list * modifier list
 and attributeRegistry =
-  | RAttribute of string * Type.t
+  | RAttribute of string * Type.t * modifier list
 and argumentRegistry =
   | RArgument of Type.t
 ;;
@@ -48,6 +48,11 @@ type methodOrAttributeSignature =
   Corresponding registry : (after the comment)
 *)
 
+let rec hasModifier modifiers modifier = match modifiers with
+  | [] -> false
+  | h::t when h = modifier -> true
+  | h::t -> hasModifier t modifier
+
 let objectClassRegistry = RClass("Object", None, [],[])
 ;;
 
@@ -55,26 +60,6 @@ let rec findClass classes className = match classes with
   | [] -> raise (ClassNameNotFound(className))
   | (RClass(n, _, _, _))::_ when n = className -> List.hd classes
   | (RClass(n, _, _, _))::t -> findClass t className
-;;
-
-let getClassMethod className member arguments registry =
-  let rec findMethod m = match m with
-    | [] -> raise (MemberNotFound(member))
-    | (RMethod(n, t1, args))::t when member = n -> t1
-    | h::t -> findMethod t
-  in
-  match registry with
-    | RPackage(_, classes) -> let RClass(_,_,_,m) = (findClass classes className) in findMethod m
-;;
-
-let getClassAttribute className member registry =
-  let rec findAttribute a = match a with
-    | [] -> raise (MemberNotFound(member))
-    | (RAttribute(n, t1))::t when member = n -> t1
-    | h::t -> findAttribute t
-  in
-  match registry with
-    | RPackage(_, classes) -> let RClass(_,_,a,_) = (findClass classes className) in findAttribute a
 ;;
 
 let getClassParent className registry =
@@ -87,6 +72,50 @@ let getClassParent className registry =
     | RPackage(_, classes) -> findParent classes
 ;;
 
+let getClassMethodAll className member arguments registry =
+  let rec findMethod m = match m with
+    | [] -> raise (MemberNotFound(member))
+    | (RMethod(n, t1, args, modif))::t when member = n -> RMethod(n, t1, args, modif)
+    | h::t -> findMethod t
+  in
+  match registry with
+    | RPackage(_, classes) -> let RClass(_,_,_,m) = (findClass classes className) in findMethod m
+;;
+
+let getClassMethod className member arguments registry =
+  match getClassMethodAll className member arguments registry with
+    | RMethod(n, t1, args, modif) when member = n -> t1
+;;
+
+let getClassAttribute className member registry =
+  let rec findAttribute a = match a with
+    | [] -> raise (MemberNotFound(member))
+    | (RAttribute(n, t1, modif))::t when member = n -> t1
+    | h::t -> findAttribute t
+  in
+  match registry with
+    | RPackage(_, classes) -> let RClass(_,_,a,_) = (findClass classes className) in findAttribute a
+;;
+
+let rec getClassMethodParent classCaller className member arguments registry = match registry with
+  | RPackage(_, classes) -> let RClass(_,_,a,_) = (findClass classes className) in
+    try
+      let m = getClassMethodAll className member arguments registry in
+        match m with
+	  | RMethod(n, t1, args, modif) -> begin if hasModifier modif Private then
+              if classCaller <> className then raise(PrivateContext(n)) else m
+            else
+              m
+          end;
+    with
+      | MemberNotFound(member) -> let parent = getClassParent className registry in
+        match parent with
+          | None -> raise (MemberNotFound(member))
+          | Some(p) -> getClassMethodParent classCaller p.tid member arguments registry
+      ;
+    ;
+;;
+
 (* build registry functions *)
 
 let buildArgumentRegistry argument = match argument with
@@ -94,13 +123,13 @@ let buildArgumentRegistry argument = match argument with
 ;;
 
 let buildMethodRegistry meth = match meth with
-  | { mmodifiers = _; mname = name; mreturntype = returnType; margstype = arguments; mthrows = _; mbody = _ } ->
-    RMethod(name, returnType, List.map buildArgumentRegistry arguments)
+  | { mmodifiers = modifiers; mname = name; mreturntype = returnType; margstype = arguments; mthrows = _; mbody = _ } ->
+    RMethod(name, returnType, List.map buildArgumentRegistry arguments, modifiers)
 ;;
 
 let buildAttributeRegistry attribute = match attribute with
-  | { amodifiers = _; aname = name; atype = argType; adefault = _ } ->
-    RAttribute(name, argType)
+  | { amodifiers = modifiers; aname = name; atype = argType; adefault = _ } ->
+    RAttribute(name, argType, modifiers)
 ;;
 
 let buildClassRegistry classes = match classes with
@@ -210,12 +239,12 @@ let stringOfArgument arg = match arg with
 ;;
 
 let stringOfMethod attr = match attr with
-  | RMethod(name, returnType, arguments) ->
+  | RMethod(name, returnType, arguments, modif) ->
     (getTabs ()) ^ (Type.stringOf returnType) ^ " " ^ name ^ "(" ^ (iterToString stringOfArgument arguments ", ") ^ ");\n"
 ;;
 
 let stringOfAttribute attr = match attr with
-  | RAttribute(name, argType) ->
+  | RAttribute(name, argType, modif) ->
     (getTabs ()) ^ (Type.stringOf argType) ^ " " ^ name ^ ";\n"
 ;;
 

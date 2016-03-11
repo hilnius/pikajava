@@ -45,10 +45,10 @@ let checkIntegerKind t1 = match t1 with
 ;;
 
 let checkCall e methodName arguments reg = match e with
-  | None -> print_string "None"
+  | None -> print_string "";
   | Some(exp) -> match extractSome exp.etype with
-    | Type.Ref(r) -> match getClassMethod r.tid methodName arguments reg with
-      | _ -> print_string "Hello"
+    | Type.Ref(r) -> match getClassMethodParent "" r.tid methodName arguments reg with
+      | _ -> print_string ""
     | _ -> raise (NotDeferencable(extractSome exp.etype))
 
 let checkExpression e reg = match e.edesc with
@@ -140,6 +140,7 @@ let checkAST ast registry =
   with
     | MemberNotFound(m) -> print_string ("\027[31mMember not found : " ^ m ^ "\027[0m\n");
     | NotDeferencable(t) -> print_string ("\027[31mType cannot be deferenced : " ^ (Type.stringOf t) ^ "\027[0m\n");
+    | PrivateContext(n) -> print_string ("\027[31mThe attribute or method " ^ n ^ " is not accessible in this context\027[0m\n");
     | TypeMismatch(t1,t2) -> print_string ("\027[31mType mismatch exception between " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | CannotCompareTypes(t1,t2) -> print_string ("\027[31mCannot compare types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | BadOperandTypes(t1,t2) -> print_string ("\027[31mBad operand types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
