@@ -6,6 +6,7 @@ exception VariableAlreadyDeclared of string
 exception UntypedExpression
 exception NotDeferencable of Type.t
 exception PrivateContext of string
+exception StaticReference of string
 exception TypeMismatch of (Type.t * Type.t)
 exception EmptyList
 exception CannotCompareTypes of (Type.t * Type.t)

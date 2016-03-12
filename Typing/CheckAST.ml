@@ -3,6 +3,12 @@ open AST
 open Exceptions
 open ClassRegistry
 
+(* function when f expects another parameter than the list elements *)
+let iterArg f l parameter =
+  let fp sd = f sd parameter in
+    List.iter fp l
+;;
+
 let extractSome a = match a with
   | None -> raise UntypedExpression;
   | Some(b) -> b;
@@ -45,10 +51,9 @@ let checkIntegerKind t1 = match t1 with
 ;;
 
 let checkCall e methodName arguments reg = match e with
-  | None -> print_string "";
+  | None -> ();
   | Some(exp) -> match extractSome exp.etype with
-    | Type.Ref(r) -> match getClassMethodParent "" r.tid methodName arguments reg with
-      | _ -> print_string ""
+    | Type.Ref(r) -> ()
     | _ -> raise (NotDeferencable(extractSome exp.etype))
 
 let checkExpression e reg = match e.edesc with
@@ -107,8 +112,8 @@ let checkVarDecl v reg = match v with
 ;;
 
 let rec checkStatement s reg = match s with
-  | VarDecl(l) -> let checkVarDeclReg v = checkVarDecl v reg in List.iter checkVarDeclReg l;
-  | Block(sl) -> let checkStatementReg sd = checkStatement sd reg in List.iter checkStatementReg sl;
+  | VarDecl(l) -> iterArg checkVarDecl l reg
+  | Block(sl) -> iterArg checkStatement sl reg
   (*| Nop
   | While of expression * statement
   | For of (Type.t * string * expression option) list * expression option * expression list * statement *)
@@ -122,25 +127,23 @@ let rec checkStatement s reg = match s with
 ;;
 
 let checkMethod meth reg = match meth with
-  | { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = f } -> let checkStatementReg s = checkStatement s reg in
-    List.iter checkStatementReg f;
+  | { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = f } -> iterArg checkStatement f reg
 ;;
 
 let checkClass cl reg = match cl with
-  | { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; cloc = h }) }-> let checkMethodReg meth = checkMethod meth reg in
-    List.iter checkMethodReg g;
+  | { modifiers = a; id = b; info = Class({ cparent = c; cattributes = d; cinits = e; cconsts = f; cmethods = g; cloc = h }) } -> iterArg checkMethod g reg
 ;;
 
 let checkAST ast registry =
   let { package = p; type_list = classList; } = ast in
   try
-    let checkClassReg cl = checkClass cl registry in
-      List.iter checkClassReg classList;
+    iterArg checkClass classList registry
     ;
   with
     | MemberNotFound(m) -> print_string ("\027[31mMember not found : " ^ m ^ "\027[0m\n");
     | NotDeferencable(t) -> print_string ("\027[31mType cannot be deferenced : " ^ (Type.stringOf t) ^ "\027[0m\n");
     | PrivateContext(n) -> print_string ("\027[31mThe attribute or method " ^ n ^ " is not accessible in this context\027[0m\n");
+    (*| StaticReference(n) -> print_string ("\027[31mTrying to access " ^ n ^ " without an instance\027[0m\n");*)
     | TypeMismatch(t1,t2) -> print_string ("\027[31mType mismatch exception between " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | CannotCompareTypes(t1,t2) -> print_string ("\027[31mCannot compare types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | BadOperandTypes(t1,t2) -> print_string ("\027[31mBad operand types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");

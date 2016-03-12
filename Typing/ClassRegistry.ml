@@ -12,7 +12,7 @@ classes and their methods and attributes.
 That way, the typer will query the registry everytime it encounters an attribute / method call, and
 the registry will be able to tell the typer what is the return type of what he's using.
 
-getClassMethod and getClassAttribute are functions that do exactly that (take a class and a method or
+getClassMethodType and getClassAttribute are functions that do exactly that (take a class and a method or
 attribute name, and return the type of this method / attribute).
 *)
 
@@ -62,6 +62,16 @@ let rec findClass classes className = match classes with
   | (RClass(n, _, _, _))::t -> findClass t className
 ;;
 
+let getClass className registry =
+  let rec findClassAux classes className = match classes with
+    | [] -> raise (ClassNameNotFound(className))
+    | (RClass(n, p, a, m))::_ when n = className -> RClass(n, p, a, m)
+    | (RClass(_, _, _, _))::t -> findClassAux t className
+  in
+  match registry with
+    | RPackage(_, classes) -> findClass classes className
+;;
+
 let getClassParent className registry =
   let rec findParent a = match a with
     | [] -> None
@@ -72,46 +82,51 @@ let getClassParent className registry =
     | RPackage(_, classes) -> findParent classes
 ;;
 
-let getClassMethodAll className member arguments registry =
+let getClassMethod classContext className member arguments registry =
   let rec findMethod m = match m with
     | [] -> raise (MemberNotFound(member))
-    | (RMethod(n, t1, args, modif))::t when member = n -> RMethod(n, t1, args, modif)
+    | (RMethod(n, t1, args, modif))::t when member = n -> begin
+        if ((classContext <> className) && (hasModifier modif Private)) then raise (PrivateContext(member));
+        RMethod(n, t1, args, modif)
+      end;
     | h::t -> findMethod t
   in
   match registry with
     | RPackage(_, classes) -> let RClass(_,_,_,m) = (findClass classes className) in findMethod m
 ;;
 
-let getClassMethod className member arguments registry =
-  match getClassMethodAll className member arguments registry with
-    | RMethod(n, t1, args, modif) when member = n -> t1
+let getClassMethodType classContext className member arguments registry =
+  match getClassMethod classContext className member arguments registry with
+    | RMethod(n, t1, args, modif) -> t1
 ;;
 
-let getClassAttribute className member registry =
+let getClassAttribute classContext className member registry =
   let rec findAttribute a = match a with
     | [] -> raise (MemberNotFound(member))
-    | (RAttribute(n, t1, modif))::t when member = n -> t1
+    | (RAttribute(n, t1, modif))::t when member = n -> begin
+        if ((classContext <> className) && (hasModifier modif Private)) then raise (PrivateContext(member));
+        RAttribute(n, t1, modif)
+      end;
     | h::t -> findAttribute t
   in
   match registry with
     | RPackage(_, classes) -> let RClass(_,_,a,_) = (findClass classes className) in findAttribute a
 ;;
 
-let rec getClassMethodParent classCaller className member arguments registry = match registry with
+let getClassAttributeType classContext className member registry =
+  match getClassAttribute classContext className member registry with
+    | RAttribute(n, t1, modif) -> t1
+;;
+
+let rec getClassMethodParent classContext className member arguments registry = match registry with
   | RPackage(_, classes) -> let RClass(_,_,a,_) = (findClass classes className) in
     try
-      let m = getClassMethodAll className member arguments registry in
-        match m with
-	  | RMethod(n, t1, args, modif) -> begin if hasModifier modif Private then
-              if classCaller <> className then raise(PrivateContext(n)) else m
-            else
-              m
-          end;
+      getClassMethod classContext className member arguments registry
     with
       | MemberNotFound(member) -> let parent = getClassParent className registry in
         match parent with
           | None -> raise (MemberNotFound(member))
-          | Some(p) -> getClassMethodParent classCaller p.tid member arguments registry
+          | Some(p) -> getClassMethodParent classContext p.tid member arguments registry
       ;
     ;
 ;;
