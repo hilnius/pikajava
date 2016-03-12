@@ -9,6 +9,11 @@ let iterArg f l parameter =
     List.iter fp l
 ;;
 
+let iterArg2 f l parameter parameter2 =
+  let fp sd = f sd parameter parameter2 in
+    List.iter fp l
+;;
+
 let extractSome a = match a with
   | None -> raise UntypedExpression;
   | Some(b) -> b;
@@ -57,19 +62,17 @@ let checkCall e methodName arguments reg = match e with
     | _ -> raise (NotDeferencable(extractSome exp.etype))
 
 let checkExpression e reg = match e.edesc with
-  (*| New(name, identifiers, arguments) ->*)
   | Call(e2, methodName, arguments) -> checkCall e2 methodName arguments reg
-  (*| Attr of expression * string
-  | If of expression * expression * expression *)
-  (*| Val(value) -> ()*)
-  (* | Name of string
-  | ArrayInit of expression list*)
+  (*| ArrayInit of expression list*)
   | AssignExp(e1, aop, e2) -> begin match aop with
       | Assign | Ass_add | Ass_sub | Ass_mul | Ass_div -> if not(compareAssignTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
       | Ass_mod -> if not(checkPrimitiveNotBoolean (extractSome e1.etype) && checkPrimitiveNotBoolean (extractSome e2.etype)) then raise (BadOperandTypes(extractSome e1.etype, extractSome e2.etype))
       | Ass_shl | Ass_shr | Ass_shrr -> if not(checkIntegerKind (extractSome e1.etype) && checkIntegerKind (extractSome e2.etype)) then raise (BadOperandTypes(extractSome e1.etype, extractSome e2.etype))
     end;
-  (*| Post of expression * postfix_op *)
+  | Post(e1, pfo) -> if not(checkIntegerKind (extractSome e1.etype)) then raise (CannotCast(extractSome e1.etype, Type.Primitive(Type.Int)))
+  | Pre(pfo, e1) -> begin match pfo with
+      | Op_incr | Op_decr -> if not(checkIntegerKind (extractSome e1.etype)) then raise (CannotCast(extractSome e1.etype, Type.Primitive(Type.Int)))
+    end;
   | Op(e1, op, e2) -> begin match op with
       | Op_eq | Op_ne | Op_gt | Op_lt | Op_ge | Op_le -> if not(compareTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
       | Op_cor | Op_cand -> begin
@@ -79,7 +82,7 @@ let checkExpression e reg = match e.edesc with
     end;
   | CondOp(e1, e2, e3) -> begin
       if not (checkBoolean (extractSome e1.etype)) then raise (ShouldBeBoolean(extractSome e1.etype));
-      if not (compareTypes (extractSome e1.etype) (extractSome e2.etype)) then raise (CannotCompareTypes(extractSome e1.etype, extractSome e2.etype))
+      if not (compareTypes (extractSome e2.etype) (extractSome e3.etype)) then raise (CannotCompareTypes(extractSome e2.etype, extractSome e3.etype))
     end;
   (*| Cast(t1, e1) -> print_string "hello"*)
   (*| Instanceof of expression * expression *)
@@ -111,23 +114,35 @@ let checkVarDecl v reg = match v with
     end
 ;;
 
-let rec checkStatement s reg = match s with
+let checkVarDeclOpt v reg = match v with
+  | (None, varName, init) -> ()
+  | (Some(t), varName, init) -> checkVarDecl (t varName init) reg
+
+let rec checkStatement s reg returnType = match s with
   | VarDecl(l) -> iterArg checkVarDecl l reg
-  | Block(sl) -> iterArg checkStatement sl reg
-  (*| Nop
-  | While of expression * statement
-  | For of (Type.t * string * expression option) list * expression option * expression list * statement *)
-  | If(e1, ifSt, None) -> checkExpression e1 reg; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt reg;
-  | If(e1, ifSt, Some(elseSt)) -> checkExpression e1 reg; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt reg; checkStatement elseSt reg
-  (*| Return of expression option
-  | Throw of expression
-  | Try of statement list * (argument * statement list) list * statement list*)
+  | Block(sl) -> iterArg2 checkStatement sl reg returnType
+  | While(e, s) -> begin checkExpression e reg; checkStatement s reg returnType end
+  | For(vdl, None, el, st) -> begin
+      (*iterArg checkVarDeclOpt vdl reg;*)
+      iterArg checkExpression el reg;
+      checkStatement st reg returnType
+    end
+  | For(vdl, Some(ec), el, st) -> begin
+      (*iterArg checkVarDeclOpt vdl reg;*)
+      checkExpression ec reg;
+      iterArg checkExpression el reg;
+      checkStatement st reg returnType
+    end
+  | If(e1, ifSt, None) -> checkExpression e1 reg; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt reg returnType;
+  | If(e1, ifSt, Some(elseSt)) -> checkExpression e1 reg; if extractSome (e1.etype) <> Primitive(Boolean) then raise (ShouldBeBoolean(extractSome e1.etype)); checkStatement ifSt reg returnType; checkStatement elseSt reg returnType
+  | Return(None) -> if not (compareTypes Type.Void returnType) then raise (CannotCompareTypes(Type.Void, returnType))
+  | Return(Some(e)) -> if not (compareTypes (extractSome e.etype) returnType) then raise (CannotCompareTypes(extractSome e.etype, returnType))
   | Expr(e) -> checkExpression e reg
   | _ -> ()
 ;;
 
 let checkMethod meth reg = match meth with
-  | { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = f } -> iterArg checkStatement f reg
+  | { mmodifiers = a; mname = b; mreturntype = c; margstype = d; mthrows = e; mbody = f } -> iterArg2 checkStatement f reg c
 ;;
 
 let checkClass cl reg = match cl with
@@ -143,9 +158,9 @@ let checkAST ast registry =
     | MemberNotFound(m) -> print_string ("\027[31mMember not found : " ^ m ^ "\027[0m\n");
     | NotDeferencable(t) -> print_string ("\027[31mType cannot be deferenced : " ^ (Type.stringOf t) ^ "\027[0m\n");
     | PrivateContext(n) -> print_string ("\027[31mThe attribute or method " ^ n ^ " is not accessible in this context\027[0m\n");
-    (*| StaticReference(n) -> print_string ("\027[31mTrying to access " ^ n ^ " without an instance\027[0m\n");*)
     | TypeMismatch(t1,t2) -> print_string ("\027[31mType mismatch exception between " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | CannotCompareTypes(t1,t2) -> print_string ("\027[31mCannot compare types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
+    | CannotCast(t1,t2) -> print_string ("\027[31mCannot cast " ^ (Type.stringOf t1) ^ " to " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | BadOperandTypes(t1,t2) -> print_string ("\027[31mBad operand types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n");
     | ShouldBeBoolean(t1) -> print_string ("\027[31mExpected type boolean, found " ^ (Type.stringOf t1) ^ "\027[0m\n");
     | _ -> print_string ("\027[31mAn exception of unknown type occured.\027[0m\n");
