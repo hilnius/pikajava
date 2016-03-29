@@ -12,7 +12,7 @@ classes and their methods and attributes.
 That way, the typer will query the registry everytime it encounters an attribute / method call, and
 the registry will be able to tell the typer what is the return type of what he's using.
 
-getClassMethod and getClassAttribute are functions that do exactly that (take a class and a method or
+getClassMethodType and getClassAttribute are functions that do exactly that (take a class and a method or
 attribute name, and return the type of this method / attribute).
 *)
 
@@ -23,9 +23,9 @@ and packageRegistry =
 and classRegistry = (* name, parent, attributes, methods *)
   | RClass of string * Type.ref_type option * attributeRegistry list * methodRegistry list
 and methodRegistry =
-  | RMethod of string * Type.t * argumentRegistry list
+  | RMethod of string * Type.t * argumentRegistry list * modifier list
 and attributeRegistry =
-  | RAttribute of string * Type.t
+  | RAttribute of string * Type.t * modifier list
 and argumentRegistry =
   | RArgument of Type.t
 ;;
@@ -48,6 +48,11 @@ type methodOrAttributeSignature =
   Corresponding registry : (after the comment)
 *)
 
+let rec hasModifier modifiers modifier = match modifiers with
+  | [] -> false
+  | h::t when h = modifier -> true
+  | h::t -> hasModifier t modifier
+
 let objectClassRegistry = RClass("Object", None, [],[])
 ;;
 
@@ -57,24 +62,14 @@ let rec findClass classes className = match classes with
   | (RClass(n, _, _, _))::t -> findClass t className
 ;;
 
-let getClassMethod className member arguments registry =
-  let rec findMethod m = match m with
-    | [] -> raise (MemberNotFound(member))
-    | (RMethod(n, t1, args))::t when member = n -> t1
-    | h::t -> findMethod t
+let getClass className registry =
+  let rec findClassAux classes className = match classes with
+    | [] -> raise (ClassNameNotFound(className))
+    | (RClass(n, p, a, m))::_ when n = className -> RClass(n, p, a, m)
+    | (RClass(_, _, _, _))::t -> findClassAux t className
   in
   match registry with
-    | RPackage(_, classes) -> let RClass(_,_,_,m) = (findClass classes className) in findMethod m
-;;
-
-let getClassAttribute className member registry =
-  let rec findAttribute a = match a with
-    | [] -> raise (MemberNotFound(member))
-    | (RAttribute(n, t1))::t when member = n -> t1
-    | h::t -> findAttribute t
-  in
-  match registry with
-    | RPackage(_, classes) -> let RClass(_,_,a,_) = (findClass classes className) in findAttribute a
+    | RPackage(_, classes) -> findClass classes className
 ;;
 
 let getClassParent className registry =
@@ -87,6 +82,55 @@ let getClassParent className registry =
     | RPackage(_, classes) -> findParent classes
 ;;
 
+let getClassMethod classContext className member arguments registry =
+  let rec findMethod m = match m with
+    | [] -> raise (MemberNotFound(member))
+    | (RMethod(n, t1, args, modif))::t when member = n -> begin
+        if ((classContext <> className) && (hasModifier modif Private)) then raise (PrivateContext(member));
+        RMethod(n, t1, args, modif)
+      end;
+    | h::t -> findMethod t
+  in
+  match registry with
+    | RPackage(_, classes) -> let RClass(_,_,_,m) = (findClass classes className) in findMethod m
+;;
+
+let getClassMethodType classContext className member arguments registry =
+  match getClassMethod classContext className member arguments registry with
+    | RMethod(n, t1, args, modif) -> t1
+;;
+
+let getClassAttribute classContext className member registry =
+  let rec findAttribute a = match a with
+    | [] -> raise (MemberNotFound(member))
+    | (RAttribute(n, t1, modif))::t when member = n -> begin
+        if ((classContext <> className) && (hasModifier modif Private)) then raise (PrivateContext(member));
+        RAttribute(n, t1, modif)
+      end;
+    | h::t -> findAttribute t
+  in
+  match registry with
+    | RPackage(_, classes) -> let RClass(_,_,a,_) = (findClass classes className) in findAttribute a
+;;
+
+let getClassAttributeType classContext className member registry =
+  match getClassAttribute classContext className member registry with
+    | RAttribute(n, t1, modif) -> t1
+;;
+
+let rec getClassMethodParent classContext className member arguments registry = match registry with
+  | RPackage(_, classes) -> let RClass(_,_,a,_) = (findClass classes className) in
+    try
+      getClassMethod classContext className member arguments registry
+    with
+      | MemberNotFound(member) -> let parent = getClassParent className registry in
+        match parent with
+          | None -> raise (MemberNotFound(member))
+          | Some(p) -> getClassMethodParent classContext p.tid member arguments registry
+      ;
+    ;
+;;
+
 (* build registry functions *)
 
 let buildArgumentRegistry argument = match argument with
@@ -94,13 +138,13 @@ let buildArgumentRegistry argument = match argument with
 ;;
 
 let buildMethodRegistry meth = match meth with
-  | { mmodifiers = _; mname = name; mreturntype = returnType; margstype = arguments; mthrows = _; mbody = _ } ->
-    RMethod(name, returnType, List.map buildArgumentRegistry arguments)
+  | { mmodifiers = modifiers; mname = name; mreturntype = returnType; margstype = arguments; mthrows = _; mbody = _ } ->
+    RMethod(name, returnType, List.map buildArgumentRegistry arguments, modifiers)
 ;;
 
 let buildAttributeRegistry attribute = match attribute with
-  | { amodifiers = _; aname = name; atype = argType; adefault = _ } ->
-    RAttribute(name, argType)
+  | { amodifiers = modifiers; aname = name; atype = argType; adefault = _ } ->
+    RAttribute(name, argType, modifiers)
 ;;
 
 let buildClassRegistry classes = match classes with
@@ -210,12 +254,12 @@ let stringOfArgument arg = match arg with
 ;;
 
 let stringOfMethod attr = match attr with
-  | RMethod(name, returnType, arguments) ->
+  | RMethod(name, returnType, arguments, modif) ->
     (getTabs ()) ^ (Type.stringOf returnType) ^ " " ^ name ^ "(" ^ (iterToString stringOfArgument arguments ", ") ^ ");\n"
 ;;
 
 let stringOfAttribute attr = match attr with
-  | RAttribute(name, argType) ->
+  | RAttribute(name, argType, modif) ->
     (getTabs ()) ^ (Type.stringOf argType) ^ " " ^ name ^ ";\n"
 ;;
 

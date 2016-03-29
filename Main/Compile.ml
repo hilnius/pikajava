@@ -23,7 +23,7 @@ let execute lexbuf verbose =
     print_program typedAST;
     print_endline "";
     print_endline "----------------------[ \027[96mChecking typed AST\027[0m  ]----------------------";
-    CheckAST.checkAST typedAST;
+    CheckAST.checkAST typedAST registry;
     print_endline "\027[32mAST types checked\027[0m";
     print_endline "";
     print_endline "----------------------[ \027[96mCompiling typed AST\027[0m  ]----------------------";
