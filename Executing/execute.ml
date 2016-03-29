@@ -386,22 +386,15 @@ let rec findClassDescriptor className descriptorsClass =
 		classType = aType;
 		methods = methods;
 		attributes = astattributes
-	}::t ->
-		let result = 
-			match aType with 
-		 	(*| Array of t * int*)
-			(*| Primitive(primitive) -> match primitive with *)
-			| Ref(refType) ->
-				if refType.tid=className then
-					{
-						parentType = parentType;
-						classType = aType;
-						methods = methods;
-						attributes = astattributes
-					}
-				else findClassDescriptor className t
-		in 
-		result
+	}::t -> 
+		if aType.tid=className then
+			{
+				parentType = parentType;
+				classType = aType;
+				methods = methods;
+				attributes = astattributes
+			}
+		else findClassDescriptor className t
 	| [] -> print_string "Class not found!\n"; exit 1
 
 
@@ -572,7 +565,7 @@ and evaluateExpression expression scopedData = match expression with
 				let callerScope = evaluateExpression callerExpression scopedData in
 				executeMethod (getMethod callerType scopedData.data.tm methodName ) callerScope (changeListToOptionList arguments)
 			end
-	| Call (None, methodName, arguments) -> 
+	| Call (None, methodName, arguments) ->
 		let callerType = (List.hd  scopedData.stack).thisType in 
 		executeMethod (getMethod callerType scopedData.data.tm methodName ) scopedData (changeListToOptionList arguments)
 	| Attr (expression, attributeName) ->
