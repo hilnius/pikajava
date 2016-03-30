@@ -28,14 +28,14 @@ let execute lexbuf verbose =
     print_endline "";
     print_endline "----------------------[ \027[96mCompiling typed AST\027[0m  ]----------------------";
     let data = Compilation.treeWalk typedAST in
-    printData data;
+    (*printData data;*)
     let test9 = {
       edesc = Val(Int("9"));
       etype = Some(Primitive(Int));
     }
     in
     let scopedData = Execute.executeMethod ((Execute.getMain data.tm),Ref({tpath=[];tid="identifier"})) {data=data; currentScope=0; currentObject={objectId=1;objectName=""; attributes=[]; objectValue=Compilation.Null; scope=0};stack=[]} [Some(test9)] in 
-    printData scopedData.data;
+    (*printData scopedData.data;*)
     if verbose then AST.print_program typedAST
   with
     | Error ->
