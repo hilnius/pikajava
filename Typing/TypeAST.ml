@@ -74,6 +74,10 @@ let declareVariable varType varName instance =
   | (h, s, cl)::t -> scope := ((varType, varName, instance)::h, s, cl)::t
 ;;
 
+let extractSomeRef t = match t with
+  | None -> None
+  | Some(r) -> Some(Type.Ref(r))
+
 (* get the return type of a method depending on the class name, the method name, and the arguments *)
 let rec getMethodType etype methodName arguments r = match etype with
   | None -> raise (MemberNotFound(methodName))
@@ -88,7 +92,7 @@ let rec getMethodType etype methodName arguments r = match etype with
     with
       | StaticReference(methodName) -> raise (StaticReference(methodName))
       | PrivateContext(methodName) -> raise (PrivateContext(methodName))
-      | _ -> getMethodType (Some (Type.Ref(CheckAST.extractSome (getClassParent refType.tid r)))) methodName arguments r
+      | _ -> getMethodType (extractSomeRef (getClassParent refType.tid r)) methodName arguments r
 ;;
 
 (* get the type of an attribute depending on the class name and the attribute name *)
@@ -107,7 +111,7 @@ let rec getAttributeType etype memberName r = match etype with
     with
       | StaticReference(methodName) -> raise (StaticReference(methodName))
       | PrivateContext(methodName) -> raise (PrivateContext(methodName))
-      | _ -> getAttributeType (Some (Type.Ref(CheckAST.extractSome (getClassParent refType.tid r)))) memberName r
+      | _ -> getAttributeType (extractSomeRef (getClassParent refType.tid r)) memberName r
 ;;
 
 (* get the type of a scope variable, if it exists *)
@@ -371,13 +375,17 @@ let typeAST ast registry =
     { package = p; type_list = (map2 typeClass classList registry); }
     ;
   with
-    | MemberNotFound(m) -> print_string ("\027[31mMember not found : " ^ m ^ "\027[0m\n"); ast
-    | NotDeferencable(t) -> print_string ("\027[31mType cannot be deferenced : " ^ (Type.stringOf t) ^ "\027[0m\n"); ast
-    | PrivateContext(n) -> print_string ("\027[31mThe attribute or method " ^ n ^ " is not accessible in this context\027[0m\n"); ast
-    | StaticReference(n) -> print_string ("\027[31mTrying to access " ^ n ^ " in a static context\027[0m\n"); ast
-    | TypeMismatch(t1,t2) -> print_string ("\027[31mType mismatch exception between " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n"); ast
-    | CannotCompareTypes(t1,t2) -> print_string ("\027[31mCannot compare types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n"); ast
-    | BadOperandTypes(t1,t2) -> print_string ("\027[31mBad operand types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n"); ast
-    | ShouldBeBoolean(t1) -> print_string ("\027[31mExpected type boolean, found " ^ (Type.stringOf t1) ^ "\027[0m\n"); ast
-    | _ -> print_string ("\027[31mAn exception of unknown type occured.\027[0m\n"); ast
+    | ClassNameNotFound(cls) -> print_string ("\027[31mClass not found : " ^ cls ^ "\027[0m\n"); exit 1
+    | MemberNotFound(m) -> print_string ("\027[31mMember not found : " ^ m ^ "\027[0m\n"); exit 1
+    | VariableDoesNotExist(m) -> print_string ("\027[31mVariable does not exists in this scope : " ^ m ^ "\027[0m\n"); exit 1
+    | VariableAlreadyDeclared(m) -> print_string ("\027[31mVariable is already declared in this scope : " ^ m ^ "\027[0m\n"); exit 1
+    | UntypedExpression -> print_string ("\027[31mUntyped expression found !\027[0m\n"); exit 1
+    | NotDeferencable(t) -> print_string ("\027[31mType cannot be deferenced : " ^ (Type.stringOf t) ^ "\027[0m\n"); exit 1
+    | PrivateContext(n) -> print_string ("\027[31mThe attribute or method " ^ n ^ " is not accessible in this context\027[0m\n"); exit 1
+    | StaticReference(n) -> print_string ("\027[31mTrying to access " ^ n ^ " in a static context\027[0m\n"); exit 1
+    | TypeMismatch(t1,t2) -> print_string ("\027[31mType mismatch exception between " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n"); exit 1
+    | CannotCompareTypes(t1,t2) -> print_string ("\027[31mCannot compare types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n"); exit 1
+    | BadOperandTypes(t1,t2) -> print_string ("\027[31mBad operand types " ^ (Type.stringOf t1) ^ " and " ^ (Type.stringOf t2) ^ "\027[0m\n"); exit 1
+    | ShouldBeBoolean(t1) -> print_string ("\027[31mExpected type boolean, found " ^ (Type.stringOf t1) ^ "\027[0m\n"); exit 1
+    | _ -> print_string ("\027[31mAn 1 exception of unknown type occured.\027[0m\n"); exit 1
 ;;
