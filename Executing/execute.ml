@@ -211,7 +211,7 @@ let rec getRef descriptorObject scopedData =
 and findRefInData dos refId = 
 	match dos with
 	|a::t->if a.objectId= refId then a else findRefInData t refId
-	|[] -> print_string ("Could not find descriptor with id "^(string_of_int refId)); exit 1
+	|[] -> print_string ("Could not find descriptor with id "^(string_of_int refId)^"\n"); exit 1
 
 
 let setValue descriptorObject newValue = 
@@ -410,6 +410,15 @@ let rec initializeAttributes className scopedData =
 			scope = scopedData.currentScope
 		}
 	in
+	let addAttributeToObject objectToUpdate attributeToAdd =
+		{
+			objectId = objectToUpdate.objectId;
+			objectName = "";
+			attributes = objectToUpdate.attributes@[attributeToAdd];
+			objectValue = objectToUpdate.objectValue;
+			scope = objectToUpdate.scope
+		}
+	in
 	let rec evaluateAttributes scope attributes objectToFill =
 		match attributes with 
 		|{
@@ -420,16 +429,8 @@ let rec initializeAttributes className scopedData =
 			(* aloc = Location.t;*)
 		}::t->
 			let newScope = evaluateExpression expression scopedData	in
-			let newObjectToFill = 
-				{
-					objectId = objectToFill.objectId;
-					objectName = "";
-					attributes = objectToFill.attributes@[(changeName aName (changeScope (-1) newScope.currentObject))];
-					objectValue = Compilation.Instanciated;
-					scope = scope.currentScope
-				}
-			in	
-				evaluateAttributes newScope t newObjectToFill
+			let newObjectToFill = addAttributeToObject objectToFill (changeName aName (changeScope (-1) newScope.currentObject)) in	
+			evaluateAttributes newScope t newObjectToFill
 		|{
 			amodifiers = modifiers ;
 			aname = aName;
@@ -437,16 +438,26 @@ let rec initializeAttributes className scopedData =
 			adefault = None;
 			(* aloc = Location.t;*)
 		}::t->
-			let newObjectToFill =
-				{
-					objectId = objectToFill.objectId;
-					objectName = "";
-					attributes = objectToFill.attributes@[constructNull (-1) aName];
-					objectValue = Compilation.Instanciated;
-					scope = scope.currentScope
-				}
-			in	
-			evaluateAttributes scope t newObjectToFill
+			if aType = Primitive(Int) then
+				begin
+					let attributeToAdd =
+						{
+							objectId = (-2);
+							objectName = aName;
+							attributes = [];
+							objectValue = Int(0);
+							scope = scopedData.currentScope
+						}
+					in
+					let newObjectToFill = addAttributeToObject objectToFill attributeToAdd in	
+					evaluateAttributes scope t newObjectToFill
+				end
+			else
+				begin
+					let attributeToAdd = constructNull (-1) aName in
+					let newObjectToFill = addAttributeToObject objectToFill attributeToAdd in	
+					evaluateAttributes scope t newObjectToFill
+				end
 		| []-> changeCurrentObject scope objectToFill
 	in	
 	evaluateAttributes scopedData classDescriptor.attributes objectToCreate
@@ -484,12 +495,16 @@ and evaluateExpression expression scopedData = match expression with
 	| New(None,className, expressions) ->
 		let finalClassName = List.nth className ((List.length className) - 1) in
 		let scopedWithInitialized = initializeAttributes finalClassName scopedData  in
-		executeMethod (getConstructor (deconstructExpressionType expression) scopedWithInitialized.data.tm (finalClassName^"$"^finalClassName)) scopedWithInitialized (changeListToOptionList expressions)
+		let scopeWithNewTempObject = addObject ("TEMP_OBJ_"^(string_of_float (Sys.time()))) scopedWithInitialized in
+		let tempObj = scopeWithNewTempObject.currentObject in
+		let nearlyFinalScope = executeMethod (getConstructor (deconstructExpressionType expression) scopeWithNewTempObject.data.tm (finalClassName^"$"^finalClassName)) scopeWithNewTempObject (changeListToOptionList expressions) in
+		deleteObject tempObj nearlyFinalScope
+
 	| New(Some outer,className, expressions) ->
 		let finalClassName = List.nth className ((List.length className) - 1) in
 		let scopedWithInitialized = initializeAttributes finalClassName scopedData  in
 		executeMethod (getConstructor (deconstructExpressionType expression) scopedWithInitialized.data.tm (finalClassName^"$"^finalClassName)) scopedWithInitialized (changeListToOptionList expressions)	
-	| Name (anObjectName) ->   evaluateNameString anObjectName scopedData
+	| Name (anObjectName) ->evaluateNameString anObjectName scopedData
 	| Op(expression1,operator,expression2) -> 
 		let evaluatedExpression1 = evaluateExpression expression1 scopedData in 
 		let evaluatedExpression2 = evaluateExpression expression2 evaluatedExpression1 in 
@@ -755,7 +770,6 @@ and addObject objectName scopedData =
 				scope = currentScope
 			}
 		in
-
 		{
 			data =
 				{
@@ -767,7 +781,7 @@ and addObject objectName scopedData =
 			currentObject = objectNamed;
 			stack = thisList
 		}
-	
+
 (* Reassign object *)
 and reassignObject objectScope objectName scopedData =
 	match scopedData with 
@@ -987,10 +1001,18 @@ and evaluateAndAddToScopeArgs argumentsToEvaluate methodArgumentsProt scopedData
 	if List.length argumentsToEvaluate = List.length methodArgumentsProt then
 	begin
 		match argumentsToEvaluate, methodArgumentsProt with
-		| argExpr::t, argProt::m -> 
-			let callerScope = evaluateExpression (changeElementToNotOption argExpr) scopedData in
-			let newScope = changeCurrentObject callerScope (setValue callerScope.currentObject (Reference(callerScope.currentObject.objectId))) in 
-		evaluateAndAddToScopeArgs t m (addObject argProt.pident newScope) 
+		| argExpr::t, argProt::m ->
+			if argProt.ptype = Primitive(Int) then
+				begin
+					let callerScope = evaluateExpression (changeElementToNotOption argExpr) scopedData in
+					evaluateAndAddToScopeArgs t m (addObject argProt.pident callerScope)
+				end
+			else
+				begin
+					let callerScope = evaluateExpression (changeElementToNotOption argExpr) scopedData in
+					let newScope = changeCurrentObject callerScope (setValue callerScope.currentObject (Reference(callerScope.currentObject.objectId))) in 
+					evaluateAndAddToScopeArgs t m (addObject argProt.pident newScope)
+				end
 		| [], _ -> scopedData
 	end
 	else 
