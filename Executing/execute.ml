@@ -198,6 +198,11 @@ let getIntValue descriptorObject =
 	| Int(a) -> a
 	| Null -> 0
 
+let getBoolValue descriptorObject = 
+	match descriptorObject.objectValue with 
+	| Bool(a) -> a
+	| Null -> false
+
 let isRef descriptorObject =
 	match descriptorObject.objectValue with 
 	| Reference(id) -> true
@@ -651,7 +656,8 @@ and instanceOf leftObjectType classExpressionType scopedData =
 and evaluatePreExpression expressionScoped prefixOp =
 	match prefixOp with 
 	|Op_incr -> changeCurrentObject expressionScoped (setValue expressionScoped.currentObject (Int((getIntValue expressionScoped.currentObject)  + 1))) 
-	|Op_decr -> changeCurrentObject expressionScoped (setValue expressionScoped.currentObject (Int((getIntValue expressionScoped.currentObject)  - 1))) 
+	|Op_decr -> changeCurrentObject expressionScoped (setValue expressionScoped.currentObject (Int((getIntValue expressionScoped.currentObject)  - 1)))
+	|Op_not -> changeCurrentObject expressionScoped (setValue expressionScoped.currentObject (Bool(not (getBoolValue expressionScoped.currentObject))))
 
 
 and evaluatePostExpression expressionScoped postfixOp =
