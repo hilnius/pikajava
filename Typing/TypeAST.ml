@@ -118,7 +118,7 @@ let rec getAttributeType etype memberName r = match etype with
 let getScopeType varName r =
   let rec innerGetScope l name = match l with (* find in a scope *)
     | [] -> None
-    | (vt, vn, vi)::q when vn = name -> if (vi && currentScopeStatic ()) then raise (StaticReference(varName)) else Some(vt);
+    | (vt, vn, vi)::q when vn = name -> if (vi && currentScopeStatic () && name <> "this") then begin print_string name; raise (StaticReference(varName)) end else Some(vt);
     | _::t -> innerGetScope t name
   in
   let rec goDownScopes l name = match l with (* check the topmost scope first, then go down *)
